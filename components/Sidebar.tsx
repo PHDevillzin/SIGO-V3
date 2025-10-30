@@ -93,9 +93,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
               />
                <NavItem 
                 icon={DocumentDuplicateIcon}
-                label="Solicitações para aprovação"
-                active={currentView === 'solicitacoes_aprovacao'}
-                onClick={() => setCurrentView('solicitacoes_aprovacao')}
+                label="Solicitações para classificação"
+                active={currentView === 'solicitacoes_classificação'}
+                onClick={() => setCurrentView('solicitacoes_classificação')}
               />
             </div>
           )}
