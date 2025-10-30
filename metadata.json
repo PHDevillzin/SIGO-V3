@@ -1,0 +1,5 @@
+{
+  "name": "Dashboard de Solicitações",
+  "description": "Uma interface de dashboard para visualizar e gerenciar solicitações, replicando um design existente. Apresenta um layout com barra lateral, cartões de resumo e uma tabela de dados detalhada.",
+  "requestFramePermissions": []
+}
