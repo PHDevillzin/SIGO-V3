@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import MonthlySummaryModal from './MonthlySummaryModal';
 import AdvancedFilters from './AdvancedFilters';
-import { MagnifyingGlassIcon, FilterIcon, PencilIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
+import { MagnifyingGlassIcon, FilterIcon, PencilIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, EyeIcon, ArrowsUpDownIcon, ChevronUpIcon, ChevronDownIcon } from './Icons';
 import EditRequestModal from './EditRequestModal';
 import { Criticality, Request, PlanningData } from '../types';
 
@@ -57,6 +57,7 @@ const PlanningScreen: React.FC = () => {
     const [isClassificationModalOpen, setIsClassificationModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
+    const [sortConfig, setSortConfig] = useState<{ key: keyof PlanningData | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
 
     const summaryData = [
         { year: 2026, demand: 28, value: 'R$ 15.000,00' },
@@ -79,12 +80,61 @@ const PlanningScreen: React.FC = () => {
         ), [searchTerm]
     );
 
-    const totalPages = useMemo(() => Math.ceil(filteredData.length / itemsPerPage), [filteredData, itemsPerPage]);
+    const handleSort = (key: keyof PlanningData) => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const parseValueForSort = (value: string | number) => {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+            if (value.startsWith('R$')) {
+                return parseFloat(value.replace('R$ ', '').replace(/\./g, '').replace(',', '.'));
+            }
+            const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+            if (dateRegex.test(value)) {
+                const [, day, month, year] = value.match(dateRegex)!;
+                return new Date(`${year}-${month}-${day}`).getTime();
+            }
+        }
+        return value;
+    }
+
+    const sortedData = useMemo(() => {
+        let sortableItems = [...filteredData];
+        if (sortConfig.key) {
+            sortableItems.sort((a, b) => {
+                const aValue = a[sortConfig.key!];
+                const bValue = b[sortConfig.key!];
+    
+                if (aValue === 'N/A' || aValue === null) return 1;
+                if (bValue === 'N/A' || bValue === null) return -1;
+    
+                const parsedA = parseValueForSort(aValue);
+                const parsedB = parseValueForSort(bValue);
+    
+                if (parsedA < parsedB) {
+                    return sortConfig.direction === 'ascending' ? -1 : 1;
+                }
+                if (parsedA > parsedB) {
+                    return sortConfig.direction === 'ascending' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [filteredData, sortConfig]);
+
+
+    const totalPages = useMemo(() => Math.ceil(sortedData.length / itemsPerPage), [sortedData, itemsPerPage]);
 
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
-        return filteredData.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredData, currentPage, itemsPerPage]);
+        return sortedData.slice(startIndex, startIndex + itemsPerPage);
+    }, [sortedData, currentPage, itemsPerPage]);
 
 
     const handleYearSelect = (year: number) => {
@@ -98,6 +148,25 @@ const PlanningScreen: React.FC = () => {
     
     const handleCloseClassificationModal = () => {
         setIsClassificationModalOpen(false);
+    };
+
+    const SortableHeader: React.FC<{
+        columnKey: keyof PlanningData;
+        title: string;
+    }> = ({ columnKey, title }) => {
+        const isSorted = sortConfig.key === columnKey;
+        return (
+            <th scope="col" className="px-6 py-3 font-semibold cursor-pointer whitespace-nowrap" onClick={() => handleSort(columnKey)}>
+                <div className="flex items-center space-x-1">
+                    <span>{title}</span>
+                    {isSorted ? (
+                        sortConfig.direction === 'ascending' ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />
+                    ) : (
+                        <ArrowsUpDownIcon className="w-4 h-4 text-gray-400" />
+                    )}
+                </div>
+            </th>
+        );
     };
 
     return (
@@ -168,17 +237,18 @@ const PlanningScreen: React.FC = () => {
                                     <th scope="col" className="p-4">
                                         <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
                                     </th>
-                                    <th scope="col" className="px-6 py-3 font-semibold">Criticidade</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold">Ordem</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold">Unidade</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold">Descrição</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold">Situação</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold">Início Projeto</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold">Saldo Projeto Prazo</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold">Saldo Projeto Valor</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold">Início Obra</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold">Saldo Obra Prazo</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold">Saldo Obra Valor</th>
+                                    <SortableHeader columnKey="criticidade" title="Criticidade" />
+                                    <SortableHeader columnKey="ordem" title="Ordem" />
+                                    <SortableHeader columnKey="unidade" title="Unidade" />
+                                    <SortableHeader columnKey="descricao" title="Descrição" />
+                                    <SortableHeader columnKey="situacao" title="Situação" />
+                                    <SortableHeader columnKey="inicioProjeto" title="Início Projeto" />
+                                    <SortableHeader columnKey="saldoProjetoPrazo" title="Saldo Projeto Prazo" />
+                                    <SortableHeader columnKey="saldoProjetoValor" title="Saldo Projeto Valor" />
+                                    <SortableHeader columnKey="inicioObra" title="Início Obra" />
+                                    <SortableHeader columnKey="saldoObraPrazo" title="Saldo Obra Prazo" />
+                                    <SortableHeader columnKey="saldoObraValor" title="Saldo Obra Valor" />
+                                    <th scope="col" className="px-6 py-3 font-semibold text-center">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -202,10 +272,24 @@ const PlanningScreen: React.FC = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">{item.inicioObra}</td>
                                         <td className="px-6 py-4 text-center">{item.saldoObraPrazo}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">{item.saldoObraValor}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-center space-x-2">
+                                                <button className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" aria-label="Visualizar">
+                                                    <EyeIcon className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setIsClassificationModalOpen(true)}
+                                                    className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
+                                                    aria-label="Editar"
+                                                >
+                                                    <PencilIcon className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 )) : (
                                    <tr>
-                                        <td colSpan={12} className="text-center py-10 text-gray-500">
+                                        <td colSpan={13} className="text-center py-10 text-gray-500">
                                             Nenhum dado encontrado.
                                         </td>
                                    </tr>
@@ -227,12 +311,12 @@ const PlanningScreen: React.FC = () => {
                             </span>
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
+                                disabled={currentPage === totalPages || totalPages === 0}
                                 className="disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <ChevronRightIcon className="w-6 h-6 text-gray-400" />
                             </button>
-                             <span className="text-sm text-gray-600">Página {currentPage} de {totalPages}</span>
+                             <span className="text-sm text-gray-600">Página {currentPage} de {totalPages > 0 ? totalPages : 1}</span>
                         </div>
                         <div>
                             <select

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import MonthlySummaryModal from './MonthlySummaryModal';
 import AdvancedFilters from './AdvancedFilters';
-import { MagnifyingGlassIcon, FilterIcon, ArrowsUpDownIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
+import { MagnifyingGlassIcon, FilterIcon, ArrowsUpDownIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon } from './Icons';
 import EditRequestModal from './EditRequestModal';
 import { Criticality, Request, PlanningData } from '../types';
 
@@ -57,6 +57,7 @@ const PlurianualScreen: React.FC = () => {
     const [isClassificationModalOpen, setIsClassificationModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
+    const [sortConfig, setSortConfig] = useState<{ key: keyof PlanningData | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
 
     const summaryData = [
         { year: 2026, demand: 28, value: 'R$ 15.000,00' },
@@ -79,12 +80,60 @@ const PlurianualScreen: React.FC = () => {
         ), [searchTerm]
     );
 
-    const totalPages = useMemo(() => Math.ceil(filteredData.length / itemsPerPage), [filteredData, itemsPerPage]);
+    const handleSort = (key: keyof PlanningData) => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const parseValueForSort = (value: string | number) => {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+            if (value.startsWith('R$')) {
+                return parseFloat(value.replace('R$ ', '').replace(/\./g, '').replace(',', '.'));
+            }
+            const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+            if (dateRegex.test(value)) {
+                const [, day, month, year] = value.match(dateRegex)!;
+                return new Date(`${year}-${month}-${day}`).getTime();
+            }
+        }
+        return value;
+    }
+
+    const sortedData = useMemo(() => {
+        let sortableItems = [...filteredData];
+        if (sortConfig.key) {
+            sortableItems.sort((a, b) => {
+                const aValue = a[sortConfig.key!];
+                const bValue = b[sortConfig.key!];
+    
+                if (aValue === 'N/A' || aValue === null) return 1;
+                if (bValue === 'N/A' || bValue === null) return -1;
+    
+                const parsedA = parseValueForSort(aValue);
+                const parsedB = parseValueForSort(bValue);
+    
+                if (parsedA < parsedB) {
+                    return sortConfig.direction === 'ascending' ? -1 : 1;
+                }
+                if (parsedA > parsedB) {
+                    return sortConfig.direction === 'ascending' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [filteredData, sortConfig]);
+
+    const totalPages = useMemo(() => Math.ceil(sortedData.length / itemsPerPage), [sortedData, itemsPerPage]);
 
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
-        return filteredData.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredData, currentPage, itemsPerPage]);
+        return sortedData.slice(startIndex, startIndex + itemsPerPage);
+    }, [sortedData, currentPage, itemsPerPage]);
 
 
     const handleYearSelect = (year: number) => {
@@ -98,6 +147,25 @@ const PlurianualScreen: React.FC = () => {
     
     const handleCloseClassificationModal = () => {
         setIsClassificationModalOpen(false);
+    };
+
+    const SortableHeader: React.FC<{
+        columnKey: keyof PlanningData;
+        title: string;
+    }> = ({ columnKey, title }) => {
+        const isSorted = sortConfig.key === columnKey;
+        return (
+            <th scope="col" className="px-6 py-3 font-semibold cursor-pointer whitespace-nowrap" onClick={() => handleSort(columnKey)}>
+                <div className="flex items-center space-x-1">
+                    <span>{title}</span>
+                    {isSorted ? (
+                        sortConfig.direction === 'ascending' ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />
+                    ) : (
+                        <ArrowsUpDownIcon className="w-4 h-4 text-gray-400" />
+                    )}
+                </div>
+            </th>
+        );
     };
 
     return (
@@ -168,19 +236,19 @@ const PlurianualScreen: React.FC = () => {
                                     <th scope="col" className="p-4">
                                         <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
                                     </th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Criticidade</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Ordem</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Unidade</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Descrição</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Situação</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Saldo Valor</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Término Projeto</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Término Obra</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Empenho 2026</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Empenho 2027</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Empenho 2028</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Empenho 2029</th>
-                                    <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Empenho 2030</th>
+                                    <SortableHeader columnKey="criticidade" title="Criticidade" />
+                                    <SortableHeader columnKey="ordem" title="Ordem" />
+                                    <SortableHeader columnKey="unidade" title="Unidade" />
+                                    <SortableHeader columnKey="descricao" title="Descrição" />
+                                    <SortableHeader columnKey="situacao" title="Situação" />
+                                    <SortableHeader columnKey="saldoObraValor" title="Saldo Valor" />
+                                    <SortableHeader columnKey="terminoProjeto" title="Término Projeto" />
+                                    <SortableHeader columnKey="terminoObra" title="Término Obra" />
+                                    <SortableHeader columnKey="empenho2026" title="Empenho 2026" />
+                                    <SortableHeader columnKey="empenho2027" title="Empenho 2027" />
+                                    <SortableHeader columnKey="empenho2028" title="Empenho 2028" />
+                                    <SortableHeader columnKey="empenho2029" title="Empenho 2029" />
+                                    <SortableHeader columnKey="empenho2030" title="Empenho 2030" />
                                 </tr>
                             </thead>
                             <tbody>
@@ -231,12 +299,12 @@ const PlurianualScreen: React.FC = () => {
                             </span>
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
+                                disabled={currentPage === totalPages || totalPages === 0}
                                 className="disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <ChevronRightIcon className="w-6 h-6 text-gray-400" />
                             </button>
-                             <span className="text-sm text-gray-600">Página {currentPage} de {totalPages}</span>
+                             <span className="text-sm text-gray-600">Página {currentPage} de {totalPages > 0 ? totalPages : 1}</span>
                         </div>
                         <div>
                             <select

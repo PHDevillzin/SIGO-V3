@@ -33,6 +33,10 @@ export const ChevronDoubleLeftIcon = createIcon(
     <path strokeLinecap="round" strokeLinejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
 );
 
+export const ChevronUpIcon = createIcon(
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+);
+
 export const ChevronDownIcon = createIcon(
     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
 );
