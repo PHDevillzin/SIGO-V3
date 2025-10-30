@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SearchIcon, FilterIcon, EyeIcon, InfoIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
+import { SearchIcon, FilterIcon, EyeIcon, InfoIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon } from './Icons';
 import { Criticality } from '../types';
 import type { Request } from '../types';
 
@@ -31,7 +31,7 @@ const CriticalityBadge: React.FC<{ level: Criticality }> = ({ level }) => {
     return <span className={`${baseClasses} ${styles[level]}`}>{level}</span>;
 }
 
-const RequestsTable: React.FC = () => {
+const RequestsTable: React.FC<{ selectedProfile: string }> = ({ selectedProfile }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
 
@@ -103,10 +103,17 @@ const RequestsTable: React.FC = () => {
                 </td>
                 <td className="px-6 py-4">{request.expectedValue}</td>
                 <td className="px-6 py-4">{request.executingUnit}</td>
-                <td className="px-6 py-4 text-center">
-                  <button className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors">
-                    <EyeIcon className="w-5 h-5" />
-                  </button>
+                <td className="px-6 py-4">
+                  <div className="flex items-center justify-center space-x-2">
+                    <button className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors">
+                      <EyeIcon className="w-5 h-5" />
+                    </button>
+                    {selectedProfile === 'Planejamento' && (
+                        <button className="bg-yellow-500 text-white p-2 rounded-md hover:bg-yellow-600 transition-colors">
+                            <PencilIcon className="w-5 h-5" />
+                        </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

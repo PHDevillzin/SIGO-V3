@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon } from './Icons';
 
+interface SidebarProps {
+  selectedProfile: string;
+  setSelectedProfile: (profile: string) => void;
+}
+
 const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boolean }> = ({ icon: Icon, label, active = false }) => (
   <a href="#" className={`flex items-center space-x-3 px-4 py-2.5 rounded-md transition-colors ${active ? 'bg-white/10 text-white' : 'text-gray-300 hover:bg-white/5'}`}>
     <Icon className="w-5 h-5" />
@@ -8,9 +13,8 @@ const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boole
   </a>
 );
 
-const Sidebar: React.FC = () => {
+const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState('Gestor GSO');
   const profiles = [
     "Administração do Sistema",
     "Alta Administração Senai",
