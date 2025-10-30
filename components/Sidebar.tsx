@@ -71,7 +71,7 @@ const Sidebar: React.FC = () => {
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg" role="listbox">
+            <div className="absolute z-10 bottom-full mb-1 w-full bg-white rounded-md shadow-lg" role="listbox">
               <ul className="py-1 max-h-60 overflow-auto text-gray-900">
                 {profiles.map((profile) => (
                   <li
