@@ -1,9 +1,10 @@
-
 import type { ElementType } from 'react';
 
 export enum Criticality {
   IMEDIATA = 'Imediata',
   CRITICA = 'Crítica',
+  MEDIA = 'Média',
+  MINIMA = 'Mínima',
 }
 
 export interface Request {
