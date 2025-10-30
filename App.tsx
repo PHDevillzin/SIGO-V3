@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import SummaryCard from './components/SummaryCard';
 import RequestsTable from './components/RequestsTable';
+// Fix: Add missing import for icons used in summaryData
 import { ListIcon, CalculatorIcon } from './components/Icons';
 
 import type { SummaryData } from './types';
