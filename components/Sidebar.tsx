@@ -18,6 +18,7 @@ const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boole
 const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isManagementMenuOpen, setIsManagementMenuOpen] = useState(false);
+  const [isSolicitacoesMenuOpen, setIsSolicitacoesMenuOpen] = useState(false);
 
   const profiles = [
     "Administração do Sistema",
@@ -41,16 +42,18 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     };
   }, []);
   
-  // Set user and profile from new image
-  const userName = "Nilson Shiniti";
+  const userName = "Paulo Ribeiro";
   useEffect(() => {
       setSelectedProfile("Solicitação Unidade");
   }, [setSelectedProfile]);
 
   useEffect(() => {
-    if (currentView === 'planejamento' || currentView === 'plurianual') {
-      setIsManagementMenuOpen(true);
-    }
+    const isSolicitacoes = currentView === 'solicitacoes' || currentView === 'solicitacoes_aprovacao';
+    const isGerenciamento = currentView === 'planejamento' || currentView === 'plurianual';
+    
+    setIsSolicitacoesMenuOpen(isSolicitacoes);
+    setIsManagementMenuOpen(isGerenciamento);
+
   }, [currentView]);
 
 
@@ -67,9 +70,38 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
       </div>
       <nav className="flex-1 p-4 space-y-2">
         <NavItem icon={HomeIcon} label="Home" active={currentView === 'home'} onClick={() => setCurrentView('home')} />
-        <NavItem icon={ListIcon} label="Solicitações Gerais" active={currentView === 'solicitacoes'} onClick={() => setCurrentView('solicitacoes')} />
         
-        {/* Management Collapsible Menu */}
+        {/* Menu Solicitações Collapsible */}
+        <div>
+          <button
+            onClick={() => setIsSolicitacoesMenuOpen(prev => !prev)}
+            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${(currentView === 'solicitacoes' || currentView === 'solicitacoes_aprovacao') ? 'bg-white/10 text-white' : ''}`}
+          >
+            <div className="flex items-center space-x-3">
+              <ListIcon className="w-5 h-5" />
+              <span className="font-medium">Menu Solicitações</span>
+            </div>
+            <ChevronDownIcon className={`w-4 h-4 transition-transform ${isSolicitacoesMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {isSolicitacoesMenuOpen && (
+            <div className="pt-2 pl-6 space-y-2">
+              <NavItem 
+                icon={ListIcon}
+                label="Solicitações gerais"
+                active={currentView === 'solicitacoes'}
+                onClick={() => setCurrentView('solicitacoes')}
+              />
+               <NavItem 
+                icon={DocumentDuplicateIcon}
+                label="Solicitações para aprovação"
+                active={currentView === 'solicitacoes_aprovacao'}
+                onClick={() => setCurrentView('solicitacoes_aprovacao')}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Gerenciamento Collapsible Menu */}
         <div>
           <button
             onClick={() => setIsManagementMenuOpen(prev => !prev)}
@@ -103,7 +135,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
         <div className="flex items-center space-x-3 mb-4">
           <img
             className="w-10 h-10 rounded-full object-cover"
-            src="https://i.pravatar.cc/100?u=nilson"
+            src="https://i.pravatar.cc/100?u=paulo"
             alt={userName}
           />
           <div>
