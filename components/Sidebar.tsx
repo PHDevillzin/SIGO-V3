@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon } from './Icons';
+import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon } from './Icons';
 
 interface SidebarProps {
   selectedProfile: string;
   setSelectedProfile: (profile: string) => void;
+  currentView: string;
+  setCurrentView: (view: string) => void;
 }
 
-const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boolean }> = ({ icon: Icon, label, active = false }) => (
-  <a href="#" className={`flex items-center space-x-3 px-4 py-2.5 rounded-md transition-colors ${active ? 'bg-white/10 text-white' : 'text-gray-300 hover:bg-white/5'}`}>
+const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boolean, onClick?: () => void }> = ({ icon: Icon, label, active = false, onClick }) => (
+  <a href="#" onClick={(e) => { e.preventDefault(); onClick?.(); }} className={`flex items-center space-x-3 px-4 py-2.5 rounded-md transition-colors ${active ? 'bg-white/10 text-white' : 'text-gray-300 hover:bg-white/5'}`}>
     <Icon className="w-5 h-5" />
     <span className="font-medium">{label}</span>
   </a>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile }) => {
+const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isManagementMenuOpen, setIsManagementMenuOpen] = useState(false);
+
   const profiles = [
     "Administração do Sistema",
     "Alta Administração Senai",
@@ -36,6 +40,19 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile }
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+  
+  // Set user and profile from new image
+  const userName = "Nilson Shiniti";
+  useEffect(() => {
+      setSelectedProfile("Solicitação Unidade");
+  }, [setSelectedProfile]);
+
+  useEffect(() => {
+    if (currentView === 'planejamento' || currentView === 'plurianual') {
+      setIsManagementMenuOpen(true);
+    }
+  }, [currentView]);
+
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-[#0B1A4E] text-white">
@@ -49,18 +66,48 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile }
         </button>
       </div>
       <nav className="flex-1 p-4 space-y-2">
-        <NavItem icon={HomeIcon} label="Home" />
-        <NavItem icon={ListIcon} label="Solicitações Gerais" active={true} />
+        <NavItem icon={HomeIcon} label="Home" active={currentView === 'home'} onClick={() => setCurrentView('home')} />
+        <NavItem icon={ListIcon} label="Solicitações Gerais" active={currentView === 'solicitacoes'} onClick={() => setCurrentView('solicitacoes')} />
+        
+        {/* Management Collapsible Menu */}
+        <div>
+          <button
+            onClick={() => setIsManagementMenuOpen(prev => !prev)}
+            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${(currentView === 'planejamento' || currentView === 'plurianual') ? 'bg-white/10 text-white' : ''}`}
+          >
+            <div className="flex items-center space-x-3">
+              <Cog8ToothIcon className="w-5 h-5" />
+              <span className="font-medium">Gerenciamento</span>
+            </div>
+            <ChevronDownIcon className={`w-4 h-4 transition-transform ${isManagementMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {isManagementMenuOpen && (
+            <div className="pt-2 pl-6 space-y-2">
+              <NavItem 
+                icon={BuildingOfficeIcon}
+                label="Planejamento"
+                active={currentView === 'planejamento'}
+                onClick={() => setCurrentView('planejamento')}
+              />
+               <NavItem 
+                icon={DocumentDuplicateIcon}
+                label="Plurianual"
+                active={currentView === 'plurianual'}
+                onClick={() => setCurrentView('plurianual')}
+              />
+            </div>
+          )}
+        </div>
       </nav>
       <div className="p-4 border-t border-white/10">
         <div className="flex items-center space-x-3 mb-4">
           <img
             className="w-10 h-10 rounded-full object-cover"
-            src="https://picsum.photos/id/237/100/100"
-            alt="Paulo Henrique"
+            src="https://i.pravatar.cc/100?u=nilson"
+            alt={userName}
           />
           <div>
-            <p className="font-semibold text-white">Paulo Henrique</p>
+            <p className="font-semibold text-white">{userName}</p>
           </div>
         </div>
         <div className="relative mb-4" ref={dropdownRef}>

@@ -3,6 +3,7 @@ import type { Request } from '../types';
 import { Criticality } from '../types';
 import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
 import EditRequestModal from './EditRequestModal';
+import AdvancedFilters from './AdvancedFilters';
 
 const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Santo An...', description: 'Reforma Gera...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO' },
@@ -49,6 +50,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
     const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
 
     const filteredRequests = useMemo(() =>
@@ -100,11 +102,17 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
                             className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    <button className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 transition-colors">
+                    <button 
+                        onClick={() => setShowAdvancedFilters(prev => !prev)}
+                        className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 transition-colors"
+                    >
                         <FilterIcon className="w-5 h-5" />
                         <span>Filtros Avançados</span>
                     </button>
                 </div>
+
+                {showAdvancedFilters && <AdvancedFilters />}
+                
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-gray-500">
                         <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
