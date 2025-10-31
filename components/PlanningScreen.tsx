@@ -68,6 +68,7 @@ const PlanningScreen: React.FC = () => {
         { year: 2028, demand: 42, value: 'R$ 17.000,00' },
         { year: 2029, demand: 28, value: 'R$ 7.000,00' },
         { year: 2030, demand: 15, value: 'R$ 5.000,00' },
+        { year: 2031, demand: 10, value: 'R$ 3.000,00' },
     ];
 
     const dummyRequestForModal: Request = {
@@ -184,7 +185,7 @@ const PlanningScreen: React.FC = () => {
                     <h1 className="text-2xl font-semibold text-gray-800">Tela Planejamento</h1>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                     {summaryData.map(data => (
                         <PlanningSummaryCard 
                             key={data.year} 

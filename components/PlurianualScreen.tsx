@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import MonthlySummaryModal from './MonthlySummaryModal';
 import AdvancedFilters from './AdvancedFilters';
-import { MagnifyingGlassIcon, FilterIcon, ArrowsUpDownIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon } from './Icons';
+import { MagnifyingGlassIcon, FilterIcon, ArrowsUpDownIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon, EyeIcon, PencilIcon } from './Icons';
 import EditRequestModal from './EditRequestModal';
+import DetailsModal from './DetailsModal';
 import { Criticality, Request, PlanningData } from '../types';
 
 const planningData: PlanningData[] = [
@@ -55,6 +56,8 @@ const PlurianualScreen: React.FC = () => {
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isClassificationModalOpen, setIsClassificationModalOpen] = useState(false);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedItemForDetails, setSelectedItemForDetails] = useState<PlanningData | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [sortConfig, setSortConfig] = useState<{ key: keyof PlanningData | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
@@ -65,6 +68,7 @@ const PlurianualScreen: React.FC = () => {
         { year: 2028, demand: 42, value: 'R$ 17.000,00' },
         { year: 2029, demand: 28, value: 'R$ 7.000,00' },
         { year: 2030, demand: 15, value: 'R$ 5.000,00' },
+        { year: 2031, demand: 10, value: 'R$ 3.000,00' },
     ];
 
     const dummyRequestForModal: Request = {
@@ -148,6 +152,11 @@ const PlurianualScreen: React.FC = () => {
     const handleCloseClassificationModal = () => {
         setIsClassificationModalOpen(false);
     };
+    
+    const handleViewDetails = (item: PlanningData) => {
+        setSelectedItemForDetails(item);
+        setIsDetailsModalOpen(true);
+    };
 
     const SortableHeader: React.FC<{
         columnKey: keyof PlanningData;
@@ -175,7 +184,7 @@ const PlurianualScreen: React.FC = () => {
                     <h1 className="text-2xl font-semibold text-gray-800">Tela Plurianual</h1>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                     {summaryData.map(data => (
                         <PlurianualSummaryCard 
                             key={data.year} 
@@ -206,10 +215,10 @@ const PlurianualScreen: React.FC = () => {
                         <div className="flex items-center space-x-2">
                              <button
                                 onClick={() => setIsClassificationModalOpen(true)}
-                                className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 transition-colors"
+                                className="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors"
                             >
-                                <ArrowsUpDownIcon className="w-5 h-5" />
-                                <span>Classificar</span>
+                                <PencilIcon className="w-5 h-5" />
+                                <span>Editar</span>
                             </button>
                              <button
                                 className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 transition-colors"
@@ -249,6 +258,7 @@ const PlurianualScreen: React.FC = () => {
                                     <SortableHeader columnKey="empenho2028" title="Empenho 2028" />
                                     <SortableHeader columnKey="empenho2029" title="Empenho 2029" />
                                     <SortableHeader columnKey="empenho2030" title="Empenho 2030" />
+                                    <th scope="col" className="px-6 py-3 font-semibold text-center">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -274,10 +284,24 @@ const PlurianualScreen: React.FC = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">{item.empenho2028}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">{item.empenho2029}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">{item.empenho2030}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-center space-x-2">
+                                                <button onClick={() => handleViewDetails(item)} className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" aria-label="Visualizar">
+                                                    <EyeIcon className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setIsClassificationModalOpen(true)}
+                                                    className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
+                                                    aria-label="Editar"
+                                                >
+                                                    <PencilIcon className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                )) : (
                                    <tr>
-                                        <td colSpan={14} className="text-center py-10 text-gray-500">
+                                        <td colSpan={15} className="text-center py-10 text-gray-500">
                                             Nenhum dado disponível.
                                         </td>
                                    </tr>
@@ -334,6 +358,11 @@ const PlurianualScreen: React.FC = () => {
                 request={dummyRequestForModal}
                 onSave={handleCloseClassificationModal}
                 title="Solicitação para classificação"
+            />
+            <DetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                data={selectedItemForDetails}
             />
         </>
     );
