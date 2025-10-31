@@ -3,6 +3,7 @@ import MonthlySummaryModal from './MonthlySummaryModal';
 import AdvancedFilters from './AdvancedFilters';
 import { MagnifyingGlassIcon, FilterIcon, PencilIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, EyeIcon, ArrowsUpDownIcon, ChevronUpIcon, ChevronDownIcon } from './Icons';
 import EditRequestModal from './EditRequestModal';
+import DetailsModal from './DetailsModal';
 import { Criticality, Request, PlanningData } from '../types';
 
 const planningData: PlanningData[] = [
@@ -55,6 +56,8 @@ const PlanningScreen: React.FC = () => {
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isClassificationModalOpen, setIsClassificationModalOpen] = useState(false);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedItemForDetails, setSelectedItemForDetails] = useState<PlanningData | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [sortConfig, setSortConfig] = useState<{ key: keyof PlanningData | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
@@ -148,6 +151,11 @@ const PlanningScreen: React.FC = () => {
     
     const handleCloseClassificationModal = () => {
         setIsClassificationModalOpen(false);
+    };
+    
+    const handleViewDetails = (item: PlanningData) => {
+        setSelectedItemForDetails(item);
+        setIsDetailsModalOpen(true);
     };
 
     const SortableHeader: React.FC<{
@@ -274,7 +282,7 @@ const PlanningScreen: React.FC = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">{item.saldoObraValor}</td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-center space-x-2">
-                                                <button className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" aria-label="Visualizar">
+                                                <button onClick={() => handleViewDetails(item)} className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" aria-label="Visualizar">
                                                     <EyeIcon className="w-5 h-5" />
                                                 </button>
                                                 <button
@@ -346,6 +354,11 @@ const PlanningScreen: React.FC = () => {
                 request={dummyRequestForModal}
                 onSave={handleCloseClassificationModal}
                 title="Solicitação para classificação"
+            />
+            <DetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                data={selectedItemForDetails}
             />
         </>
     );
