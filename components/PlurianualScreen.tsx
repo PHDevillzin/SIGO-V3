@@ -2,9 +2,9 @@ import React, { useState, useMemo } from 'react';
 import MonthlySummaryModal from './MonthlySummaryModal';
 import AdvancedFilters from './AdvancedFilters';
 import { MagnifyingGlassIcon, FilterIcon, ArrowsUpDownIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon, EyeIcon, PencilIcon } from './Icons';
-import EditRequestModal from './EditRequestModal';
+import ProjectWorkDataModal from './ProjectWorkDataModal';
 import DetailsModal from './DetailsModal';
-import { Criticality, Request, PlanningData } from '../types';
+import { Criticality, PlanningData } from '../types';
 
 const planningData: PlanningData[] = [
     { id: 1, criticidade: Criticality.MEDIA, ordem: 'SS-24-0102-O1', unidade: 'CE 114 - Agudos', descricao: 'Ampliação de 03 salas de aula', situacao: 'Concluída', inicioProjeto: '15/01/2024', saldoProjetoPrazo: 2, saldoProjetoValor: 'R$ 1.907.299,65', inicioObra: '15/03/2024', saldoObraPrazo: 3, saldoObraValor: 'R$ 1.812.699,83', terminoProjeto: '15/03/2024', terminoObra: '15/06/2024', empenho2026: 'R$ 0,00', empenho2027: 'R$ 0,00', empenho2028: 'R$ 0,00', empenho2029: 'R$ 0,00', empenho2030: 'R$ 0,00' },
@@ -51,11 +51,13 @@ const PlurianualSummaryCard: React.FC<{ year: number, demand: number, value: str
 
 
 const PlurianualScreen: React.FC = () => {
+    const [allData, setAllData] = useState<PlanningData[]>(planningData);
     const [selectedYear, setSelectedYear] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isClassificationModalOpen, setIsClassificationModalOpen] = useState(false);
+    const [isProjectWorkModalOpen, setIsProjectWorkModalOpen] = useState(false);
+    const [selectedItemForEdit, setSelectedItemForEdit] = useState<PlanningData | null>(null);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [selectedItemForDetails, setSelectedItemForDetails] = useState<PlanningData | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -70,18 +72,13 @@ const PlurianualScreen: React.FC = () => {
         { year: 2030, demand: 15, value: 'R$ 5.000,00' },
         { year: 2031, demand: 10, value: 'R$ 3.000,00' },
     ];
-
-    const dummyRequestForModal: Request = {
-      id: 0, criticality: Criticality.MINIMA, unit: '', description: '', status: '',
-      currentLocation: '', expectedStartDate: '', hasInfo: false, expectedValue: '', executingUnit: '',
-    };
     
     const filteredData = useMemo(() =>
-        planningData.filter(item =>
+        allData.filter(item =>
             item.unidade.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.situacao.toLowerCase().includes(searchTerm.toLowerCase())
-        ), [searchTerm]
+        ), [allData, searchTerm]
     );
 
     const handleSort = (key: keyof PlanningData) => {
@@ -149,8 +146,19 @@ const PlurianualScreen: React.FC = () => {
         setIsModalOpen(false);
     };
     
-    const handleCloseClassificationModal = () => {
-        setIsClassificationModalOpen(false);
+    const handleEditClick = (item: PlanningData) => {
+        setSelectedItemForEdit(item);
+        setIsProjectWorkModalOpen(true);
+    };
+
+    const handleCloseProjectWorkModal = () => {
+        setIsProjectWorkModalOpen(false);
+        setSelectedItemForEdit(null);
+    };
+
+    const handleSaveProjectWorkData = (updatedData: PlanningData) => {
+        setAllData(prev => prev.map(item => item.id === updatedData.id ? updatedData : item));
+        handleCloseProjectWorkModal();
     };
     
     const handleViewDetails = (item: PlanningData) => {
@@ -214,11 +222,11 @@ const PlurianualScreen: React.FC = () => {
                         </div>
                         <div className="flex items-center space-x-2">
                              <button
-                                onClick={() => setIsClassificationModalOpen(true)}
-                                className="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors"
+                                disabled
+                                className="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
                                 <PencilIcon className="w-5 h-5" />
-                                <span>Editar</span>
+                                <span>Reclassificar</span>
                             </button>
                              <button
                                 className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 transition-colors"
@@ -290,7 +298,7 @@ const PlurianualScreen: React.FC = () => {
                                                     <EyeIcon className="w-5 h-5" />
                                                 </button>
                                                 <button
-                                                    onClick={() => setIsClassificationModalOpen(true)}
+                                                    onClick={() => handleEditClick(item)}
                                                     className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
                                                     aria-label="Editar"
                                                 >
@@ -352,12 +360,11 @@ const PlurianualScreen: React.FC = () => {
                 onClose={handleCloseModal}
                 year={selectedYear}
             />
-             <EditRequestModal
-                isOpen={isClassificationModalOpen}
-                onClose={handleCloseClassificationModal}
-                request={dummyRequestForModal}
-                onSave={handleCloseClassificationModal}
-                title="Solicitação para classificação"
+             <ProjectWorkDataModal
+                isOpen={isProjectWorkModalOpen}
+                onClose={handleCloseProjectWorkModal}
+                data={selectedItemForEdit}
+                onSave={handleSaveProjectWorkData}
             />
             <DetailsModal
                 isOpen={isDetailsModalOpen}

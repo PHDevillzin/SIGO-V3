@@ -153,15 +153,13 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
                                             <button className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors">
                                                 <EyeIcon className="w-5 h-5" />
                                             </button>
-                                            {selectedProfile === 'Planejamento' && (
-                                                <button 
-                                                    onClick={() => handleEditClick(request)}
-                                                    className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
-                                                    aria-label="Editar"
-                                                >
-                                                    <PencilIcon className="w-5 h-5" />
-                                                </button>
-                                            )}
+                                            <button 
+                                                onClick={() => handleEditClick(request)}
+                                                className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
+                                                aria-label="Editar"
+                                            >
+                                                <PencilIcon className="w-5 h-5" />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -210,6 +208,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
                 onClose={handleCloseModal}
                 request={selectedRequest}
                 onSave={handleSaveRequest}
+                title="Solicitação para classificação"
             />
         </>
     );
