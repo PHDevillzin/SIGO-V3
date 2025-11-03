@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import MonthlySummaryModal from './MonthlySummaryModal';
 import AdvancedFilters from './AdvancedFilters';
 import { MagnifyingGlassIcon, FilterIcon, PencilIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, EyeIcon, ArrowsUpDownIcon, ChevronUpIcon, ChevronDownIcon } from './Icons';
@@ -63,6 +63,7 @@ const PlanningScreen: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [sortConfig, setSortConfig] = useState<{ key: keyof PlanningData | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
     const summaryData = [
         { year: 2026, demand: 28, value: 'R$ 15.000,00' },
@@ -136,7 +137,10 @@ const PlanningScreen: React.FC = () => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         return sortedData.slice(startIndex, startIndex + itemsPerPage);
     }, [sortedData, currentPage, itemsPerPage]);
-
+    
+    useEffect(() => {
+        setSelectedIds([]);
+    }, [sortedData, currentPage, itemsPerPage]);
 
     const handleYearSelect = (year: number) => {
         setSelectedYear(year);
@@ -165,6 +169,35 @@ const PlanningScreen: React.FC = () => {
     const handleViewDetails = (item: PlanningData) => {
         setSelectedItemForDetails(item);
         setIsDetailsModalOpen(true);
+    };
+
+    const handleSelectRow = (id: number) => {
+        setSelectedIds(prev => {
+            if (prev.includes(id)) {
+                return prev.filter(rowId => rowId !== id);
+            } else {
+                return [...prev, id];
+            }
+        });
+    };
+
+    const handleSelectAll = () => {
+        const paginatedIds = paginatedData.map(item => item.id);
+        const allOnPageSelected = paginatedData.length > 0 && paginatedIds.every(id => selectedIds.includes(id));
+
+        if (allOnPageSelected) {
+            setSelectedIds(prev => prev.filter(id => !paginatedIds.includes(id)));
+        } else {
+            setSelectedIds(prev => [...new Set([...prev, ...paginatedIds])]);
+        }
+    };
+    
+    const handleEditSelected = () => {
+        if (selectedIds.length !== 1) return;
+        const selectedItem = allData.find(item => item.id === selectedIds[0]);
+        if (selectedItem) {
+            handleEditClick(selectedItem);
+        }
     };
 
     const SortableHeader: React.FC<{
@@ -223,11 +256,12 @@ const PlanningScreen: React.FC = () => {
                         </div>
                         <div className="flex items-center space-x-2">
                              <button
-                                disabled
+                                onClick={handleEditSelected}
+                                disabled={selectedIds.length !== 1}
                                 className="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
                                 <PencilIcon className="w-5 h-5" />
-                                <span>Reclassificar</span>
+                                <span>Editar</span>
                             </button>
                              <button
                                 className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 transition-colors"
@@ -252,7 +286,13 @@ const PlanningScreen: React.FC = () => {
                             <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
                                 <tr>
                                     <th scope="col" className="p-4">
-                                        <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
+                                        <input 
+                                            type="checkbox" 
+                                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                            checked={paginatedData.length > 0 && paginatedData.every(item => selectedIds.includes(item.id))}
+                                            onChange={handleSelectAll}
+                                            aria-label="Selecionar todos na página"
+                                        />
                                     </th>
                                     <SortableHeader columnKey="criticidade" title="Criticidade" />
                                     <SortableHeader columnKey="ordem" title="Ordem" />
@@ -272,7 +312,13 @@ const PlanningScreen: React.FC = () => {
                                 {paginatedData.length > 0 ? paginatedData.map(item => (
                                     <tr key={item.id} className="bg-white border-b hover:bg-gray-50 align-middle">
                                         <td className="p-4">
-                                            <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
+                                            <input 
+                                                type="checkbox" 
+                                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                                checked={selectedIds.includes(item.id)}
+                                                onChange={() => handleSelectRow(item.id)}
+                                                aria-label={`Selecionar item ${item.ordem}`}
+                                            />
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 rounded-md text-xs font-medium ${getCriticalityClass(item.criticidade)}`}>
@@ -293,13 +339,6 @@ const PlanningScreen: React.FC = () => {
                                             <div className="flex items-center justify-center space-x-2">
                                                 <button onClick={() => handleViewDetails(item)} className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" aria-label="Visualizar">
                                                     <EyeIcon className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleEditClick(item)}
-                                                    className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
-                                                    aria-label="Editar"
-                                                >
-                                                    <PencilIcon className="w-5 h-5" />
                                                 </button>
                                             </div>
                                         </td>
