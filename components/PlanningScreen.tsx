@@ -64,6 +64,7 @@ const PlanningScreen: React.FC = () => {
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [sortConfig, setSortConfig] = useState<{ key: keyof PlanningData | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [isToastVisible, setIsToastVisible] = useState(false);
 
     const summaryData = [
         { year: 2026, demand: 28, value: 'R$ 15.000,00' },
@@ -164,6 +165,10 @@ const PlanningScreen: React.FC = () => {
     const handleSaveProjectWorkData = (updatedData: PlanningData) => {
         setAllData(prev => prev.map(item => item.id === updatedData.id ? updatedData : item));
         handleCloseProjectWorkModal();
+        setIsToastVisible(true);
+        setTimeout(() => {
+            setIsToastVisible(false);
+        }, 3000);
     };
     
     const handleViewDetails = (item: PlanningData) => {
@@ -221,6 +226,12 @@ const PlanningScreen: React.FC = () => {
 
     return (
         <>
+            <div 
+              className={`fixed top-6 right-6 bg-green-600 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-transform duration-500 ease-in-out ${isToastVisible ? 'translate-x-0' : 'translate-x-[150%]'}`}
+              role="alert"
+            >
+                <p className="font-semibold">Demanda atualizada com sucesso.</p>
+            </div>
             <div className="space-y-6">
                 <div className="bg-white rounded-lg shadow p-6">
                     <h1 className="text-2xl font-semibold text-gray-800">Tela Planejamento</h1>
