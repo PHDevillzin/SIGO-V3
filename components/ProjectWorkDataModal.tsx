@@ -21,7 +21,6 @@ const ProjectWorkDataModal: React.FC<ProjectWorkDataModalProps> = ({ isOpen, onC
             saldoProjetoValor: data.saldoProjetoValor,
             saldoObraPrazo: data.saldoObraPrazo,
             saldoProjetoPrazo: data.saldoProjetoPrazo,
-            situacao: data.situacao,
         });
     } else {
         setFormData({});
@@ -95,9 +94,13 @@ const ProjectWorkDataModal: React.FC<ProjectWorkDataModalProps> = ({ isOpen, onC
               <label htmlFor="saldoObraPrazo" className="block text-sm font-medium text-gray-700 mb-1">Saldo Obra Prazo (meses)</label>
               <input type="number" id="saldoObraPrazo" name="saldoObraPrazo" value={formData.saldoObraPrazo || ''} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"/>
             </div>
-            <div className="md:col-span-2">
-              <label htmlFor="situacao" className="block text-sm font-medium text-gray-700 mb-1">Situação</label>
-              <input type="text" id="situacao" name="situacao" value={formData.situacao || ''} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed"/>
+            <div>
+              <label htmlFor="situacaoProjeto" className="block text-sm font-medium text-gray-700 mb-1">Situação Projeto</label>
+              <input type="text" id="situacaoProjeto" name="situacaoProjeto" value={data.inicioProjeto !== 'N/A' ? data.situacao : 'N/A'} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed"/>
+            </div>
+            <div>
+              <label htmlFor="situacaoObra" className="block text-sm font-medium text-gray-700 mb-1">Situação Obra</label>
+              <input type="text" id="situacaoObra" name="situacaoObra" value={data.inicioObra !== 'N/A' ? data.situacao : 'N/A'} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed"/>
             </div>
           </div>
         </form>
