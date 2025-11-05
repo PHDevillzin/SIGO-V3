@@ -7,6 +7,9 @@ interface AdvancedFiltersProps {
 }
 
 const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ hideSituacao = false, hideTipologia = false }) => {
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
+
     return (
         <div className="p-6 border-t border-b border-gray-200">
             <div className="flex items-center space-x-2 mb-6">
@@ -31,7 +34,12 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ hideSituacao = false,
                 )}
                 <div>
                     <label htmlFor="origem" className="block text-sm font-medium text-gray-700">Origem</label>
-                    <input type="text" id="origem" placeholder="Filtre por Local Atual" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm" />
+                    <select id="origem" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
+                        <option value="">Selecione o ano</option>
+                        {years.map(year => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
+                    </select>
                 </div>
 
                 {/* Row 2 */}

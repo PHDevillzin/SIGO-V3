@@ -96,11 +96,11 @@ const ProjectWorkDataModal: React.FC<ProjectWorkDataModalProps> = ({ isOpen, onC
             </div>
             <div>
               <label htmlFor="situacaoProjeto" className="block text-sm font-medium text-gray-700 mb-1">Situação Projeto</label>
-              <input type="text" id="situacaoProjeto" name="situacaoProjeto" value={data.inicioProjeto !== 'N/A' ? data.situacao : 'N/A'} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed"/>
+              <input type="text" id="situacaoProjeto" name="situacaoProjeto" value={data.situacaoProjeto || 'N/A'} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed"/>
             </div>
             <div>
               <label htmlFor="situacaoObra" className="block text-sm font-medium text-gray-700 mb-1">Situação Obra</label>
-              <input type="text" id="situacaoObra" name="situacaoObra" value={data.inicioObra !== 'N/A' ? data.situacao : 'N/A'} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed"/>
+              <input type="text" id="situacaoObra" name="situacaoObra" value={data.situacaoObra || 'N/A'} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed"/>
             </div>
           </div>
         </form>

@@ -34,7 +34,9 @@ export interface PlanningData {
   ordem: string;
   unidade: string;
   descricao: string;
-  situacao: string;
+  situacaoObra: string;
+  situacaoProjeto: string;
+  status: string;
   inicioProjeto: string;
   saldoProjetoPrazo: number; // in months
   saldoProjetoValor: string;

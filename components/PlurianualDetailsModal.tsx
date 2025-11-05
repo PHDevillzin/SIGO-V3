@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { XMarkIcon, PencilIcon, PlusIcon, MinusIcon } from './Icons';
 import type { PlanningData } from '../types';
 
-interface DetailsModalProps {
+interface PlurianualDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   data: PlanningData | null;
@@ -196,7 +196,7 @@ const FinancialInfoTab: React.FC<FinancialInfoTabProps> = ({ data, valorHomologa
 };
 
 
-const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, data }) => {
+const PlurianualDetailsModal: React.FC<PlurianualDetailsModalProps> = ({ isOpen, onClose, data }) => {
   const [activeTab, setActiveTab] = useState('details');
   
   if (!isOpen || !data) {
@@ -212,7 +212,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, data }) =>
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" role="dialog" aria-modal="true" aria-labelledby="details-modal-title">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[95vh] flex flex-col">
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 id="details-modal-title" className="text-xl font-semibold text-gray-800">Detalhes</h2>
+          <h2 id="details-modal-title" className="text-xl font-semibold text-gray-800">Detalhes plurianual</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600" aria-label="Fechar">
             <XMarkIcon className="w-6 h-6" />
           </button>
@@ -283,4 +283,4 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, data }) =>
   );
 };
 
-export default DetailsModal;
+export default PlurianualDetailsModal;
