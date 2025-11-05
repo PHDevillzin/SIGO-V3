@@ -67,7 +67,7 @@ const PlurianualScreen: React.FC = () => {
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isProjectWorkModalOpen, setIsProjectWorkModalOpen] = useState(false);
-    const [selectedItemForEdit, setSelectedItemForEdit] = useState<PlanningData | null>(null);
+    const [selectedItemsForEdit, setSelectedItemsForEdit] = useState<PlanningData[] | null>(null);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [selectedItemForDetails, setSelectedItemForDetails] = useState<PlanningData | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -162,18 +162,34 @@ const PlurianualScreen: React.FC = () => {
         setIsModalOpen(false);
     };
     
-    const handleEditClick = (item: PlanningData) => {
-        setSelectedItemForEdit(item);
+    const handleEditSelected = () => {
+        if (selectedIds.length === 0) return;
+        const selectedItems = allData.filter(item => selectedIds.includes(item.id));
+        setSelectedItemsForEdit(selectedItems);
         setIsProjectWorkModalOpen(true);
     };
 
     const handleCloseProjectWorkModal = () => {
         setIsProjectWorkModalOpen(false);
-        setSelectedItemForEdit(null);
+        setSelectedItemsForEdit(null);
     };
 
-    const handleSaveProjectWorkData = (updatedData: PlanningData) => {
-        setAllData(prev => prev.map(item => item.id === updatedData.id ? updatedData : item));
+    const handleSaveProjectWorkData = (updatePayload: Partial<PlanningData>) => {
+        const idsToUpdate = selectedItemsForEdit?.map(item => item.id) ?? [];
+        if (idsToUpdate.length === 0) {
+            handleCloseProjectWorkModal();
+            return;
+        }
+
+        const finalPayload = { ...updatePayload };
+        if (finalPayload.inicioProjeto === '') finalPayload.inicioProjeto = 'N/A';
+        if (finalPayload.inicioObra === '') finalPayload.inicioObra = 'N/A';
+
+        setAllData(prev =>
+            prev.map(item =>
+                idsToUpdate.includes(item.id) ? { ...item, ...finalPayload } : item
+            )
+        );
         handleCloseProjectWorkModal();
         setIsToastVisible(true);
         setTimeout(() => {
@@ -207,14 +223,6 @@ const PlurianualScreen: React.FC = () => {
         }
     };
     
-    const handleEditSelected = () => {
-        if (selectedIds.length !== 1) return;
-        const selectedItem = allData.find(item => item.id === selectedIds[0]);
-        if (selectedItem) {
-            handleEditClick(selectedItem);
-        }
-    };
-
     const SortableHeader: React.FC<{
         columnKey: keyof PlanningData;
         title: string;
@@ -240,7 +248,7 @@ const PlurianualScreen: React.FC = () => {
               className={`fixed top-6 left-6 bg-green-600 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-transform duration-500 ease-in-out ${isToastVisible ? 'translate-x-0' : '-translate-x-[150%]'}`}
               role="alert"
             >
-                <p className="font-semibold">Demanda atualizada com sucesso.</p>
+                <p className="font-semibold">Demanda(s) atualizada(s) com sucesso.</p>
             </div>
             <div className="space-y-6">
                 <div className="bg-white rounded-lg shadow p-6">
@@ -278,7 +286,7 @@ const PlurianualScreen: React.FC = () => {
                         <div className="flex items-center space-x-2">
                              <button
                                 onClick={handleEditSelected}
-                                disabled={selectedIds.length !== 1}
+                                disabled={selectedIds.length === 0}
                                 className="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
                                 <PencilIcon className="w-5 h-5" />
@@ -428,7 +436,7 @@ const PlurianualScreen: React.FC = () => {
              <ProjectWorkDataModal
                 isOpen={isProjectWorkModalOpen}
                 onClose={handleCloseProjectWorkModal}
-                data={selectedItemForEdit}
+                data={selectedItemsForEdit}
                 onSave={handleSaveProjectWorkData}
             />
             <PlurianualDetailsModal
