@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { XMarkIcon, PencilIcon, PlusIcon, MinusIcon } from './Icons';
 import type { PlanningData } from '../types';
 
@@ -6,6 +6,7 @@ interface PlurianualDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   data: PlanningData | null;
+  initialTab?: 'details' | 'financial';
 }
 
 const ReadOnlyField: React.FC<{ label: string; value: string | React.ReactNode; large?: boolean; className?: string; id: string }> = ({ label, value, large = false, className, id }) => (
@@ -196,9 +197,15 @@ const FinancialInfoTab: React.FC<FinancialInfoTabProps> = ({ data, valorHomologa
 };
 
 
-const PlurianualDetailsModal: React.FC<PlurianualDetailsModalProps> = ({ isOpen, onClose, data }) => {
-  const [activeTab, setActiveTab] = useState('details');
+const PlurianualDetailsModal: React.FC<PlurianualDetailsModalProps> = ({ isOpen, onClose, data, initialTab }) => {
+  const [activeTab, setActiveTab] = useState(initialTab || 'details');
   
+  useEffect(() => {
+    if (isOpen) {
+        setActiveTab(initialTab || 'details');
+    }
+  }, [isOpen, initialTab]);
+
   if (!isOpen || !data) {
     return null;
   }

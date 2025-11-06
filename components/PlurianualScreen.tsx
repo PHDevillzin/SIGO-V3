@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import MonthlySummaryModal from './MonthlySummaryModal';
 import AdvancedFilters from './AdvancedFilters';
-import { MagnifyingGlassIcon, FilterIcon, ArrowsUpDownIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon, EyeIcon, PencilIcon } from './Icons';
+import { MagnifyingGlassIcon, FilterIcon, ArrowsUpDownIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon, EyeIcon, PencilIcon, BanknotesIcon } from './Icons';
 import ProjectWorkDataModal from './ProjectWorkDataModal';
 import PlurianualDetailsModal from './PlurianualDetailsModal';
 import { Criticality, PlanningData } from '../types';
@@ -75,6 +75,7 @@ const PlurianualScreen: React.FC = () => {
     const [sortConfig, setSortConfig] = useState<{ key: keyof PlanningData | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [isToastVisible, setIsToastVisible] = useState(false);
+    const [detailsModalInitialTab, setDetailsModalInitialTab] = useState<'details' | 'financial'>('details');
 
     const summaryData = [
         { year: 2026, demand: 28, value: 'R$ 15.000,00' },
@@ -199,6 +200,13 @@ const PlurianualScreen: React.FC = () => {
     
     const handleViewDetails = (item: PlanningData) => {
         setSelectedItemForDetails(item);
+        setDetailsModalInitialTab('details');
+        setIsDetailsModalOpen(true);
+    };
+
+    const handleEmpenhoClick = (item: PlanningData) => {
+        setSelectedItemForDetails(item);
+        setDetailsModalInitialTab('financial');
         setIsDetailsModalOpen(true);
     };
     
@@ -379,6 +387,9 @@ const PlurianualScreen: React.FC = () => {
                                                 <button onClick={() => handleViewDetails(item)} className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" aria-label="Visualizar">
                                                     <EyeIcon className="w-5 h-5" />
                                                 </button>
+                                                <button onClick={() => handleEmpenhoClick(item)} className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition-colors" aria-label="Empenho">
+                                                    <BanknotesIcon className="w-5 h-5" />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -445,6 +456,7 @@ const PlurianualScreen: React.FC = () => {
                 isOpen={isDetailsModalOpen}
                 onClose={() => setIsDetailsModalOpen(false)}
                 data={selectedItemForDetails}
+                initialTab={detailsModalInitialTab}
             />
         </>
     );
