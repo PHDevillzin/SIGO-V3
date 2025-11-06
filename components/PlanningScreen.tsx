@@ -310,7 +310,7 @@ const PlanningScreen: React.FC = () => {
                         </div>
                     </div>
                     
-                    {showAdvancedFilters && <AdvancedFilters hideSituacao hideTipologia />}
+                    {showAdvancedFilters && <AdvancedFilters hideSituacao />}
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left text-gray-500">
@@ -329,6 +329,7 @@ const PlanningScreen: React.FC = () => {
                                     <SortableHeader columnKey="ordem" title="Ordem" />
                                     <SortableHeader columnKey="unidade" title="Unidade" />
                                     <SortableHeader columnKey="descricao" title="Descrição" />
+                                    <th scope="col" className="px-6 py-3 font-semibold">Tipologia</th>
                                     <SortableHeader columnKey="status" title="Status" />
                                     <SortableHeader columnKey="situacaoProjeto" title="Situação Projeto" />
                                     <SortableHeader columnKey="inicioProjeto" title="Início Projeto" />
@@ -361,6 +362,7 @@ const PlanningScreen: React.FC = () => {
                                         <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{item.ordem}</td>
                                         <td className="px-6 py-4">{item.unidade}</td>
                                         <td className="px-6 py-4">{item.descricao}</td>
+                                        <td className="px-6 py-4"></td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(item.status)}`}>
                                                 {item.status}
@@ -384,7 +386,7 @@ const PlanningScreen: React.FC = () => {
                                     </tr>
                                 )) : (
                                    <tr>
-                                        <td colSpan={15} className="text-center py-10 text-gray-500">
+                                        <td colSpan={16} className="text-center py-10 text-gray-500">
                                             Nenhum dado encontrado.
                                         </td>
                                    </tr>
