@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon } from './Icons';
+import type { Request } from '../types';
 
 interface ReclassificationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: any) => void;
   selectedCount: number;
+  request: Request | null;
 }
 
 const investmentCategories = [
@@ -22,7 +24,7 @@ const typologyOptions = [
     'Tipologia D',
 ].sort();
 
-const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount }) => {
+const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request }) => {
   const [formData, setFormData] = useState({
     tipologia: '',
     categoria: '',
@@ -37,37 +39,95 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
   });
 
   useEffect(() => {
-    // Reset form when modal opens
+    const formatDateForInput = (dateString: string | undefined): string => {
+        if (!dateString || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) return '';
+        const [day, month, year] = dateString.split('/');
+        return `${year}-${month}-${day}`;
+    };
+
+    const parseValueToNumberString = (value: string | undefined): string => {
+        if (!value) return '';
+        const cleanedValue = value.toLowerCase().replace('r$', '').trim();
+        let multiplier = 1;
+        if (cleanedValue.endsWith('mi')) {
+            multiplier = 1000000;
+        } else if (cleanedValue.endsWith('mil')) {
+            multiplier = 1000;
+        }
+        const numericPart = parseFloat(cleanedValue.replace(',', '.'));
+        if (isNaN(numericPart)) {
+            return '';
+        }
+        return (numericPart * multiplier).toFixed(2);
+    };
+
     if (isOpen) {
         setFormData({
             tipologia: '',
-            categoria: '',
-            inicioProjeto: '',
-            prazoProjeto: '',
-            valorProjeto: '',
-            terminoProjeto: '',
+            categoria: request?.categoriaInvestimento || '',
+            inicioProjeto: request ? formatDateForInput(request.expectedStartDate) : '',
+            prazoProjeto: request?.prazo?.toString() || '',
+            valorProjeto: request ? parseValueToNumberString(request.expectedValue) : '',
+            terminoProjeto: '', // Will be auto-calculated
             inicioObra: '',
             prazoObra: '',
             valorObra: '',
-            terminoObra: '',
+            terminoObra: '', // Will be auto-calculated
         });
     }
-  }, [isOpen]);
+  }, [isOpen, request]);
   
   const calculateEndDate = (startDate: string, months: string) => {
-      if (!startDate || !months) return '';
-      const date = new Date(startDate);
-      date.setMonth(date.getMonth() + parseInt(months, 10));
-      return date.toLocaleDateString('pt-BR');
+      if (!startDate || !months || parseInt(months, 10) <= 0) return '';
+      try {
+        const date = new Date(startDate);
+        // Handle timezone offset by working in UTC
+        date.setUTCDate(date.getUTCDate() + 1);
+        date.setUTCMonth(date.getUTCMonth() + parseInt(months, 10));
+        return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+      } catch (e) {
+        return '';
+      }
   };
 
   useEffect(() => {
-      setFormData(prev => ({ ...prev, terminoProjeto: calculateEndDate(prev.inicioProjeto, prev.prazoProjeto) }));
-  }, [formData.inicioProjeto, formData.prazoProjeto]);
-  
-  useEffect(() => {
-      setFormData(prev => ({ ...prev, terminoObra: calculateEndDate(prev.inicioObra, prev.prazoObra) }));
-  }, [formData.inicioObra, formData.prazoObra]);
+    // This effect will automatically calculate project/obra end dates and copy values
+    const newTerminoProjeto = calculateEndDate(formData.inicioProjeto, formData.prazoProjeto);
+
+    let newInicioObra = '';
+    let newPrazoObra = '';
+    let newValorObra = '';
+    let newTerminoObra = '';
+
+    // If project end date is valid, calculate subsequent obra fields
+    if (newTerminoProjeto) {
+        // Parse dd/mm/yyyy to create a Date object
+        const [day, month, year] = newTerminoProjeto.split('/').map(Number);
+        const projectEndDate = new Date(Date.UTC(year, month - 1, day));
+        
+        // Add 6 months for obra start date
+        projectEndDate.setUTCMonth(projectEndDate.getUTCMonth() + 6);
+        
+        // Format as YYYY-MM-DD for the date input
+        newInicioObra = projectEndDate.toISOString().split('T')[0];
+        
+        // Copy project duration and value to obra
+        newPrazoObra = formData.prazoProjeto || '';
+        newValorObra = formData.valorProjeto || '';
+
+        // Now, calculate obra end date using the newly derived values
+        newTerminoObra = calculateEndDate(newInicioObra, newPrazoObra);
+    }
+
+    setFormData(prev => ({
+        ...prev,
+        terminoProjeto: newTerminoProjeto,
+        inicioObra: newInicioObra,
+        prazoObra: newPrazoObra,
+        valorObra: newValorObra,
+        terminoObra: newTerminoObra,
+    }));
+  }, [formData.inicioProjeto, formData.prazoProjeto, formData.valorProjeto]);
 
 
   if (!isOpen) {
@@ -96,10 +156,10 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
           </button>
         </div>
         <form id="reclassification-form" onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-6">
-          {selectedCount > 0 && (
+          {selectedCount > 1 && (
             <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700" role="alert">
               <p className="font-bold">Atenção</p>
-              <p>Você está reclassificando {selectedCount} demanda{selectedCount > 1 ? 's' : ''}. Os dados inseridos serão aplicados a todos os itens selecionados.</p>
+              <p>Você está reclassificando {selectedCount} demandas. Os dados inseridos serão aplicados a todos os itens selecionados.</p>
             </div>
           )}
           {/* Section for Tipologia and Categoria */}
@@ -150,7 +210,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
                 </div>
                 <div>
                     <label htmlFor="valorProjeto" className="block text-sm font-medium text-gray-700 mb-1">Valor projeto</label>
-                    <input type="text" id="valorProjeto" name="valorProjeto" value={formData.valorProjeto} onChange={handleChange} placeholder="R$ 0,00" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
+                    <input type="number" step="0.01" id="valorProjeto" name="valorProjeto" value={formData.valorProjeto} onChange={handleChange} placeholder="0.00" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
                 </div>
                  <div>
                     <label htmlFor="terminoProjeto" className="block text-sm font-medium text-gray-700 mb-1">Término</label>
@@ -173,7 +233,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
               </div>
               <div>
                 <label htmlFor="valorObra" className="block text-sm font-medium text-gray-700 mb-1">Valor obra</label>
-                <input type="text" id="valorObra" name="valorObra" value={formData.valorObra} onChange={handleChange} placeholder="R$ 0,00" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
+                <input type="number" step="0.01" id="valorObra" name="valorObra" value={formData.valorObra} onChange={handleChange} placeholder="0.00" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
               </div>
               <div>
                 <label htmlFor="terminoObra" className="block text-sm font-medium text-gray-700 mb-1">Término</label>

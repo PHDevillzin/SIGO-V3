@@ -2,32 +2,31 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { Request } from '../types';
 import { Criticality } from '../types';
 import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
-import EditRequestModal from './EditRequestModal';
 import AdvancedFilters from './AdvancedFilters';
 import ReclassificationModal from './ReclassificationModal';
 
 const initialRequests: Request[] = [
-    { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Santo An...', description: 'Reforma Gera...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO' },
-    { id: 2, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Ambientação ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2025', hasInfo: false, expectedValue: '300 mil', executingUnit: 'GSO' },
-    { id: 3, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Ambientação ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO' },
-    { id: 4, criticality: Criticality.CRITICA, unit: 'Nova Unidade', description: 'Construção de...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2026', hasInfo: false, expectedValue: '50 mi', executingUnit: 'GSO' },
-    { id: 5, criticality: Criticality.MEDIA, unit: 'CAT Sertãozin...', description: 'Execução com...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2026', hasInfo: true, expectedValue: '350 mil', executingUnit: 'Unidade' },
-    { id: 6, criticality: Criticality.MEDIA, unit: 'CE 342 - Jardi...', description: 'Instalação de I...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2026', hasInfo: true, expectedValue: '425 mil', executingUnit: 'Unidade' },
-    { id: 7, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'teste ciência s...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '04/11/2025', hasInfo: false, expectedValue: '200 mil', executingUnit: 'GSO' },
-    { id: 8, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'ciencia senai ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'Unidade' },
-    { id: 9, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: '11350310 - ci...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '220 mil', executingUnit: 'GSO' },
-    { id: 10, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: '02101251- tes...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO' },
-    { id: 11, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: 'ciÊncia 03100...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '500 mil', executingUnit: 'GSO' },
-    { id: 12, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: 'teste gso', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '200 mil', executingUnit: 'GSO' },
-    { id: 13, criticality: Criticality.MINIMA, unit: 'CAT Ribeirão ...', description: 'Instalação de ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO' },
-    { id: 14, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: '02101306 - ci...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '04/11/2027', hasInfo: true, expectedValue: '200 mil', executingUnit: 'GSO' },
-    { id: 15, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Nova Demanda ...', status: 'Em Aprovação', currentLocation: 'Diretoria', expectedStartDate: '10/12/2025', hasInfo: false, expectedValue: '150 mil', executingUnit: 'Sede' },
-    { id: 16, criticality: Criticality.IMEDIATA, unit: 'CAT Tatuapé', description: 'Reforma Urgente', status: 'Planejamento', currentLocation: 'GSO', expectedStartDate: '01/02/2026', hasInfo: false, expectedValue: '1.2 mi', executingUnit: 'GSO' },
-    { id: 17, criticality: Criticality.MEDIA, unit: 'Escola SENAI', description: 'Upgrade de Lab...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '08/08/2026', hasInfo: false, expectedValue: '750 mil', executingUnit: 'Unidade' },
-    { id: 18, criticality: Criticality.MINIMA, unit: 'CAT Osasco', description: 'Manutenção Rot...', status: 'Concluído', currentLocation: 'Unidade', expectedStartDate: '03/03/2024', hasInfo: false, expectedValue: '50 mil', executingUnit: 'Unidade' },
-    { id: 19, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Expansão de ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '09/09/2027', hasInfo: false, expectedValue: '2.5 mi', executingUnit: 'GSO' },
-    { id: 20, criticality: Criticality.MEDIA, unit: 'CAT Campinas', description: 'Reforma de Fachada', status: 'Em Execução', currentLocation: 'Unidade', expectedStartDate: '07/06/2025', hasInfo: false, expectedValue: '400 mil', executingUnit: 'Unidade' },
-    { id: 21, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'Pintura Interna', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '11/11/2025', hasInfo: false, expectedValue: '90 mil', executingUnit: 'GSO' },
+    { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Santo An...', description: 'Reforma Gera...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P' },
+    { id: 2, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Ambientação ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2025', hasInfo: false, expectedValue: '300 mil', executingUnit: 'GSO', prazo: 6, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SESI', ordem: 'SS-25-0002-O' },
+    { id: 3, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Ambientação ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO', prazo: 6, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SESI', ordem: 'SS-25-0003-O' },
+    { id: 4, criticality: Criticality.CRITICA, unit: 'Nova Unidade', description: 'Construção de...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2026', hasInfo: false, expectedValue: '50 mi', executingUnit: 'GSO', prazo: 36, categoriaInvestimento: 'Nova Unidade', entidade: 'SENAI', ordem: 'SS-26-0004-P' },
+    { id: 5, criticality: Criticality.MEDIA, unit: 'CAT Sertãozin...', description: 'Execução com...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2026', hasInfo: true, expectedValue: '350 mil', executingUnit: 'Unidade', prazo: 8, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-26-0005-O' },
+    { id: 6, criticality: Criticality.MEDIA, unit: 'CE 342 - Jardi...', description: 'Instalação de I...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2026', hasInfo: true, expectedValue: '425 mil', executingUnit: 'Unidade', prazo: 10, categoriaInvestimento: 'Reforma Operacional', entidade: 'SESI', ordem: 'SS-26-0006-O' },
+    { id: 7, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'teste ciência s...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '04/11/2025', hasInfo: false, expectedValue: '200 mil', executingUnit: 'GSO', prazo: 4, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0007-P' },
+    { id: 8, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'ciencia senai ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'Unidade', prazo: 5, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0008-P' },
+    { id: 9, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: '11350310 - ci...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '220 mil', executingUnit: 'GSO', prazo: 4, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0009-P' },
+    { id: 10, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: '02101251- tes...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO', prazo: 5, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0010-P' },
+    { id: 11, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: 'ciÊncia 03100...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '500 mil', executingUnit: 'GSO', prazo: 12, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-25-0011-O' },
+    { id: 12, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: 'teste gso', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '200 mil', executingUnit: 'GSO', prazo: 3, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0012-P' },
+    { id: 13, criticality: Criticality.MINIMA, unit: 'CAT Ribeirão ...', description: 'Instalação de ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO', prazo: 5, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0013-O' },
+    { id: 14, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: '02101306 - ci...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '04/11/2027', hasInfo: true, expectedValue: '200 mil', executingUnit: 'GSO', prazo: 4, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-27-0014-P' },
+    { id: 15, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Nova Demanda ...', status: 'Em Aprovação', currentLocation: 'Diretoria', expectedStartDate: '10/12/2025', hasInfo: false, expectedValue: '150 mil', executingUnit: 'Sede', prazo: 3, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SESI', ordem: 'SS-25-0015-P' },
+    { id: 16, criticality: Criticality.IMEDIATA, unit: 'CAT Tatuapé', description: 'Reforma Urgente', status: 'Planejamento', currentLocation: 'GSO', expectedStartDate: '01/02/2026', hasInfo: false, expectedValue: '1.2 mi', executingUnit: 'GSO', prazo: 18, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-26-0016-P' },
+    { id: 17, criticality: Criticality.MEDIA, unit: 'Escola SENAI', description: 'Upgrade de Lab...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '08/08/2026', hasInfo: false, expectedValue: '750 mil', executingUnit: 'Unidade', prazo: 12, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-26-0017-O' },
+    { id: 18, criticality: Criticality.MINIMA, unit: 'CAT Osasco', description: 'Manutenção Rot...', status: 'Concluído', currentLocation: 'Unidade', expectedStartDate: '03/03/2024', hasInfo: false, expectedValue: '50 mil', executingUnit: 'Unidade', prazo: 2, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-24-0018-P' },
+    { id: 19, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Expansão de ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '09/09/2027', hasInfo: false, expectedValue: '2.5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SESI', ordem: 'SS-27-0019-P' },
+    { id: 20, criticality: Criticality.MEDIA, unit: 'CAT Campinas', description: 'Reforma de Fachada', status: 'Em Execução', currentLocation: 'Unidade', expectedStartDate: '07/06/2025', hasInfo: false, expectedValue: '400 mil', executingUnit: 'Unidade', prazo: 9, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-25-0020-O' },
+    { id: 21, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'Pintura Interna', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '11/11/2025', hasInfo: false, expectedValue: '90 mil', executingUnit: 'GSO', prazo: 3, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0021-P' },
 ];
 
 const getCriticalityClass = (criticality: Criticality) => {
@@ -48,9 +47,8 @@ interface RequestsTableProps {
 const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentView }) => {
     const [requests, setRequests] = useState<Request[]>(initialRequests);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isReclassificationModalOpen, setIsReclassificationModalOpen] = useState(false);
-    const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
+    const [selectedRequestForReclassification, setSelectedRequestForReclassification] = useState<Request | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -76,26 +74,12 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         setSelectedIds([]);
     }, [paginatedRequests]);
 
-    const handleEditClick = (request: Request) => {
-        setSelectedRequest(request);
-        setIsEditModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setIsEditModalOpen(false);
-        setSelectedRequest(null);
-    };
-
-    const handleSaveRequest = (updatedRequest: Request) => {
-        setRequests(prev => prev.map(r => r.id === updatedRequest.id ? updatedRequest : r));
-        handleCloseModal();
-    };
-
     const handleSaveReclassification = (data: any) => {
         console.log('Reclassifying items:', selectedIds, 'with data:', data);
         // Here you would typically update the state with the new data
         setIsReclassificationModalOpen(false);
         setSelectedIds([]);
+        setSelectedRequestForReclassification(null);
     };
 
     const handleSelectRow = (id: number) => {
@@ -119,7 +103,15 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         }
     };
     
-    const modalTitle = isReclassificationView ? "Solicitação para reclassificação" : "Solicitação para classificação";
+    const handleOpenReclassificationModal = () => {
+        if (selectedIds.length === 1) {
+            const requestToReclassify = requests.find(r => r.id === selectedIds[0]);
+            setSelectedRequestForReclassification(requestToReclassify || null);
+        } else {
+            setSelectedRequestForReclassification(null); // For bulk edit, modal starts empty
+        }
+        setIsReclassificationModalOpen(true);
+    };
 
     return (
         <>
@@ -143,7 +135,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     <div className="flex items-center space-x-2">
                         {isReclassificationView && (
                              <button
-                                onClick={() => setIsReclassificationModalOpen(true)}
+                                onClick={handleOpenReclassificationModal}
                                 disabled={selectedIds.length === 0}
                                 className="flex items-center space-x-2 bg-purple-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-purple-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
@@ -182,10 +174,18 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                 <th scope="col" className="px-6 py-3 font-semibold">Unidade</th>
                                 <th scope="col" className="px-6 py-3 font-semibold">Descrição</th>
                                 <th scope="col" className="px-6 py-3 font-semibold">Status</th>
-                                <th scope="col" className="px-6 py-3 font-semibold">Local Atual</th>
+                                {!isReclassificationView && <th scope="col" className="px-6 py-3 font-semibold">Local Atual</th>}
                                 <th scope="col" className="px-6 py-3 font-semibold">Início Esperado</th>
+                                {isReclassificationView && <th scope="col" className="px-6 py-3 font-semibold text-center">Prazo (meses)</th>}
                                 <th scope="col" className="px-6 py-3 font-semibold">Valor Esperado</th>
-                                <th scope="col" className="px-6 py-3 font-semibold">Unidade Exec...</th>
+                                {isReclassificationView && (
+                                    <>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Categoria Investimento</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Entidade</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Ordem</th>
+                                    </>
+                                )}
+                                {!isReclassificationView && <th scope="col" className="px-6 py-3 font-semibold">Unidade Exec...</th>}
                                 <th scope="col" className="px-6 py-3 font-semibold text-center">Ações</th>
                             </tr>
                         </thead>
@@ -211,29 +211,28 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{request.unit}</td>
                                     <td className="px-6 py-4">{request.description}</td>
                                     <td className="px-6 py-4">{request.status}</td>
-                                    <td className="px-6 py-4">{request.currentLocation}</td>
+                                    {!isReclassificationView && <td className="px-6 py-4">{request.currentLocation}</td>}
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center space-x-1">
                                         <span>{request.expectedStartDate}</span>
                                         {request.hasInfo && <InformationCircleIcon className="w-5 h-5 text-gray-400" />}
                                         </div>
                                     </td>
+                                    {isReclassificationView && <td className="px-6 py-4 text-center">{request.prazo}</td>}
                                     <td className="px-6 py-4">{request.expectedValue}</td>
-                                    <td className="px-6 py-4">{request.executingUnit}</td>
+                                    {isReclassificationView && (
+                                        <>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.categoriaInvestimento}</td>
+                                            <td className="px-6 py-4">{request.entidade}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.ordem}</td>
+                                        </>
+                                    )}
+                                    {!isReclassificationView && <td className="px-6 py-4">{request.executingUnit}</td>}
                                     <td className="px-6 py-4">
                                         <div className="flex items-center justify-center space-x-2">
                                             <button className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors">
                                                 <EyeIcon className="w-5 h-5" />
                                             </button>
-                                            {!isReclassificationView && (
-                                                <button 
-                                                    onClick={() => handleEditClick(request)}
-                                                    className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
-                                                    aria-label="Editar"
-                                                >
-                                                    <PencilIcon className="w-5 h-5" />
-                                                </button>
-                                            )}
                                         </div>
                                     </td>
                                 </tr>
@@ -277,18 +276,12 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     </div>
                 </div>
             </div>
-            <EditRequestModal
-                isOpen={isEditModalOpen}
-                onClose={handleCloseModal}
-                request={selectedRequest}
-                onSave={handleSaveRequest}
-                title={modalTitle}
-            />
             <ReclassificationModal
                 isOpen={isReclassificationModalOpen}
                 onClose={() => setIsReclassificationModalOpen(false)}
                 onSave={handleSaveReclassification}
                 selectedCount={selectedIds.length}
+                request={selectedRequestForReclassification}
             />
         </>
     );

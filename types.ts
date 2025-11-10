@@ -18,6 +18,10 @@ export interface Request {
   hasInfo: boolean;
   expectedValue: string;
   executingUnit: string;
+  prazo?: number;
+  categoriaInvestimento?: string;
+  entidade?: string;
+  ordem?: string;
 }
 
 export interface SummaryData {
