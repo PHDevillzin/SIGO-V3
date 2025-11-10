@@ -22,6 +22,12 @@ const App: React.FC = () => {
         { title: 'Total Geral', count: 20, value: 'R$ 154.890.000,00', color: 'border-orange-400', icon: CalculatorIcon },
     ];
 
+    const isSolicitacoesView = currentView === 'solicitacoes' || currentView === 'solicitacoes_reclassificacao';
+    const solicitacoesTitle = currentView === 'solicitacoes' 
+        ? 'Solicitações' 
+        : 'Solicitações para Reclassificação';
+
+
   return (
     <div className="flex h-screen bg-[#F0F2F5] font-sans">
       <Sidebar 
@@ -31,15 +37,15 @@ const App: React.FC = () => {
         setCurrentView={setCurrentView}
       />
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-        {currentView === 'solicitacoes' && (
+        {isSolicitacoesView && (
           <>
-            <Header title="Solicitações" selectedProfile={selectedProfile} />
+            <Header title={solicitacoesTitle} selectedProfile={selectedProfile} />
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 my-6">
               {summaryData.map((data, index) => (
                 <SummaryCard key={index} {...data} />
               ))}
             </div>
-            <RequestsTable selectedProfile={selectedProfile} />
+            <RequestsTable selectedProfile={selectedProfile} currentView={currentView} />
           </>
         )}
         {currentView === 'planejamento' && <PlanningScreen />}

@@ -48,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
   }, [setSelectedProfile]);
 
   useEffect(() => {
-    const isSolicitacoes = currentView === 'solicitacoes' || currentView === 'solicitacoes_aprovacao';
+    const isSolicitacoes = currentView === 'solicitacoes' || currentView === 'solicitacoes_reclassificacao';
     const isGerenciamento = currentView === 'planejamento' || currentView === 'plurianual';
     
     setIsSolicitacoesMenuOpen(isSolicitacoes);
@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
         <div>
           <button
             onClick={() => setIsSolicitacoesMenuOpen(prev => !prev)}
-            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${(currentView === 'solicitacoes' || currentView === 'solicitacoes_aprovacao') ? 'bg-white/10 text-white' : ''}`}
+            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${(currentView === 'solicitacoes' || currentView === 'solicitacoes_reclassificacao') ? 'bg-white/10 text-white' : ''}`}
           >
             <div className="flex items-center space-x-3">
               <ListIcon className="w-5 h-5" />
@@ -93,9 +93,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
               />
                <NavItem 
                 icon={DocumentDuplicateIcon}
-                label="Solicitações para classificação"
-                active={currentView === 'solicitacoes_classificação'}
-                onClick={() => setCurrentView('solicitacoes_classificação')}
+                label="Solicitações para reclassificação"
+                active={currentView === 'solicitacoes_reclassificacao'}
+                onClick={() => setCurrentView('solicitacoes_reclassificacao')}
               />
             </div>
           )}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Request } from '../types';
 import { Criticality } from '../types';
 import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
@@ -41,9 +41,10 @@ const getCriticalityClass = (criticality: Criticality) => {
 
 interface RequestsTableProps {
   selectedProfile: string;
+  currentView: string;
 }
 
-const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
+const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentView }) => {
     const [requests, setRequests] = useState<Request[]>(initialRequests);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,7 +52,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
+    const isReclassificationView = currentView === 'solicitacoes_reclassificacao';
 
     const filteredRequests = useMemo(() =>
         requests.filter(request =>
@@ -67,6 +70,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
         return filteredRequests.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredRequests, currentPage, itemsPerPage]);
 
+    useEffect(() => {
+        setSelectedIds([]);
+    }, [paginatedRequests]);
 
     const handleEditClick = (request: Request) => {
         setSelectedRequest(request);
@@ -82,6 +88,29 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
         setRequests(prev => prev.map(r => r.id === updatedRequest.id ? updatedRequest : r));
         handleCloseModal();
     };
+
+    const handleSelectRow = (id: number) => {
+        setSelectedIds(prev => {
+            if (prev.includes(id)) {
+                return prev.filter(rowId => rowId !== id);
+            } else {
+                return [...prev, id];
+            }
+        });
+    };
+
+    const handleSelectAll = () => {
+        const paginatedIds = paginatedRequests.map(item => item.id);
+        const allOnPageSelected = paginatedRequests.length > 0 && paginatedIds.every(id => selectedIds.includes(id));
+
+        if (allOnPageSelected) {
+            setSelectedIds(prev => prev.filter(id => !paginatedIds.includes(id)));
+        } else {
+            setSelectedIds(prev => [...new Set([...prev, ...paginatedIds])]);
+        }
+    };
+    
+    const modalTitle = isReclassificationView ? "Solicitação para reclassificação" : "Solicitação para classificação";
 
     return (
         <>
@@ -102,13 +131,24 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
                             className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    <button 
-                        onClick={() => setShowAdvancedFilters(prev => !prev)}
-                        className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 transition-colors"
-                    >
-                        <FilterIcon className="w-5 h-5" />
-                        <span>Filtros Avançados</span>
-                    </button>
+                    <div className="flex items-center space-x-2">
+                        {isReclassificationView && (
+                             <button
+                                disabled={selectedIds.length === 0}
+                                className="flex items-center space-x-2 bg-purple-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-purple-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                                <PencilIcon className="w-5 h-5" />
+                                <span>Reclassificar</span>
+                            </button>
+                        )}
+                        <button 
+                            onClick={() => setShowAdvancedFilters(prev => !prev)}
+                            className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 transition-colors"
+                        >
+                            <FilterIcon className="w-5 h-5" />
+                            <span>Filtros Avançados</span>
+                        </button>
+                    </div>
                 </div>
 
                 {showAdvancedFilters && <AdvancedFilters />}
@@ -117,6 +157,17 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
                     <table className="w-full text-sm text-left text-gray-500">
                         <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
                             <tr>
+                                {isReclassificationView && (
+                                    <th scope="col" className="p-4">
+                                        <input 
+                                            type="checkbox" 
+                                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                            checked={paginatedRequests.length > 0 && paginatedRequests.every(item => selectedIds.includes(item.id))}
+                                            onChange={handleSelectAll}
+                                            aria-label="Selecionar todos na página"
+                                        />
+                                    </th>
+                                )}
                                 <th scope="col" className="px-6 py-3 font-semibold">Criticidade</th>
                                 <th scope="col" className="px-6 py-3 font-semibold">Unidade</th>
                                 <th scope="col" className="px-6 py-3 font-semibold">Descrição</th>
@@ -131,6 +182,17 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
                         <tbody>
                             {paginatedRequests.map(request => (
                                 <tr key={request.id} className="bg-white border-b hover:bg-gray-50 align-middle">
+                                    {isReclassificationView && (
+                                         <td className="p-4">
+                                            <input 
+                                                type="checkbox" 
+                                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                                checked={selectedIds.includes(request.id)}
+                                                onChange={() => handleSelectRow(request.id)}
+                                                aria-label={`Selecionar item ${request.id}`}
+                                            />
+                                        </td>
+                                    )}
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-md text-xs font-medium ${getCriticalityClass(request.criticality)}`}>
                                             {request.criticality}
@@ -153,13 +215,15 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
                                             <button className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors">
                                                 <EyeIcon className="w-5 h-5" />
                                             </button>
-                                            <button 
-                                                onClick={() => handleEditClick(request)}
-                                                className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
-                                                aria-label="Editar"
-                                            >
-                                                <PencilIcon className="w-5 h-5" />
-                                            </button>
+                                            {!isReclassificationView && (
+                                                <button 
+                                                    onClick={() => handleEditClick(request)}
+                                                    className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
+                                                    aria-label="Editar"
+                                                >
+                                                    <PencilIcon className="w-5 h-5" />
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
@@ -208,7 +272,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile }) => {
                 onClose={handleCloseModal}
                 request={selectedRequest}
                 onSave={handleSaveRequest}
-                title="Solicitação para classificação"
+                title={modalTitle}
             />
         </>
     );
