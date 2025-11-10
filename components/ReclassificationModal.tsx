@@ -38,6 +38,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     terminoObra: '',
   });
 
+  // Effect for initial population of the form
   useEffect(() => {
     const formatDateForInput = (dateString: string | undefined): string => {
         if (!dateString || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) return '';
@@ -62,18 +63,33 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     };
 
     if (isOpen) {
-        setFormData({
+        const initialState = {
             tipologia: '',
             categoria: request?.categoriaInvestimento || '',
-            inicioProjeto: request ? formatDateForInput(request.expectedStartDate) : '',
-            prazoProjeto: request?.prazo?.toString() || '',
-            valorProjeto: request ? parseValueToNumberString(request.expectedValue) : '',
-            terminoProjeto: '', // Will be auto-calculated
+            inicioProjeto: '',
+            prazoProjeto: '',
+            valorProjeto: '',
+            terminoProjeto: '',
             inicioObra: '',
             prazoObra: '',
             valorObra: '',
-            terminoObra: '', // Will be auto-calculated
-        });
+            terminoObra: '',
+        };
+
+        if (request) {
+            // EXCEPTION RULE: If 'Baixa Complexidade', populate 'Obra' fields directly.
+            if (request.categoriaInvestimento === 'Baixa Complexidade') {
+                initialState.inicioObra = formatDateForInput(request.expectedStartDate);
+                initialState.prazoObra = request.prazo?.toString() || '';
+                initialState.valorObra = parseValueToNumberString(request.expectedValue);
+            } else {
+                // DEFAULT RULE: Populate 'Projeto' fields.
+                initialState.inicioProjeto = formatDateForInput(request.expectedStartDate);
+                initialState.prazoProjeto = request.prazo?.toString() || '';
+                initialState.valorProjeto = parseValueToNumberString(request.expectedValue);
+            }
+        }
+        setFormData(initialState);
     }
   }, [isOpen, request]);
   
@@ -81,8 +97,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
       if (!startDate || !months || parseInt(months, 10) <= 0) return '';
       try {
         const date = new Date(startDate);
-        // Handle timezone offset by working in UTC
-        date.setUTCDate(date.getUTCDate() + 1);
+        date.setUTCDate(date.getUTCDate() + 1); // Handle timezone offset by working in UTC
         date.setUTCMonth(date.getUTCMonth() + parseInt(months, 10));
         return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
       } catch (e) {
@@ -90,44 +105,59 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
       }
   };
 
+  // Effect for all automatic calculations
   useEffect(() => {
-    // This effect will automatically calculate project/obra end dates and copy values
+    if (!isOpen) return;
+
+    // --- PROJECT CALCULATION ---
     const newTerminoProjeto = calculateEndDate(formData.inicioProjeto, formData.prazoProjeto);
 
-    let newInicioObra = '';
-    let newPrazoObra = '';
-    let newValorObra = '';
-    let newTerminoObra = '';
+    // --- OBRA CALCULATION (with Project cascade) ---
+    let finalInicioObra = formData.inicioObra;
+    let finalPrazoObra = formData.prazoObra;
+    let finalValorObra = formData.valorObra;
 
-    // If project end date is valid, calculate subsequent obra fields
+    // Cascade from Project to Obra if a valid project end date is calculated
     if (newTerminoProjeto) {
-        // Parse dd/mm/yyyy to create a Date object
         const [day, month, year] = newTerminoProjeto.split('/').map(Number);
         const projectEndDate = new Date(Date.UTC(year, month - 1, day));
-        
-        // Add 6 months for obra start date
         projectEndDate.setUTCMonth(projectEndDate.getUTCMonth() + 6);
         
-        // Format as YYYY-MM-DD for the date input
-        newInicioObra = projectEndDate.toISOString().split('T')[0];
-        
-        // Copy project duration and value to obra
-        newPrazoObra = formData.prazoProjeto || '';
-        newValorObra = formData.valorProjeto || '';
-
-        // Now, calculate obra end date using the newly derived values
-        newTerminoObra = calculateEndDate(newInicioObra, newPrazoObra);
+        finalInicioObra = projectEndDate.toISOString().split('T')[0];
+        finalPrazoObra = formData.prazoProjeto || '';
+        finalValorObra = formData.valorProjeto || '';
     }
 
-    setFormData(prev => ({
-        ...prev,
-        terminoProjeto: newTerminoProjeto,
-        inicioObra: newInicioObra,
-        prazoObra: newPrazoObra,
-        valorObra: newValorObra,
-        terminoObra: newTerminoObra,
-    }));
-  }, [formData.inicioProjeto, formData.prazoProjeto, formData.valorProjeto]);
+    const newTerminoObra = calculateEndDate(finalInicioObra, finalPrazoObra);
+    
+    // Update state only if values have changed to prevent infinite loops
+    setFormData(prev => {
+        if (
+            prev.terminoProjeto !== newTerminoProjeto ||
+            prev.inicioObra !== finalInicioObra ||
+            prev.prazoObra !== finalPrazoObra ||
+            prev.valorObra !== finalValorObra ||
+            prev.terminoObra !== newTerminoObra
+        ) {
+            return {
+                ...prev,
+                terminoProjeto: newTerminoProjeto,
+                inicioObra: finalInicioObra,
+                prazoObra: finalPrazoObra,
+                valorObra: finalValorObra,
+                terminoObra: newTerminoObra,
+            };
+        }
+        return prev;
+    });
+  }, [
+      isOpen,
+      formData.inicioProjeto, 
+      formData.prazoProjeto, 
+      formData.valorProjeto,
+      formData.inicioObra,
+      formData.prazoObra,
+  ]);
 
 
   if (!isOpen) {
