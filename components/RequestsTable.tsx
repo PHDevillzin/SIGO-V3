@@ -4,6 +4,7 @@ import { Criticality } from '../types';
 import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
 import EditRequestModal from './EditRequestModal';
 import AdvancedFilters from './AdvancedFilters';
+import ReclassificationModal from './ReclassificationModal';
 
 const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Santo An...', description: 'Reforma Gera...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO' },
@@ -47,7 +48,8 @@ interface RequestsTableProps {
 const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentView }) => {
     const [requests, setRequests] = useState<Request[]>(initialRequests);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isReclassificationModalOpen, setIsReclassificationModalOpen] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -76,17 +78,24 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
     const handleEditClick = (request: Request) => {
         setSelectedRequest(request);
-        setIsModalOpen(true);
+        setIsEditModalOpen(true);
     };
 
     const handleCloseModal = () => {
-        setIsModalOpen(false);
+        setIsEditModalOpen(false);
         setSelectedRequest(null);
     };
 
     const handleSaveRequest = (updatedRequest: Request) => {
         setRequests(prev => prev.map(r => r.id === updatedRequest.id ? updatedRequest : r));
         handleCloseModal();
+    };
+
+    const handleSaveReclassification = (data: any) => {
+        console.log('Reclassifying items:', selectedIds, 'with data:', data);
+        // Here you would typically update the state with the new data
+        setIsReclassificationModalOpen(false);
+        setSelectedIds([]);
     };
 
     const handleSelectRow = (id: number) => {
@@ -134,6 +143,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     <div className="flex items-center space-x-2">
                         {isReclassificationView && (
                              <button
+                                onClick={() => setIsReclassificationModalOpen(true)}
                                 disabled={selectedIds.length === 0}
                                 className="flex items-center space-x-2 bg-purple-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-purple-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
@@ -268,11 +278,17 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 </div>
             </div>
             <EditRequestModal
-                isOpen={isModalOpen}
+                isOpen={isEditModalOpen}
                 onClose={handleCloseModal}
                 request={selectedRequest}
                 onSave={handleSaveRequest}
                 title={modalTitle}
+            />
+            <ReclassificationModal
+                isOpen={isReclassificationModalOpen}
+                onClose={() => setIsReclassificationModalOpen(false)}
+                onSave={handleSaveReclassification}
+                selectedCount={selectedIds.length}
             />
         </>
     );
