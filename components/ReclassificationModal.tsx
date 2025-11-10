@@ -24,6 +24,30 @@ const typologyOptions = [
     'Tipologia D',
 ].sort();
 
+// Helper functions moved outside component for reuse
+const formatDateForInput = (dateString: string | undefined): string => {
+    if (!dateString || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) return '';
+    const [day, month, year] = dateString.split('/');
+    return `${year}-${month}-${day}`;
+};
+
+const parseValueToNumberString = (value: string | undefined): string => {
+    if (!value) return '';
+    const cleanedValue = value.toLowerCase().replace('r$', '').trim();
+    let multiplier = 1;
+    if (cleanedValue.endsWith('mi')) {
+        multiplier = 1000000;
+    } else if (cleanedValue.endsWith('mil')) {
+        multiplier = 1000;
+    }
+    const numericPart = parseFloat(cleanedValue.replace(',', '.'));
+    if (isNaN(numericPart)) {
+        return '';
+    }
+    return (numericPart * multiplier).toFixed(2);
+};
+
+
 const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request }) => {
   const [formData, setFormData] = useState({
     tipologia: '',
@@ -38,30 +62,20 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     terminoObra: '',
   });
 
+  const calculateEndDate = (startDate: string, months: string) => {
+      if (!startDate || !months || parseInt(months, 10) <= 0) return '';
+      try {
+        const date = new Date(startDate);
+        date.setUTCDate(date.getUTCDate() + 1); // Handle timezone offset by working in UTC
+        date.setUTCMonth(date.getUTCMonth() + parseInt(months, 10));
+        return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+      } catch (e) {
+        return '';
+      }
+  };
+
   // Effect for initial population of the form
   useEffect(() => {
-    const formatDateForInput = (dateString: string | undefined): string => {
-        if (!dateString || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) return '';
-        const [day, month, year] = dateString.split('/');
-        return `${year}-${month}-${day}`;
-    };
-
-    const parseValueToNumberString = (value: string | undefined): string => {
-        if (!value) return '';
-        const cleanedValue = value.toLowerCase().replace('r$', '').trim();
-        let multiplier = 1;
-        if (cleanedValue.endsWith('mi')) {
-            multiplier = 1000000;
-        } else if (cleanedValue.endsWith('mil')) {
-            multiplier = 1000;
-        }
-        const numericPart = parseFloat(cleanedValue.replace(',', '.'));
-        if (isNaN(numericPart)) {
-            return '';
-        }
-        return (numericPart * multiplier).toFixed(2);
-    };
-
     if (isOpen) {
         const initialState = {
             tipologia: '',
@@ -93,23 +107,33 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     }
   }, [isOpen, request]);
   
-  const calculateEndDate = (startDate: string, months: string) => {
-      if (!startDate || !months || parseInt(months, 10) <= 0) return '';
-      try {
-        const date = new Date(startDate);
-        date.setUTCDate(date.getUTCDate() + 1); // Handle timezone offset by working in UTC
-        date.setUTCMonth(date.getUTCMonth() + parseInt(months, 10));
-        return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-      } catch (e) {
-        return '';
-      }
-  };
-
   // Effect for all automatic calculations
   useEffect(() => {
     if (!isOpen) return;
 
-    // --- PROJECT CALCULATION ---
+    // --- Special handling for "Baixa Complexidade" ---
+    if (formData.categoria === 'Baixa Complexidade') {
+      const newTerminoObra = calculateEndDate(formData.inicioObra, formData.prazoObra);
+      setFormData(prev => {
+        const newState = { ...prev };
+        
+        let changed = false;
+        if (newState.inicioProjeto) { newState.inicioProjeto = ''; changed = true; }
+        if (newState.prazoProjeto) { newState.prazoProjeto = ''; changed = true; }
+        if (newState.valorProjeto) { newState.valorProjeto = ''; changed = true; }
+        if (newState.terminoProjeto) { newState.terminoProjeto = ''; changed = true; }
+        
+        if (newState.terminoObra !== newTerminoObra) {
+          newState.terminoObra = newTerminoObra;
+          changed = true;
+        }
+        
+        return changed ? newState : prev;
+      });
+      return; 
+    }
+
+    // --- PROJECT CALCULATION (for other categories) ---
     const newTerminoProjeto = calculateEndDate(formData.inicioProjeto, formData.prazoProjeto);
 
     // --- OBRA CALCULATION (with Project cascade) ---
@@ -117,7 +141,6 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     let finalPrazoObra = formData.prazoObra;
     let finalValorObra = formData.valorObra;
 
-    // Cascade from Project to Obra if a valid project end date is calculated
     if (newTerminoProjeto) {
         const [day, month, year] = newTerminoProjeto.split('/').map(Number);
         const projectEndDate = new Date(Date.UTC(year, month - 1, day));
@@ -130,7 +153,6 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
 
     const newTerminoObra = calculateEndDate(finalInicioObra, finalPrazoObra);
     
-    // Update state only if values have changed to prevent infinite loops
     setFormData(prev => {
         if (
             prev.terminoProjeto !== newTerminoProjeto ||
@@ -152,6 +174,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     });
   }, [
       isOpen,
+      formData.categoria,
       formData.inicioProjeto, 
       formData.prazoProjeto, 
       formData.valorProjeto,
@@ -166,7 +189,43 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'categoria') {
+        const newCategory = value;
+        setFormData(prev => {
+            const newState = {
+                tipologia: prev.tipologia,
+                categoria: newCategory,
+                inicioProjeto: '',
+                prazoProjeto: '',
+                valorProjeto: '',
+                terminoProjeto: '',
+                inicioObra: '',
+                prazoObra: '',
+                valorObra: '',
+                terminoObra: '',
+            };
+
+            if (request) {
+                const startDate = formatDateForInput(request.expectedStartDate);
+                const prazo = request.prazo?.toString() || '';
+                const valor = parseValueToNumberString(request.expectedValue);
+
+                if (newCategory === 'Baixa Complexidade') {
+                    newState.inicioObra = startDate;
+                    newState.prazoObra = prazo;
+                    newState.valorObra = valor;
+                } else {
+                    newState.inicioProjeto = startDate;
+                    newState.prazoProjeto = prazo;
+                    newState.valorProjeto = valor;
+                }
+            }
+            return newState;
+        });
+    } else {
+        setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
