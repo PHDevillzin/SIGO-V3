@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Request } from '../types';
 import { Criticality } from '../types';
-import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon, PaperAirplaneIcon } from './Icons';
+import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon, PaperAirplaneIcon, CheckCircleIcon } from './Icons';
 import AdvancedFilters from './AdvancedFilters';
 import ReclassificationModal from './ReclassificationModal';
 
@@ -44,6 +44,12 @@ interface RequestsTableProps {
   currentView: string;
 }
 
+type Toast = {
+  message: string;
+  type: 'success' | 'error';
+  isVisible: boolean;
+};
+
 const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentView }) => {
     const [requests, setRequests] = useState<Request[]>(initialRequests);
     const [searchTerm, setSearchTerm] = useState('');
@@ -54,6 +60,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [reclassifiedIds, setReclassifiedIds] = useState<number[]>([]);
+    const [toast, setToast] = useState<Toast | null>(null);
 
     const isReclassificationView = currentView === 'solicitacoes_reclassificacao';
 
@@ -74,6 +81,14 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     useEffect(() => {
         setSelectedIds([]);
     }, [paginatedRequests]);
+    
+    const showToast = (message: string, type: 'success' | 'error') => {
+        setToast({ message, type, isVisible: true });
+        setTimeout(() => {
+            setToast(prev => prev ? { ...prev, isVisible: false } : null);
+            setTimeout(() => setToast(null), 500); // Allow fade out animation
+        }, 3000);
+    };
 
     const handleSaveReclassification = (data: any, shouldSend: boolean = false) => {
         console.log(`Saving reclassification for items: ${selectedIds.join(', ')}`, 'Data:', data, `Should Send: ${shouldSend}`);
@@ -112,11 +127,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         const nonSendableSelected = selectedIds.filter(id => !reclassifiedIds.includes(id));
 
         if (nonSendableSelected.length > 0) {
-            alert("Verifique os itens para envio. Somente registros habilitados podem ser enviados juntos.");
+            showToast("Verifique os itens para envio. Somente registros habilitados podem ser enviados juntos.", "error");
             return;
         }
 
-        alert("Envio em lote feito com sucesso");
+        showToast("Envio em lote feito com sucesso", "success");
 
         setRequests(prevRequests => 
             prevRequests.filter(req => !selectedIds.includes(req.id))
@@ -162,10 +177,23 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         ? reclassifiedIds.includes(selectedRequestForReclassification.id)
         : false;
         
-    const showBatchSendButton = reclassifiedIds.length > 1;
+    const showBatchSendButton = requests.filter(r => reclassifiedIds.includes(r.id)).length > 1;
+
 
     return (
         <>
+            {toast && (
+                <div
+                    className={`fixed top-6 left-6 flex items-center space-x-3 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-transform duration-500 ease-in-out ${toast.isVisible ? 'translate-x-0' : '-translate-x-[150%]'} ${
+                        toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+                    }`}
+                    role="alert"
+                    aria-live="assertive"
+                >
+                    {toast.type === 'success' ? <CheckCircleIcon className="w-6 h-6" /> : <InformationCircleIcon className="w-6 h-6" />}
+                    <p className="font-semibold">{toast.message}</p>
+                </div>
+            )}
             <div className="bg-white rounded-lg shadow">
                 <div className="p-4 flex justify-between items-center space-x-4">
                     <div className="relative flex-grow max-w-sm">
