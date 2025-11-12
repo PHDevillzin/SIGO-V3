@@ -148,6 +148,13 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         setSelectedIds([]);
     };
 
+    const handleSingleSend = (id: number) => {
+        showToast('Solicitação enviada com sucesso.', 'success');
+        setRequests(prev => prev.filter(req => req.id !== id));
+        setReclassifiedIds(prev => prev.filter(reclassifiedId => reclassifiedId !== id));
+        setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+    };
+
     const handleSelectRow = (id: number) => {
         setSelectedIds(prev => {
             if (prev.includes(id)) {
@@ -331,7 +338,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                 <EyeIcon className="w-5 h-5" />
                                             </button>
                                             {isReclassificationView && reclassifiedIds.includes(request.id) && (
-                                                <button 
+                                                <button
+                                                    onClick={() => handleSingleSend(request.id)}
                                                     className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
                                                     aria-label="Enviar"
                                                 >
