@@ -92,27 +92,33 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
     const handleSaveReclassification = (data: any, shouldSend: boolean = false) => {
         console.log(`Saving reclassification for items: ${selectedIds.join(', ')}`, 'Data:', data, `Should Send: ${shouldSend}`);
-        
-        if (shouldSend) {
-            // Future logic for sending the data would go here.
-            console.log('Data is being "sent".');
-        }
 
-        setRequests(prevRequests =>
-            prevRequests.map(req => {
-                if (selectedIds.includes(req.id)) {
-                    return {
-                        ...req,
-                        categoriaInvestimento: data.categoria || req.categoriaInvestimento,
-                        tipologia: data.tipologia || req.tipologia,
-                    };
-                }
-                return req;
-            })
-        );
-        
-        // Mark these IDs as reclassified to show the 'Enviar' button
-        setReclassifiedIds(prev => [...new Set([...prev, ...selectedIds])]);
+        if (shouldSend) {
+            const message = selectedIds.length > 1 ? 'Solicitações enviadas com sucesso.' : 'Solicitação enviada com sucesso.';
+            showToast(message, 'success');
+
+            setRequests(prevRequests =>
+                prevRequests.filter(req => !selectedIds.includes(req.id))
+            );
+            setReclassifiedIds(prev =>
+                prev.filter(id => !selectedIds.includes(id))
+            );
+        } else {
+            setRequests(prevRequests =>
+                prevRequests.map(req => {
+                    if (selectedIds.includes(req.id)) {
+                        return {
+                            ...req,
+                            categoriaInvestimento: data.categoria || req.categoriaInvestimento,
+                            tipologia: data.tipologia || req.tipologia,
+                        };
+                    }
+                    return req;
+                })
+            );
+            // Mark these IDs as reclassified to show the 'Enviar' button
+            setReclassifiedIds(prev => [...new Set([...prev, ...selectedIds])]);
+        }
         
         setIsReclassificationModalOpen(false);
         setSelectedIds([]);
