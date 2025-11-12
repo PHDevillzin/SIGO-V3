@@ -5,10 +5,9 @@ import type { Request } from '../types';
 interface ReclassificationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: any, shouldSend?: boolean) => void;
+  onSave: (data: any) => void;
   selectedCount: number;
   request: Request | null;
-  isPreviouslySaved?: boolean;
 }
 
 const investmentCategories = [
@@ -73,7 +72,7 @@ const initialFormData = {
     terminoObra: '',
 };
 
-const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request, isPreviouslySaved }) => {
+const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request }) => {
   const [formData, setFormData] = useState(initialFormData);
 
   const calculateDerivedFields = useCallback((baseData: typeof formData) => {
@@ -280,20 +279,11 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
             </button>
             <button 
                 type="button" 
-                onClick={() => onSave(formData, false)} 
+                onClick={() => onSave(formData)} 
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Salvar
             </button>
-            {(formData.tipologia || isPreviouslySaved) && (
-                <button 
-                    type="button" 
-                    onClick={() => onSave(formData, true)} 
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                >
-                  Enviar
-                </button>
-            )}
         </div>
       </div>
     </div>

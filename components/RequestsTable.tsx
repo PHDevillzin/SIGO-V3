@@ -90,43 +90,47 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         }, 3000);
     };
 
-    const handleSaveReclassification = (data: any, shouldSend: boolean = false) => {
-        console.log(`Saving reclassification for items: ${selectedIds.join(', ')}`, 'Data:', data, `Should Send: ${shouldSend}`);
+    const handleSaveReclassification = (data: any) => {
+        console.log(`Saving reclassification for items: ${selectedIds.join(', ')}`, 'Data:', data);
 
-        if (shouldSend) {
-            const message = selectedIds.length > 1 ? 'Solicitações enviadas com sucesso.' : 'Solicitação enviada com sucesso.';
-            showToast(message, 'success');
-
-            setRequests(prevRequests =>
-                prevRequests.filter(req => !selectedIds.includes(req.id))
-            );
-            setReclassifiedIds(prev =>
-                prev.filter(id => !selectedIds.includes(id))
-            );
-        } else {
-            setRequests(prevRequests =>
-                prevRequests.map(req => {
-                    if (selectedIds.includes(req.id)) {
-                        return {
-                            ...req,
-                            categoriaInvestimento: data.categoria || req.categoriaInvestimento,
-                            tipologia: data.tipologia || req.tipologia,
-                        };
-                    }
-                    return req;
-                })
-            );
-            // Mark these IDs as reclassified to show the 'Enviar' button
-            setReclassifiedIds(prev => [...new Set([...prev, ...selectedIds])]);
-        }
+        setRequests(prevRequests =>
+            prevRequests.map(req => {
+                if (selectedIds.includes(req.id)) {
+                    return {
+                        ...req,
+                        categoriaInvestimento: data.categoria || req.categoriaInvestimento,
+                        tipologia: data.tipologia || req.tipologia,
+                    };
+                }
+                return req;
+            })
+        );
+        // Mark these IDs as reclassified to show the 'Enviar' button
+        setReclassifiedIds(prev => [...new Set([...prev, ...selectedIds])]);
         
+        showToast(selectedIds.length > 1 ? 'Solicitações salvas com sucesso.' : 'Solicitação salva com sucesso.', 'success');
+
         setIsReclassificationModalOpen(false);
         setSelectedIds([]);
         setSelectedRequestForReclassification(null);
     };
+    
+    const handleSingleSend = (id: number) => {
+        showToast('Solicitação enviada com sucesso.', 'success');
+        setRequests(prevRequests => 
+            prevRequests.filter(req => req.id !== id)
+        );
+        setReclassifiedIds(prev => 
+            prev.filter(reclassifiedId => reclassifiedId !== id)
+        );
+        setSelectedIds(prev =>
+            prev.filter(selectedId => selectedId !== id)
+        );
+    };
 
     const handleBatchSend = () => {
         if (selectedIds.length === 0) {
+            showToast("Selecione um ou mais itens reclassificados para enviar.", "error");
             return;
         }
 
@@ -137,7 +141,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             return;
         }
 
-        showToast("Envio em lote feito com sucesso", "success");
+        const message = selectedIds.length > 1 ? 'Solicitações enviadas com sucesso.' : 'Solicitação enviada com sucesso.';
+        showToast(message, 'success');
 
         setRequests(prevRequests => 
             prevRequests.filter(req => !selectedIds.includes(req.id))
@@ -146,13 +151,6 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             prev.filter(id => !selectedIds.includes(id))
         );
         setSelectedIds([]);
-    };
-
-    const handleSingleSend = (id: number) => {
-        showToast('Solicitação enviada com sucesso.', 'success');
-        setRequests(prev => prev.filter(req => req.id !== id));
-        setReclassifiedIds(prev => prev.filter(reclassifiedId => reclassifiedId !== id));
-        setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
     };
 
     const handleSelectRow = (id: number) => {
@@ -185,12 +183,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         }
         setIsReclassificationModalOpen(true);
     };
-    
-    const isPreviouslySaved = selectedIds.length === 1 && selectedRequestForReclassification
-        ? reclassifiedIds.includes(selectedRequestForReclassification.id)
-        : false;
         
-    const showBatchSendButton = requests.filter(r => reclassifiedIds.includes(r.id)).length > 1;
+    const isAnyItemReadyToSend = reclassifiedIds.length > 0;
 
 
     return (
@@ -227,16 +221,14 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     <div className="flex items-center space-x-2">
                         {isReclassificationView && (
                              <>
-                                {showBatchSendButton && (
-                                    <button
-                                        onClick={handleBatchSend}
-                                        disabled={selectedIds.length === 0}
-                                        className="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                    >
-                                        <PaperAirplaneIcon className="w-5 h-5" />
-                                        <span>Envio em lote</span>
-                                    </button>
-                                )}
+                                <button
+                                    onClick={handleBatchSend}
+                                    disabled={!isAnyItemReadyToSend}
+                                    className="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                >
+                                    <PaperAirplaneIcon className="w-5 h-5" />
+                                    <span>Enviar</span>
+                                </button>
                                 <button
                                     onClick={handleOpenReclassificationModal}
                                     disabled={selectedIds.length === 0}
@@ -277,6 +269,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                 <th scope="col" className="px-6 py-3 font-semibold">Criticidade</th>
                                 <th scope="col" className="px-6 py-3 font-semibold">Unidade</th>
                                 <th scope="col" className="px-6 py-3 font-semibold">Descrição</th>
+                                {isReclassificationView && <th scope="col" className="px-6 py-3 font-semibold">Tipologia</th>}
                                 <th scope="col" className="px-6 py-3 font-semibold">Status</th>
                                 {!isReclassificationView && <th scope="col" className="px-6 py-3 font-semibold">Local Atual</th>}
                                 <th scope="col" className="px-6 py-3 font-semibold">Início Esperado</th>
@@ -314,6 +307,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                     </td>
                                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{request.unit}</td>
                                     <td className="px-6 py-4">{request.description}</td>
+                                    {isReclassificationView && <td className="px-6 py-4 whitespace-nowrap">{request.tipologia}</td>}
                                     <td className="px-6 py-4">{request.status}</td>
                                     {!isReclassificationView && <td className="px-6 py-4">{request.currentLocation}</td>}
                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -395,7 +389,6 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 onSave={handleSaveReclassification}
                 selectedCount={selectedIds.length}
                 request={selectedRequestForReclassification}
-                isPreviouslySaved={isPreviouslySaved}
             />
         </>
     );

@@ -42,6 +42,7 @@ export interface PlanningData {
   situacaoObra: string;
   situacaoProjeto: string;
   status: string;
+  reclassified?: boolean;
   inicioProjeto: string;
   saldoProjetoPrazo: number; // in months
   saldoProjetoValor: string;
