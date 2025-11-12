@@ -22,6 +22,7 @@ export interface Request {
   categoriaInvestimento?: string;
   entidade?: string;
   ordem?: string;
+  tipologia?: string;
 }
 
 export interface SummaryData {

@@ -5,9 +5,10 @@ import type { Request } from '../types';
 interface ReclassificationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: any, shouldSend?: boolean) => void;
   selectedCount: number;
   request: Request | null;
+  isPreviouslySaved?: boolean;
 }
 
 const investmentCategories = [
@@ -72,7 +73,7 @@ const initialFormData = {
     terminoObra: '',
 };
 
-const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request }) => {
+const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request, isPreviouslySaved }) => {
   const [formData, setFormData] = useState(initialFormData);
 
   const calculateDerivedFields = useCallback((baseData: typeof formData) => {
@@ -116,6 +117,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
         let baseState = { ...initialFormData };
 
         if (request) {
+            baseState.tipologia = request.tipologia || '';
             const category = request.categoriaInvestimento || '';
             baseState.categoria = category;
             
@@ -170,11 +172,6 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     setFormData(finalState);
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-  
   if (!isOpen) {
     return null;
   }
@@ -190,7 +187,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
             <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
-        <form id="reclassification-form" onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-6">
+        <form id="reclassification-form" onSubmit={(e) => e.preventDefault()} className="overflow-y-auto p-6 space-y-6">
           {selectedCount > 1 && (
             <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700" role="alert">
               <p className="font-bold">Atenção</p>
@@ -281,9 +278,22 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">
               Cancelar
             </button>
-            <button type="submit" form="reclassification-form" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+            <button 
+                type="button" 
+                onClick={() => onSave(formData, false)} 
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
               Salvar
             </button>
+            {(formData.tipologia || isPreviouslySaved) && (
+                <button 
+                    type="button" 
+                    onClick={() => onSave(formData, true)} 
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  Salvar e Enviar
+                </button>
+            )}
         </div>
       </div>
     </div>
