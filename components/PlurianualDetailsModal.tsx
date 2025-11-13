@@ -108,13 +108,6 @@ const FinancialInfoTab: React.FC<FinancialInfoTabProps> = ({ data, valorHomologa
     const valorHomologadoString = formatCurrency(valorHomologado);
     
     const valuesMismatch = Math.abs(totalPrevisoes - valorHomologado) > 0.01;
-
-    const InfoRow: React.FC<{ label: string; value: string; className?: string }> = ({ label, value, className }) => (
-        <div className={`grid grid-cols-2 ${className}`}>
-            <span className="text-gray-500">{label}:</span>
-            <span className="font-semibold text-gray-800">{value}</span>
-        </div>
-    );
     
     const YearRow: React.FC<{
         label: string;
@@ -146,16 +139,22 @@ const FinancialInfoTab: React.FC<FinancialInfoTabProps> = ({ data, valorHomologa
                     <span>Editar</span>
                 </button>
             </div>
-            <div className="border border-t-0 p-4 space-y-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 p-4 bg-gray-50 rounded-md">
-                    <InfoRow label="Valor Homologado" value={valorHomologadoString} />
-                    <div></div> {/* empty div for alignment */}
-                    <InfoRow label="Início Serviço" value="Capital" />
-                    <div></div>
-                    <InfoRow label="Início Pagamento" value="Em execução" />
-                    <InfoRow label="Término Pagamento" value="Obra em 2024" />
-                    <InfoRow label="Prazo (meses)" value={`${data.saldoProjetoPrazo + data.saldoObraPrazo}`} />
-                    <InfoRow label="Observações (Prazo)" value="Novas Construções" />
+            <div className="border border-t-0 p-4 space-y-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 p-4 bg-gray-50 rounded-md text-sm">
+                    {/* Project Column */}
+                    <div className="space-y-3">
+                        <p><span className="font-semibold text-gray-600">Valor do Projeto:</span> {data.saldoProjetoValor}</p>
+                        <p><span className="font-semibold text-gray-600">Início do Projeto:</span> {data.inicioProjeto}</p>
+                        <p><span className="font-semibold text-gray-600">Fim do Projeto:</span> {data.terminoProjeto}</p>
+                        <p><span className="font-semibold text-gray-600">Prazo do Projeto (meses):</span> {data.saldoProjetoPrazo}</p>
+                    </div>
+                    {/* Work Column */}
+                    <div className="space-y-3">
+                        <p><span className="font-semibold text-gray-600">Valor da Obra:</span> {data.saldoObraValor}</p>
+                        <p><span className="font-semibold text-gray-600">Início da Obra:</span> {data.inicioObra}</p>
+                        <p><span className="font-semibold text-gray-600">Fim da Obra:</span> {data.terminoObra}</p>
+                        <p><span className="font-semibold text-gray-600">Prazo da Obra (meses):</span> {data.saldoObraPrazo}</p>
+                    </div>
                 </div>
                 
                 <div className="space-y-1">
