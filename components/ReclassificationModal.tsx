@@ -8,7 +8,6 @@ interface ReclassificationModalProps {
   onSave: (data: any) => void;
   selectedCount: number;
   request: Request | null;
-  title?: string;
   isMaintenanceMode?: boolean;
 }
 
@@ -75,7 +74,7 @@ const initialFormData = {
     terminoObra: '',
 };
 
-const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request, title, isMaintenanceMode = false }) => {
+const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request, isMaintenanceMode = false }) => {
   const [formData, setFormData] = useState(initialFormData);
 
   const calculateDerivedFields = useCallback((baseData: typeof formData) => {
@@ -178,7 +177,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     return null;
   }
   
-  const modalTitle = title || `Reclassificação de Solicitação${selectedCount > 1 ? 's' : ''}`;
+  const modalTitle = `Reclassificação de Solicitação${selectedCount > 1 ? 's' : ''}`;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">

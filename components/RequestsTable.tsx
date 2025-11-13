@@ -398,7 +398,6 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 onSave={handleSaveReclassification}
                 selectedCount={selectedIds.length}
                 request={selectedRequestForReclassification}
-                title={isManutencaoView ? 'Reclassificação de solicitação (Manutenção)' : undefined}
                 isMaintenanceMode={isManutencaoView}
             />
         </>

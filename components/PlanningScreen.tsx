@@ -103,7 +103,9 @@ const PlanningScreen: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
-    const parseValueForSort = (value: string | number) => {
+    // FIX: Updated parseValueForSort to handle boolean types for sorting, which was causing a type error.
+    const parseValueForSort = (value: string | number | boolean) => {
+        if (typeof value === 'boolean') return value ? 1 : 0;
         if (typeof value === 'number') return value;
         if (typeof value === 'string') {
             if (value.startsWith('R$')) {
@@ -125,8 +127,9 @@ const PlanningScreen: React.FC = () => {
                 const aValue = a[sortConfig.key!];
                 const bValue = b[sortConfig.key!];
     
-                if (aValue === 'N/A' || aValue === null) return 1;
-                if (bValue === 'N/A' || bValue === null) return -1;
+                // FIX: Changed strict equality check to loose equality to handle both null and undefined values for optional properties.
+                if (aValue === 'N/A' || aValue == null) return 1;
+                if (bValue === 'N/A' || bValue == null) return -1;
     
                 const parsedA = parseValueForSort(aValue);
                 const parsedB = parseValueForSort(bValue);
