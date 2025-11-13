@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon } from './Icons';
+import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon, WrenchScrewdriverIcon } from './Icons';
 
 interface SidebarProps {
   selectedProfile: string;
@@ -48,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
   }, [setSelectedProfile]);
 
   useEffect(() => {
-    const isSolicitacoes = currentView === 'solicitacoes' || currentView === 'solicitacoes_reclassificacao';
+    const isSolicitacoes = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao'].includes(currentView);
     const isGerenciamento = currentView === 'planejamento' || currentView === 'plurianual';
     
     setIsSolicitacoesMenuOpen(isSolicitacoes);
@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
         <div>
           <button
             onClick={() => setIsSolicitacoesMenuOpen(prev => !prev)}
-            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${(currentView === 'solicitacoes' || currentView === 'solicitacoes_reclassificacao') ? 'bg-white/10 text-white' : ''}`}
+            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
           >
             <div className="flex items-center space-x-3">
               <ListIcon className="w-5 h-5" />
@@ -96,6 +96,12 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                 label="Solicitações para reclassificação"
                 active={currentView === 'solicitacoes_reclassificacao'}
                 onClick={() => setCurrentView('solicitacoes_reclassificacao')}
+              />
+               <NavItem 
+                icon={WrenchScrewdriverIcon}
+                label="Manutenção"
+                active={currentView === 'manutencao'}
+                onClick={() => setCurrentView('manutencao')}
               />
             </div>
           )}

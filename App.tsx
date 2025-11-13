@@ -22,10 +22,20 @@ const App: React.FC = () => {
         { title: 'Total Geral', count: 20, value: 'R$ 154.890.000,00', color: 'border-orange-400', icon: CalculatorIcon },
     ];
 
-    const isSolicitacoesView = currentView === 'solicitacoes' || currentView === 'solicitacoes_reclassificacao';
-    const solicitacoesTitle = currentView === 'solicitacoes' 
-        ? 'Solicitações' 
-        : 'Solicitações para Reclassificação';
+    const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao'].includes(currentView);
+    const getSolicitacoesTitle = () => {
+        switch (currentView) {
+            case 'solicitacoes':
+                return 'Solicitações';
+            case 'solicitacoes_reclassificacao':
+                return 'Solicitações para Reclassificação';
+            case 'manutencao':
+                return 'Manutenção';
+            default:
+                return 'Solicitações';
+        }
+    };
+    const solicitacoesTitle = getSolicitacoesTitle();
 
 
   return (

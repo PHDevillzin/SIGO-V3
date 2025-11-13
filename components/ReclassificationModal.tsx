@@ -8,6 +8,8 @@ interface ReclassificationModalProps {
   onSave: (data: any) => void;
   selectedCount: number;
   request: Request | null;
+  title?: string;
+  isMaintenanceMode?: boolean;
 }
 
 const investmentCategories = [
@@ -15,6 +17,7 @@ const investmentCategories = [
   'Reforma Operacional',
   'Nova Unidade',
   'Intervenção Estratégica',
+  'Manutenção',
 ];
 
 const typologyOptions = [
@@ -72,7 +75,7 @@ const initialFormData = {
     terminoObra: '',
 };
 
-const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request }) => {
+const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request, title, isMaintenanceMode = false }) => {
   const [formData, setFormData] = useState(initialFormData);
 
   const calculateDerivedFields = useCallback((baseData: typeof formData) => {
@@ -175,22 +178,28 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     return null;
   }
   
-  const title = `Reclassificação de Solicitação${selectedCount > 1 ? 's' : ''}`;
+  const modalTitle = title || `Reclassificação de Solicitação${selectedCount > 1 ? 's' : ''}`;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[95vh] flex flex-col">
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+          <h2 className="text-xl font-semibold text-gray-800">{modalTitle}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
         <form id="reclassification-form" onSubmit={(e) => e.preventDefault()} className="overflow-y-auto p-6 space-y-6">
-          {selectedCount > 1 && (
+          {selectedCount > 1 && !isMaintenanceMode && (
             <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700" role="alert">
               <p className="font-bold">Atenção</p>
               <p>Você está reclassificando {selectedCount} demandas. Os dados inseridos serão aplicados a todos os itens selecionados.</p>
+            </div>
+          )}
+           {isMaintenanceMode && (
+             <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700" role="alert">
+                <p className="font-bold">Modo Manutenção</p>
+                <p>Apenas a categoria de investimento pode ser alterada.</p>
             </div>
           )}
           {/* Section for Tipologia and Categoria */}
@@ -202,7 +211,8 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
                 name="tipologia"
                 value={formData.tipologia}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                disabled={isMaintenanceMode}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="" disabled>Selecionar...</option>
                 {typologyOptions.map(option => (
@@ -233,15 +243,15 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
                 <div>
                     <label htmlFor="inicioProjeto" className="block text-sm font-medium text-gray-700 mb-1">Início projeto</label>
-                    <input type="date" id="inicioProjeto" name="inicioProjeto" value={formData.inicioProjeto} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
+                    <input type="date" id="inicioProjeto" name="inicioProjeto" value={formData.inicioProjeto} onChange={handleChange} disabled={isMaintenanceMode} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
                 </div>
                 <div>
                     <label htmlFor="prazoProjeto" className="block text-sm font-medium text-gray-700 mb-1">Prazo (meses)</label>
-                    <input type="number" id="prazoProjeto" name="prazoProjeto" value={formData.prazoProjeto} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
+                    <input type="number" id="prazoProjeto" name="prazoProjeto" value={formData.prazoProjeto} onChange={handleChange} disabled={isMaintenanceMode} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
                 </div>
                 <div>
                     <label htmlFor="valorProjeto" className="block text-sm font-medium text-gray-700 mb-1">Valor projeto</label>
-                    <input type="number" step="0.01" id="valorProjeto" name="valorProjeto" value={formData.valorProjeto} onChange={handleChange} placeholder="0.00" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
+                    <input type="number" step="0.01" id="valorProjeto" name="valorProjeto" value={formData.valorProjeto} onChange={handleChange} disabled={isMaintenanceMode} placeholder="0.00" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
                 </div>
                  <div>
                     <label htmlFor="terminoProjeto" className="block text-sm font-medium text-gray-700 mb-1">Término</label>
@@ -256,15 +266,15 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
                <div>
                 <label htmlFor="inicioObra" className="block text-sm font-medium text-gray-700 mb-1">Início</label>
-                <input type="date" id="inicioObra" name="inicioObra" value={formData.inicioObra} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
+                <input type="date" id="inicioObra" name="inicioObra" value={formData.inicioObra} onChange={handleChange} disabled={isMaintenanceMode} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
               </div>
               <div>
                 <label htmlFor="prazoObra" className="block text-sm font-medium text-gray-700 mb-1">Prazo (meses)</label>
-                <input type="number" id="prazoObra" name="prazoObra" value={formData.prazoObra} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
+                <input type="number" id="prazoObra" name="prazoObra" value={formData.prazoObra} onChange={handleChange} disabled={isMaintenanceMode} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
               </div>
               <div>
                 <label htmlFor="valorObra" className="block text-sm font-medium text-gray-700 mb-1">Valor obra</label>
-                <input type="number" step="0.01" id="valorObra" name="valorObra" value={formData.valorObra} onChange={handleChange} placeholder="0.00" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"/>
+                <input type="number" step="0.01" id="valorObra" name="valorObra" value={formData.valorObra} onChange={handleChange} disabled={isMaintenanceMode} placeholder="0.00" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
               </div>
               <div>
                 <label htmlFor="terminoObra" className="block text-sm font-medium text-gray-700 mb-1">Término</label>

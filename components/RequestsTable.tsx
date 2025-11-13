@@ -63,6 +63,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const [toast, setToast] = useState<Toast | null>(null);
 
     const isReclassificationView = currentView === 'solicitacoes_reclassificacao';
+    const isManutencaoView = currentView === 'manutencao';
 
     const filteredRequests = useMemo(() =>
         requests.filter(request =>
@@ -185,6 +186,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     };
         
     const isAnyItemReadyToSend = reclassifiedIds.length > 0;
+    const showEditButton = isReclassificationView || isManutencaoView;
+    const editButtonLabel = isManutencaoView ? 'Editar' : 'Reclassificar';
 
 
     return (
@@ -220,24 +223,24 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     </div>
                     <div className="flex items-center space-x-2">
                         {isReclassificationView && (
-                             <>
-                                <button
-                                    onClick={handleBatchSend}
-                                    disabled={!isAnyItemReadyToSend}
-                                    className="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                >
-                                    <PaperAirplaneIcon className="w-5 h-5" />
-                                    <span>Enviar</span>
-                                </button>
-                                <button
-                                    onClick={handleOpenReclassificationModal}
-                                    disabled={selectedIds.length === 0}
-                                    className="flex items-center space-x-2 bg-purple-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-purple-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                >
-                                    <PencilIcon className="w-5 h-5" />
-                                    <span>Reclassificar</span>
-                                </button>
-                             </>
+                             <button
+                                onClick={handleBatchSend}
+                                disabled={!isAnyItemReadyToSend}
+                                className="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                                <PaperAirplaneIcon className="w-5 h-5" />
+                                <span>Enviar</span>
+                            </button>
+                        )}
+                        {showEditButton && (
+                            <button
+                                onClick={handleOpenReclassificationModal}
+                                disabled={selectedIds.length === 0}
+                                className="flex items-center space-x-2 bg-purple-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-purple-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                                <PencilIcon className="w-5 h-5" />
+                                <span>{editButtonLabel}</span>
+                            </button>
                         )}
                         <button 
                             onClick={() => setShowAdvancedFilters(prev => !prev)}
@@ -255,7 +258,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     <table className="w-full text-sm text-left text-gray-500">
                         <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
                             <tr>
-                                {isReclassificationView && (
+                                {(isReclassificationView || isManutencaoView) && (
                                     <th scope="col" className="p-4">
                                         <input 
                                             type="checkbox" 
@@ -289,7 +292,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                         <tbody>
                             {paginatedRequests.map(request => (
                                 <tr key={request.id} className="bg-white border-b hover:bg-gray-50 align-middle">
-                                    {isReclassificationView && (
+                                    {(isReclassificationView || isManutencaoView) && (
                                          <td className="p-4">
                                             <input 
                                                 type="checkbox" 
@@ -389,6 +392,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 onSave={handleSaveReclassification}
                 selectedCount={selectedIds.length}
                 request={selectedRequestForReclassification}
+                title={isManutencaoView ? 'Reclassificação de solicitação (Manutenção)' : undefined}
+                isMaintenanceMode={isManutencaoView}
             />
         </>
     );
