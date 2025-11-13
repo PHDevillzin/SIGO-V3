@@ -246,7 +246,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
                     <input type="date" id="inicioProjeto" name="inicioProjeto" value={formData.inicioProjeto} onChange={handleChange} disabled={isMaintenanceMode} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
                 </div>
                 <div>
-                    <label htmlFor="prazoProjeto" className="block text-sm font-medium text-gray-700 mb-1">Prazo (meses)</label>
+                    <label htmlFor="prazoProjeto" className="block text-sm font-medium text-gray-700 mb-1">Prazo projeto(meses)</label>
                     <input type="number" id="prazoProjeto" name="prazoProjeto" value={formData.prazoProjeto} onChange={handleChange} disabled={isMaintenanceMode} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
                 </div>
                 <div>
@@ -254,7 +254,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
                     <input type="number" step="0.01" id="valorProjeto" name="valorProjeto" value={formData.valorProjeto} onChange={handleChange} disabled={isMaintenanceMode} placeholder="0.00" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
                 </div>
                  <div>
-                    <label htmlFor="terminoProjeto" className="block text-sm font-medium text-gray-700 mb-1">Término</label>
+                    <label htmlFor="terminoProjeto" className="block text-sm font-medium text-gray-700 mb-1">Término projeto</label>
                     <input type="text" id="terminoProjeto" name="terminoProjeto" value={formData.terminoProjeto} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed" placeholder="Calculado"/>
                 </div>
             </div>
@@ -265,11 +265,11 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
             <legend className="text-lg font-medium text-gray-900 px-2">Obra</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
                <div>
-                <label htmlFor="inicioObra" className="block text-sm font-medium text-gray-700 mb-1">Início</label>
+                <label htmlFor="inicioObra" className="block text-sm font-medium text-gray-700 mb-1">Início obra</label>
                 <input type="date" id="inicioObra" name="inicioObra" value={formData.inicioObra} onChange={handleChange} disabled={isMaintenanceMode} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
               </div>
               <div>
-                <label htmlFor="prazoObra" className="block text-sm font-medium text-gray-700 mb-1">Prazo (meses)</label>
+                <label htmlFor="prazoObra" className="block text-sm font-medium text-gray-700 mb-1">Prazo obra(meses)</label>
                 <input type="number" id="prazoObra" name="prazoObra" value={formData.prazoObra} onChange={handleChange} disabled={isMaintenanceMode} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
               </div>
               <div>
@@ -277,7 +277,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
                 <input type="number" step="0.01" id="valorObra" name="valorObra" value={formData.valorObra} onChange={handleChange} disabled={isMaintenanceMode} placeholder="0.00" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"/>
               </div>
               <div>
-                <label htmlFor="terminoObra" className="block text-sm font-medium text-gray-700 mb-1">Término</label>
+                <label htmlFor="terminoObra" className="block text-sm font-medium text-gray-700 mb-1">Término obra</label>
                 <input type="text" id="terminoObra" name="terminoObra" value={formData.terminoObra} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed" placeholder="Calculado"/>
               </div>
             </div>
