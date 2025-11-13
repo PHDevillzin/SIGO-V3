@@ -27,6 +27,7 @@ const initialRequests: Request[] = [
     { id: 19, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Expansão de ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '09/09/2027', hasInfo: false, expectedValue: '2.5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SESI', ordem: 'SS-27-0019-P' },
     { id: 20, criticality: Criticality.MEDIA, unit: 'CAT Campinas', description: 'Reforma de Fachada', status: 'Em Execução', currentLocation: 'Unidade', expectedStartDate: '07/06/2025', hasInfo: false, expectedValue: '400 mil', executingUnit: 'Unidade', prazo: 9, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-25-0020-O' },
     { id: 21, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'Pintura Interna', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '11/11/2025', hasInfo: false, expectedValue: '90 mil', executingUnit: 'GSO', prazo: 3, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0021-P' },
+    { id: 22, criticality: Criticality.MEDIA, unit: 'Oficina Central', description: 'Manutenção Preventiva Tornos', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '15/01/2026', hasInfo: false, expectedValue: '80 mil', executingUnit: 'Unidade', prazo: 3, categoriaInvestimento: 'Manutenção', entidade: 'SENAI', ordem: 'SS-26-0022-M', tipologia: 'Tipologia B' },
 ];
 
 const getCriticalityClass = (criticality: Criticality) => {
@@ -65,12 +66,17 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const isReclassificationView = currentView === 'solicitacoes_reclassificacao';
     const isManutencaoView = currentView === 'manutencao';
 
-    const filteredRequests = useMemo(() =>
-        requests.filter(request =>
+    const filteredRequests = useMemo(() => {
+        const sourceRequests = isReclassificationView
+            ? requests.filter(request => request.categoriaInvestimento !== 'Manutenção')
+            : requests;
+        
+        return sourceRequests.filter(request =>
             request.unit.toLowerCase().includes(searchTerm.toLowerCase()) ||
             request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
             request.status.toLowerCase().includes(searchTerm.toLowerCase())
-        ), [requests, searchTerm]);
+        );
+    }, [requests, searchTerm, isReclassificationView]);
 
     const totalPages = useMemo(() => Math.ceil(filteredRequests.length / itemsPerPage), [filteredRequests, itemsPerPage]);
 
