@@ -76,6 +76,7 @@ const initialFormData = {
 
 const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request, isMaintenanceMode = false }) => {
   const [formData, setFormData] = useState(initialFormData);
+  const [errors, setErrors] = useState<{ tipologia?: string }>({});
 
   const calculateDerivedFields = useCallback((baseData: typeof formData) => {
     const newData = { ...baseData };
@@ -116,6 +117,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
   useEffect(() => {
     if (isOpen) {
         let baseState = { ...initialFormData };
+        setErrors({}); // Reset errors when modal opens
 
         if (request) {
             baseState.tipologia = request.tipologia || '';
@@ -144,6 +146,10 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    if (name === 'tipologia' && value) {
+        setErrors(prev => ({ ...prev, tipologia: undefined }));
+    }
     
     let baseState = { ...formData, [name]: value };
 
@@ -173,11 +179,23 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     setFormData(finalState);
   };
   
+  const handleSave = () => {
+    // Validate only in reclassification mode
+    if (!isMaintenanceMode && !formData.tipologia) {
+      setErrors({ tipologia: 'Por favor, selecione uma tipologia.' });
+      return; // Prevent saving
+    }
+    setErrors({}); // Clear errors on successful save
+    onSave(formData);
+  };
+
   if (!isOpen) {
     return null;
   }
   
-  const modalTitle = `Reclassificação de Solicitação${selectedCount > 1 ? 's' : ''}`;
+  const modalTitle = isMaintenanceMode 
+    ? `Editar Solicitação de Manutenção${selectedCount > 1 ? 's' : ''}`
+    : `Reclassificação de Solicitação${selectedCount > 1 ? 's' : ''}`;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
@@ -188,7 +206,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
             <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
-        <form id="reclassification-form" onSubmit={(e) => e.preventDefault()} className="overflow-y-auto p-6 space-y-6">
+        <form id="reclassification-form" onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="overflow-y-auto p-6 space-y-6">
           {selectedCount > 1 && !isMaintenanceMode && (
             <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700" role="alert">
               <p className="font-bold">Atenção</p>
@@ -211,13 +229,18 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
                 value={formData.tipologia}
                 onChange={handleChange}
                 disabled={isMaintenanceMode}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                    errors.tipologia ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
+                }`}
+                aria-invalid={!!errors.tipologia}
+                aria-describedby={errors.tipologia ? "tipologia-error" : undefined}
               >
                 <option value="" disabled>Selecionar...</option>
                 {typologyOptions.map(option => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </select>
+               {errors.tipologia && <p id="tipologia-error" className="mt-2 text-sm text-red-600">{errors.tipologia}</p>}
             </div>
             <div>
               <label htmlFor="categoria" className="block text-sm font-medium text-gray-700 mb-1">Categoria de investimento</label>
@@ -288,7 +311,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
             </button>
             <button 
                 type="button" 
-                onClick={() => onSave(formData)} 
+                onClick={handleSave}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Salvar
