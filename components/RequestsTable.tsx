@@ -4,6 +4,7 @@ import { Criticality } from '../types';
 import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon, PaperAirplaneIcon, CheckCircleIcon } from './Icons';
 import AdvancedFilters from './AdvancedFilters';
 import ReclassificationModal from './ReclassificationModal';
+import ConfirmationModal from './ConfirmationModal';
 
 const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Santo An...', description: 'Reforma Gera...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P' },
@@ -62,6 +63,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [reclassifiedIds, setReclassifiedIds] = useState<number[]>([]);
     const [toast, setToast] = useState<Toast | null>(null);
+    const [isConfirmSendModalOpen, setIsConfirmSendModalOpen] = useState(false);
 
     const isReclassificationView = currentView === 'solicitacoes_reclassificacao';
     const isManutencaoView = currentView === 'manutencao';
@@ -137,7 +139,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
     const handleBatchSend = () => {
         if (selectedIds.length === 0) {
-            showToast("Selecione um ou mais itens reclassificados para enviar.", "error");
+            showToast("Selecione um ou mais itens habilitados para enviar.", "error");
             return;
         }
 
@@ -148,6 +150,10 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             return;
         }
 
+        setIsConfirmSendModalOpen(true);
+    };
+    
+    const handleConfirmBatchSend = () => {
         const message = selectedIds.length > 1 ? 'Solicitações enviadas com sucesso.' : 'Solicitação enviada com sucesso.';
         showToast(message, 'success');
 
@@ -158,6 +164,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             prev.filter(id => !selectedIds.includes(id))
         );
         setSelectedIds([]);
+        setIsConfirmSendModalOpen(false);
     };
 
     const handleSelectRow = (id: number) => {
@@ -228,7 +235,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                         />
                     </div>
                     <div className="flex items-center space-x-2">
-                        {isReclassificationView && (
+                        {(isReclassificationView || isManutencaoView) && (
                              <button
                                 onClick={handleBatchSend}
                                 disabled={!isAnyItemReadyToSend}
@@ -340,7 +347,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                             <button className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" aria-label="Visualizar">
                                                 <EyeIcon className="w-5 h-5" />
                                             </button>
-                                            {isReclassificationView && reclassifiedIds.includes(request.id) && (
+                                            {(isReclassificationView || isManutencaoView) && reclassifiedIds.includes(request.id) && (
                                                 <button
                                                     onClick={() => handleSingleSend(request.id)}
                                                     className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
@@ -399,6 +406,13 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 selectedCount={selectedIds.length}
                 request={selectedRequestForReclassification}
                 isMaintenanceMode={isManutencaoView}
+            />
+            <ConfirmationModal
+                isOpen={isConfirmSendModalOpen}
+                onClose={() => setIsConfirmSendModalOpen(false)}
+                onConfirm={handleConfirmBatchSend}
+                title="Confirmar Envio"
+                message="Deseja realmente validar e enviar a demanda para o planejamento?"
             />
         </>
     );
