@@ -5,6 +5,7 @@ import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, Pencil
 import AdvancedFilters from './AdvancedFilters';
 import ReclassificationModal from './ReclassificationModal';
 import ConfirmationModal from './ConfirmationModal';
+import AlertModal from './AlertModal';
 
 const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Santo An...', description: 'Reforma Gera...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P' },
@@ -64,21 +65,26 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const [reclassifiedIds, setReclassifiedIds] = useState<number[]>([]);
     const [toast, setToast] = useState<Toast | null>(null);
     const [isConfirmSendModalOpen, setIsConfirmSendModalOpen] = useState(false);
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertModalMessage, setAlertModalMessage] = useState('');
 
     const isReclassificationView = currentView === 'solicitacoes_reclassificacao';
     const isManutencaoView = currentView === 'manutencao';
 
     const filteredRequests = useMemo(() => {
-        const sourceRequests = isReclassificationView
-            ? requests.filter(request => request.categoriaInvestimento !== 'Manutenção')
-            : requests;
+        let sourceRequests = requests;
+        if (isReclassificationView) {
+            sourceRequests = requests.filter(request => request.categoriaInvestimento !== 'Manutenção');
+        } else if (isManutencaoView) {
+            sourceRequests = requests.filter(request => request.categoriaInvestimento === 'Manutenção');
+        }
         
         return sourceRequests.filter(request =>
             request.unit.toLowerCase().includes(searchTerm.toLowerCase()) ||
             request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
             request.status.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [requests, searchTerm, isReclassificationView]);
+    }, [requests, searchTerm, isReclassificationView, isManutencaoView]);
 
     const totalPages = useMemo(() => Math.ceil(filteredRequests.length / itemsPerPage), [filteredRequests, itemsPerPage]);
 
@@ -114,10 +120,18 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 return req;
             })
         );
-        // Mark these IDs as reclassified to show the 'Enviar' button
-        setReclassifiedIds(prev => [...new Set([...prev, ...selectedIds])]);
         
-        showToast(selectedIds.length > 1 ? 'Solicitações salvas com sucesso.' : 'Solicitação salva com sucesso.', 'success');
+        if (data.categoria === 'Manutenção') {
+            const message = selectedIds.length > 1
+                ? "Demandas enviadas para manutenção com Sucesso."
+                : "Demanda enviada para manutenção com Sucesso.";
+            setAlertModalMessage(message);
+            setIsAlertModalOpen(true);
+        } else {
+            // Mark these IDs as reclassified to show the 'Enviar' button
+            setReclassifiedIds(prev => [...new Set([...prev, ...selectedIds])]);
+            showToast(selectedIds.length > 1 ? 'Solicitações salvas com sucesso.' : 'Solicitação salva com sucesso.', 'success');
+        }
 
         setIsReclassificationModalOpen(false);
         setSelectedIds([]);
@@ -413,6 +427,12 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 onConfirm={handleConfirmBatchSend}
                 title="Confirmar Envio"
                 message="Deseja realmente validar e enviar a demanda para o planejamento?"
+            />
+            <AlertModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                title="Sucesso"
+                message={alertModalMessage}
             />
         </>
     );
