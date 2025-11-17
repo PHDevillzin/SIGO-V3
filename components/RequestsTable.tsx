@@ -121,7 +121,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             })
         );
         
-        if (data.categoria === 'Manutenção') {
+        if (isManutencaoView) {
+            showToast('Reclassificação concluída com sucesso.', 'success');
+        } else if (data.categoria === 'Manutenção') {
             const message = selectedIds.length > 1
                 ? "Demandas enviadas para manutenção com Sucesso."
                 : "Demanda enviada para manutenção com Sucesso.";
