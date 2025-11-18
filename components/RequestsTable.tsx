@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Request } from '../types';
 import { Criticality } from '../types';
@@ -301,7 +302,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                 <th scope="col" className="px-6 py-3 font-semibold">Criticidade</th>
                                 <th scope="col" className="px-6 py-3 font-semibold">Unidade</th>
                                 <th scope="col" className="px-6 py-3 font-semibold">Descrição</th>
-                                {isReclassificationView && <th scope="col" className="px-6 py-3 font-semibold">Tipologia</th>}
+                                {(isReclassificationView || isManutencaoView) && <th scope="col" className="px-6 py-3 font-semibold">Tipologia</th>}
                                 <th scope="col" className="px-6 py-3 font-semibold">Status</th>
                                 {!isReclassificationView && <th scope="col" className="px-6 py-3 font-semibold">Local Atual</th>}
                                 <th scope="col" className="px-6 py-3 font-semibold">Início Esperado</th>
@@ -339,7 +340,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                     </td>
                                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{request.unit}</td>
                                     <td className="px-6 py-4">{request.description}</td>
-                                    {isReclassificationView && <td className="px-6 py-4 whitespace-nowrap">{request.tipologia}</td>}
+                                    {(isReclassificationView || isManutencaoView) && <td className="px-6 py-4 whitespace-nowrap">{request.tipologia}</td>}
                                     <td className="px-6 py-4">{request.status}</td>
                                     {!isReclassificationView && <td className="px-6 py-4">{request.currentLocation}</td>}
                                     <td className="px-6 py-4 whitespace-nowrap">
