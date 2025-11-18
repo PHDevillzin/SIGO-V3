@@ -252,7 +252,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                         />
                     </div>
                     <div className="flex items-center space-x-2">
-                        {(isReclassificationView || isManutencaoView) && (
+                        {(isReclassificationView) && (
                              <button
                                 onClick={handleBatchSend}
                                 disabled={!isAnyItemReadyToSend}
@@ -364,7 +364,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                             <button className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" aria-label="Visualizar">
                                                 <EyeIcon className="w-5 h-5" />
                                             </button>
-                                            {(isReclassificationView || isManutencaoView) && reclassifiedIds.includes(request.id) && (
+                                            {(isReclassificationView) && reclassifiedIds.includes(request.id) && (
                                                 <button
                                                     onClick={() => handleSingleSend(request.id)}
                                                     className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
