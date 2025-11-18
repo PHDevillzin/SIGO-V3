@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { XMarkIcon, PaperAirplaneIcon } from './Icons';
 
@@ -7,9 +8,19 @@ interface ConfirmationModalProps {
   onConfirm: () => void;
   title: string;
   message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
 }
 
-const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, onConfirm, title, message }) => {
+const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  title, 
+  message, 
+  confirmLabel = 'Confirmar', 
+  cancelLabel = 'Cancelar' 
+}) => {
   if (!isOpen) {
     return null;
   }
@@ -28,7 +39,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
         </div>
         <div className="flex justify-end items-center p-4 border-t bg-gray-50 space-x-2">
           <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">
-            Cancelar
+            {cancelLabel}
           </button>
           <button
             type="button"
@@ -36,7 +47,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
             className="px-4 py-2 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 transition-colors flex items-center space-x-2"
           >
             <PaperAirplaneIcon className="w-5 h-5" />
-            <span>Confirmar</span>
+            <span>{confirmLabel}</span>
           </button>
         </div>
       </div>

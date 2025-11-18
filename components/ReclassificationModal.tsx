@@ -1,11 +1,14 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { XMarkIcon } from './Icons';
+import ConfirmationModal from './ConfirmationModal';
 import type { Request } from '../types';
 
 interface ReclassificationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: any) => void;
+  onCancelSave?: () => void;
   selectedCount: number;
   request: Request | null;
   isMaintenanceMode?: boolean;
@@ -74,9 +77,10 @@ const initialFormData = {
     terminoObra: '',
 };
 
-const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, selectedCount, request, isMaintenanceMode = false }) => {
+const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, onCancelSave, selectedCount, request, isMaintenanceMode = false }) => {
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState<{ tipologia?: string }>({});
+  const [isConfirmSaveOpen, setIsConfirmSaveOpen] = useState(false);
 
   const calculateDerivedFields = useCallback((baseData: typeof formData) => {
     const newData = { ...baseData };
@@ -118,6 +122,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     if (isOpen) {
         let baseState = { ...initialFormData };
         setErrors({}); // Reset errors when modal opens
+        setIsConfirmSaveOpen(false);
 
         if (request) {
             baseState.tipologia = request.tipologia || '';
@@ -179,14 +184,32 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     setFormData(finalState);
   };
   
-  const handleSave = () => {
+  const handleSaveClick = () => {
     // Validate only in reclassification mode
     if (!isMaintenanceMode && !formData.tipologia) {
       setErrors({ tipologia: 'Por favor, selecione uma tipologia.' });
       return; // Prevent saving
     }
     setErrors({}); // Clear errors on successful save
+
+    if (isMaintenanceMode) {
+      setIsConfirmSaveOpen(true);
+    } else {
+      onSave(formData);
+    }
+  };
+
+  const handleConfirmSave = () => {
+    setIsConfirmSaveOpen(false);
     onSave(formData);
+  };
+
+  const handleCancelConfirmation = () => {
+    setIsConfirmSaveOpen(false);
+    onClose();
+    if (onCancelSave) {
+      onCancelSave();
+    }
   };
 
   if (!isOpen) {
@@ -198,6 +221,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     : `Reclassificação de Solicitação${selectedCount > 1 ? 's' : ''}`;
 
   return (
+    <>
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[95vh] flex flex-col">
         <div className="flex justify-between items-center p-4 border-b">
@@ -206,7 +230,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
             <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
-        <form id="reclassification-form" onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="overflow-y-auto p-6 space-y-6">
+        <form id="reclassification-form" onSubmit={(e) => { e.preventDefault(); handleSaveClick(); }} className="overflow-y-auto p-6 space-y-6">
           {selectedCount > 1 && !isMaintenanceMode && (
             <div className="p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700" role="alert">
               <p className="font-bold">Atenção</p>
@@ -311,7 +335,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
             </button>
             <button 
                 type="button" 
-                onClick={handleSave}
+                onClick={handleSaveClick}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Salvar
@@ -319,6 +343,16 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
         </div>
       </div>
     </div>
+    <ConfirmationModal
+        isOpen={isConfirmSaveOpen}
+        onClose={handleCancelConfirmation}
+        onConfirm={handleConfirmSave}
+        title="Confirmação"
+        message="Confirma a alteração feita e salvamento do registro?"
+        confirmLabel="Sim"
+        cancelLabel="Não"
+    />
+    </>
   );
 };
 

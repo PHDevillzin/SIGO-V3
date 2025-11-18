@@ -214,6 +214,13 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         }
         setIsReclassificationModalOpen(true);
     };
+
+    const handleCancelReclassification = () => {
+        showToast('Nenhum registro foi alterado.', 'error');
+        setIsReclassificationModalOpen(false);
+        setSelectedIds([]);
+        setSelectedRequestForReclassification(null);
+    }
         
     const isAnyItemReadyToSend = reclassifiedIds.length > 0;
     const showEditButton = isReclassificationView || isManutencaoView;
@@ -420,6 +427,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 isOpen={isReclassificationModalOpen}
                 onClose={() => setIsReclassificationModalOpen(false)}
                 onSave={handleSaveReclassification}
+                onCancelSave={handleCancelReclassification}
                 selectedCount={selectedIds.length}
                 request={selectedRequestForReclassification}
                 isMaintenanceMode={isManutencaoView}
