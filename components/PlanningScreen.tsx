@@ -100,7 +100,18 @@ const PlanningScreen: React.FC = () => {
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [sortConfig, setSortConfig] = useState<{ key: keyof PlanningData | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
-    const [isToastVisible, setIsToastVisible] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; isVisible: boolean }>({
+        message: '',
+        type: 'success',
+        isVisible: false
+    });
+
+    const showToast = (message: string, type: 'success' | 'error') => {
+        setToast({ message, type, isVisible: true });
+        setTimeout(() => {
+            setToast(prev => ({ ...prev, isVisible: false }));
+        }, 3000);
+    };
 
     const summaryData = [
         { year: 2026, demand: 28, value: 'R$ 15.000,00' },
@@ -205,7 +216,17 @@ const PlanningScreen: React.FC = () => {
 
     const handleEditSelected = () => {
         if (selectedIds.length === 0) return;
+        
         const selectedItems = allData.filter(item => selectedIds.includes(item.id));
+        
+        const hasReclassified = selectedItems.some(item => item.reclassified === true);
+        const hasNotReclassified = selectedItems.some(item => !item.reclassified);
+
+        if (hasReclassified && hasNotReclassified) {
+            showToast("Operação não realizada. A seleção contém demandas reclassificadas e não reclassificadas.", "error");
+            return;
+        }
+
         setSelectedItemsForEdit(selectedItems);
         setIsProjectWorkModalOpen(true);
     };
@@ -253,10 +274,7 @@ const PlanningScreen: React.FC = () => {
             })
         );
         handleCloseProjectWorkModal();
-        setIsToastVisible(true);
-        setTimeout(() => {
-            setIsToastVisible(false);
-        }, 3000);
+        showToast("Demanda(s) atualizada(s) com sucesso.", "success");
     };
     
     const handleViewDetails = (item: PlanningData) => {
@@ -307,10 +325,10 @@ const PlanningScreen: React.FC = () => {
     return (
         <>
             <div 
-              className={`fixed top-6 left-6 bg-green-600 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-transform duration-500 ease-in-out ${isToastVisible ? 'translate-x-0' : '-translate-x-[150%]'}`}
+              className={`fixed top-6 left-6 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-transform duration-500 ease-in-out ${toast.isVisible ? 'translate-x-0' : '-translate-x-[150%]'} ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}
               role="alert"
             >
-                <p className="font-semibold">Demanda(s) atualizada(s) com sucesso.</p>
+                <p className="font-semibold">{toast.message}</p>
             </div>
             <div className="space-y-6">
                 <div className="bg-white rounded-lg shadow p-6">
