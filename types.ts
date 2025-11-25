@@ -1,3 +1,4 @@
+
 import type { ElementType } from 'react';
 
 export enum Criticality {
@@ -56,4 +57,5 @@ export interface PlanningData {
   empenho2028: string;
   empenho2029: string;
   empenho2030: string;
+  changes?: Partial<PlanningData>; // Stores original values of changed fields
 }

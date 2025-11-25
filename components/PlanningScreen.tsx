@@ -1,7 +1,8 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import MonthlySummaryModal from './MonthlySummaryModal';
 import AdvancedFilters from './AdvancedFilters';
-import { MagnifyingGlassIcon, FilterIcon, PencilIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, EyeIcon, ArrowsUpDownIcon, ChevronUpIcon, ChevronDownIcon } from './Icons';
+import { MagnifyingGlassIcon, FilterIcon, PencilIcon, ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, EyeIcon, ArrowsUpDownIcon, ChevronUpIcon, ChevronDownIcon, InformationCircleIcon } from './Icons';
 import ProjectWorkDataModal from './ProjectWorkDataModal';
 import PlanningDetailsModal from './PlanningDetailsModal';
 import { Criticality, PlanningData } from '../types';
@@ -59,6 +60,30 @@ const PlanningSummaryCard: React.FC<{ year: number, demand: number, value: strin
     </div>
 );
 
+interface CellWithTooltipProps {
+    value: string | number;
+    originalValue?: string | number;
+    className?: string;
+}
+
+const CellWithTooltip: React.FC<CellWithTooltipProps> = ({ value, originalValue, className }) => {
+    const hasChange = originalValue !== undefined && originalValue !== value;
+
+    return (
+        <div className={`flex items-center space-x-1 ${className}`}>
+            <span className="truncate">{value}</span>
+            {hasChange && (
+                 <div className="group relative">
+                    <InformationCircleIcon className="w-4 h-4 text-orange-500 cursor-help" />
+                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-50">
+                        Anterior: {originalValue}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 
 const PlanningScreen: React.FC = () => {
     const [allData, setAllData] = useState<PlanningData[]>(planningData);
@@ -104,7 +129,8 @@ const PlanningScreen: React.FC = () => {
     };
 
     // FIX: Updated parseValueForSort to handle boolean types for sorting, which was causing a type error.
-    const parseValueForSort = (value: string | number | boolean) => {
+    const parseValueForSort = (value: string | number | boolean | undefined) => {
+        if (value === undefined) return 0;
         if (typeof value === 'boolean') return value ? 1 : 0;
         if (typeof value === 'number') return value;
         if (typeof value === 'string') {
@@ -191,9 +217,39 @@ const PlanningScreen: React.FC = () => {
         if (finalPayload.inicioObra === '') finalPayload.inicioObra = 'N/A';
 
         setAllData(prev =>
-            prev.map(item =>
-                idsToUpdate.includes(item.id) ? { ...item, ...finalPayload } : item
-            )
+            prev.map(item => {
+                if (!idsToUpdate.includes(item.id)) return item;
+
+                const newChanges = { ...(item.changes || {}) };
+                let hasChanges = false;
+
+                (Object.keys(finalPayload) as Array<keyof PlanningData>).forEach(key => {
+                    const newValue = finalPayload[key];
+                    const oldValue = item[key];
+
+                    // Logic: If the value is changing, track the original value
+                    // If we edit multiple times, we prefer to keep the 'original' value from before the *first* edit in the session,
+                    // or strictly the previous value. The requirement says "dado anterior a alteração" (previous data).
+                    // Let's assume we preserve the value before any modifications were made if it's not already tracked.
+                    
+                    if (newValue !== oldValue) {
+                         if (newChanges[key] === undefined) {
+                             // Store the original value only if it wasn't already stored
+                             // This handles the "original" vs "modified" concept best
+                             newChanges[key] = oldValue as any; 
+                         }
+                         // If we revert to original, we could remove the key, but keeping it shows it was "touched"
+                         // Simpler approach: Just check difference.
+                         hasChanges = true;
+                    }
+                });
+
+                return { 
+                    ...item, 
+                    ...finalPayload,
+                    changes: Object.keys(newChanges).length > 0 ? newChanges : undefined
+                };
+            })
         );
         handleCloseProjectWorkModal();
         setIsToastVisible(true);
@@ -377,17 +433,37 @@ const PlanningScreen: React.FC = () => {
                                                 {item.reclassified ? 'Sim' : 'Não'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">{item.situacaoProjeto}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{item.inicioProjeto}</td>
-                                        <td className="px-6 py-4 text-center">{item.saldoProjetoPrazo}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{item.saldoProjetoValor}</td>
-                                        <td className="px-6 py-4">{item.situacaoObra}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{item.inicioObra}</td>
-                                        <td className="px-6 py-4 text-center">{item.saldoObraPrazo}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{item.saldoObraValor}</td>
+                                        <td className="px-6 py-4">
+                                            <CellWithTooltip value={item.situacaoProjeto} originalValue={item.changes?.situacaoProjeto} />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <CellWithTooltip value={item.inicioProjeto} originalValue={item.changes?.inicioProjeto} />
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                             <CellWithTooltip value={item.saldoProjetoPrazo} originalValue={item.changes?.saldoProjetoPrazo} className="justify-center" />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                             <CellWithTooltip value={item.saldoProjetoValor} originalValue={item.changes?.saldoProjetoValor} />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                             <CellWithTooltip value={item.situacaoObra} originalValue={item.changes?.situacaoObra} />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                             <CellWithTooltip value={item.inicioObra} originalValue={item.changes?.inicioObra} />
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                             <CellWithTooltip value={item.saldoObraPrazo} originalValue={item.changes?.saldoObraPrazo} className="justify-center"/>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                             <CellWithTooltip value={item.saldoObraValor} originalValue={item.changes?.saldoObraValor} />
+                                        </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-center space-x-2">
-                                                <button onClick={() => handleViewDetails(item)} className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" aria-label="Visualizar">
+                                                <button 
+                                                    onClick={() => handleViewDetails(item)} 
+                                                    className={`${item.changes && Object.keys(item.changes).length > 0 ? 'bg-green-500 hover:bg-green-600' : 'bg-sky-500 hover:bg-sky-600'} text-white p-2 rounded-md transition-colors`} 
+                                                    aria-label="Visualizar"
+                                                >
                                                     <EyeIcon className="w-5 h-5" />
                                                 </button>
                                             </div>
