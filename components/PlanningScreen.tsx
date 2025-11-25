@@ -90,6 +90,7 @@ const PlanningScreen: React.FC = () => {
     const [selectedYear, setSelectedYear] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [activeFilters, setActiveFilters] = useState<{ reclassified?: string } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isProjectWorkModalOpen, setIsProjectWorkModalOpen] = useState(false);
     const [selectedItemsForEdit, setSelectedItemsForEdit] = useState<PlanningData[] | null>(null);
@@ -110,15 +111,26 @@ const PlanningScreen: React.FC = () => {
         { year: 2031, demand: 10, value: 'R$ 3.000,00' },
     ];
     
-    const filteredData = useMemo(() =>
-        allData.filter(item =>
+    const filteredData = useMemo(() => {
+        let data = allData.filter(item =>
             item.unidade.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.situacaoObra.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.situacaoProjeto.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.status.toLowerCase().includes(searchTerm.toLowerCase())
-        ), [allData, searchTerm]
-    );
+        );
+
+        if (activeFilters?.reclassified && activeFilters.reclassified !== 'all') {
+             const isReclassified = activeFilters.reclassified === 'yes';
+             data = data.filter(item => !!item.reclassified === isReclassified);
+        }
+
+        return data;
+    }, [allData, searchTerm, activeFilters]);
+
+    const handleApplyFilters = (filters: { reclassified?: string }) => {
+        setActiveFilters(filters);
+    };
 
     const handleSort = (key: keyof PlanningData) => {
         let direction: 'ascending' | 'descending' = 'ascending';
@@ -128,7 +140,6 @@ const PlanningScreen: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
-    // FIX: Updated parseValueForSort to handle boolean types for sorting, which was causing a type error.
     const parseValueForSort = (value: string | number | boolean | undefined) => {
         if (value === undefined) return 0;
         if (typeof value === 'boolean') return value ? 1 : 0;
@@ -153,7 +164,6 @@ const PlanningScreen: React.FC = () => {
                 const aValue = a[sortConfig.key!];
                 const bValue = b[sortConfig.key!];
     
-                // FIX: Changed strict equality check to loose equality to handle both null and undefined values for optional properties.
                 if (aValue === 'N/A' || aValue == null) return 1;
                 if (bValue === 'N/A' || bValue == null) return -1;
     
@@ -226,20 +236,11 @@ const PlanningScreen: React.FC = () => {
                 (Object.keys(finalPayload) as Array<keyof PlanningData>).forEach(key => {
                     const newValue = finalPayload[key];
                     const oldValue = item[key];
-
-                    // Logic: If the value is changing, track the original value
-                    // If we edit multiple times, we prefer to keep the 'original' value from before the *first* edit in the session,
-                    // or strictly the previous value. The requirement says "dado anterior a alteração" (previous data).
-                    // Let's assume we preserve the value before any modifications were made if it's not already tracked.
                     
                     if (newValue !== oldValue) {
                          if (newChanges[key] === undefined) {
-                             // Store the original value only if it wasn't already stored
-                             // This handles the "original" vs "modified" concept best
                              newChanges[key] = oldValue as any; 
                          }
-                         // If we revert to original, we could remove the key, but keeping it shows it was "touched"
-                         // Simpler approach: Just check difference.
                          hasChanges = true;
                     }
                 });
@@ -369,7 +370,13 @@ const PlanningScreen: React.FC = () => {
                         </div>
                     </div>
                     
-                    {showAdvancedFilters && <AdvancedFilters hideSituacao />}
+                    {showAdvancedFilters && (
+                        <AdvancedFilters 
+                            hideSituacao 
+                            showReclassified 
+                            onFilter={handleApplyFilters} 
+                        />
+                    )}
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left text-gray-500">

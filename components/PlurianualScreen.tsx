@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import MonthlySummaryModal from './MonthlySummaryModal';
 import AdvancedFilters from './AdvancedFilters';
@@ -65,6 +66,7 @@ const PlurianualScreen: React.FC = () => {
     const [selectedYear, setSelectedYear] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [activeFilters, setActiveFilters] = useState<{ reclassified?: string } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isProjectWorkModalOpen, setIsProjectWorkModalOpen] = useState(false);
     const [selectedItemsForEdit, setSelectedItemsForEdit] = useState<PlanningData[] | null>(null);
@@ -86,13 +88,24 @@ const PlurianualScreen: React.FC = () => {
         { year: 2031, demand: 10, value: 'R$ 3.000,00' },
     ];
     
-    const filteredData = useMemo(() =>
-        allData.filter(item =>
+    const filteredData = useMemo(() => {
+        let data = allData.filter(item =>
             item.unidade.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.status.toLowerCase().includes(searchTerm.toLowerCase())
-        ), [allData, searchTerm]
-    );
+        );
+
+        if (activeFilters?.reclassified && activeFilters.reclassified !== 'all') {
+             const isReclassified = activeFilters.reclassified === 'yes';
+             data = data.filter(item => !!item.reclassified === isReclassified);
+        }
+
+        return data;
+    }, [allData, searchTerm, activeFilters]);
+
+    const handleApplyFilters = (filters: { reclassified?: string }) => {
+        setActiveFilters(filters);
+    };
 
     const handleSort = (key: keyof PlanningData) => {
         let direction: 'ascending' | 'descending' = 'ascending';
@@ -102,7 +115,6 @@ const PlurianualScreen: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
-    // FIX: Updated parseValueForSort to handle boolean types for sorting, which was causing a type error.
     const parseValueForSort = (value: string | number | boolean) => {
         if (typeof value === 'boolean') return value ? 1 : 0;
         if (typeof value === 'number') return value;
@@ -126,7 +138,6 @@ const PlurianualScreen: React.FC = () => {
                 const aValue = a[sortConfig.key!];
                 const bValue = b[sortConfig.key!];
     
-                // FIX: Changed strict equality check to loose equality to handle both null and undefined values for optional properties.
                 if (aValue === 'N/A' || aValue == null) return 1;
                 if (bValue === 'N/A' || bValue == null) return -1;
     
@@ -319,7 +330,13 @@ const PlurianualScreen: React.FC = () => {
                         </div>
                     </div>
                     
-                    {showAdvancedFilters && <AdvancedFilters hideSituacao />}
+                    {showAdvancedFilters && (
+                        <AdvancedFilters 
+                            hideSituacao 
+                            showReclassified 
+                            onFilter={handleApplyFilters} 
+                        />
+                    )}
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left text-gray-500">
