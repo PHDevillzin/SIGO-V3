@@ -67,37 +67,6 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ hideSituacao = false,
                         <input type="text" id="situacao" placeholder="Filtre por Status" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm" />
                     </div>
                 )}
-                {showReclassified && (
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Reclassificado</label>
-                        <div className="mt-2 flex items-center space-x-4">
-                             <div className="flex items-center">
-                                <input
-                                    id="reclassificado-sim"
-                                    type="checkbox"
-                                    checked={reclassifiedYes}
-                                    onChange={(e) => setReclassifiedYes(e.target.checked)}
-                                    className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
-                                />
-                                <label htmlFor="reclassificado-sim" className="ml-2 block text-sm text-gray-900">
-                                    Sim
-                                </label>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    id="reclassificado-nao"
-                                    type="checkbox"
-                                    checked={reclassifiedNo}
-                                    onChange={(e) => setReclassifiedNo(e.target.checked)}
-                                    className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
-                                />
-                                <label htmlFor="reclassificado-nao" className="ml-2 block text-sm text-gray-900">
-                                    Não
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                )}
                 <div>
                     <label htmlFor="origem" className="block text-sm font-medium text-gray-700">Origem</label>
                     <select id="origem" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
@@ -127,6 +96,37 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ hideSituacao = false,
                     <div>
                         <label htmlFor="tipologia" className="block text-sm font-medium text-gray-700">Tipologia</label>
                         <input type="text" id="tipologia" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm" />
+                    </div>
+                )}
+                {showReclassified && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Reclassificado</label>
+                        <div className="mt-2 flex items-center space-x-4">
+                             <div className="flex items-center">
+                                <input
+                                    id="reclassificado-sim"
+                                    type="checkbox"
+                                    checked={reclassifiedYes}
+                                    onChange={(e) => setReclassifiedYes(e.target.checked)}
+                                    className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+                                />
+                                <label htmlFor="reclassificado-sim" className="ml-2 block text-sm text-gray-900">
+                                    Sim
+                                </label>
+                            </div>
+                            <div className="flex items-center">
+                                <input
+                                    id="reclassificado-nao"
+                                    type="checkbox"
+                                    checked={reclassifiedNo}
+                                    onChange={(e) => setReclassifiedNo(e.target.checked)}
+                                    className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+                                />
+                                <label htmlFor="reclassificado-nao" className="ml-2 block text-sm text-gray-900">
+                                    Não
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
