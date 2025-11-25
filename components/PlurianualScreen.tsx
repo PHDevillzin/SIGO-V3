@@ -334,7 +334,8 @@ const PlurianualScreen: React.FC = () => {
                         <AdvancedFilters 
                             hideSituacao 
                             showReclassified 
-                            onFilter={handleApplyFilters} 
+                            onFilter={handleApplyFilters}
+                            activeFilters={activeFilters}
                         />
                     )}
 

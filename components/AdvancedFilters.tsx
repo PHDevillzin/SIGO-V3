@@ -6,15 +6,17 @@ interface AdvancedFiltersProps {
     hideSituacao?: boolean;
     hideTipologia?: boolean;
     showReclassified?: boolean;
+    activeFilters?: { reclassified?: string } | null;
     onFilter?: (filters: { reclassified?: string }) => void;
 }
 
-const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ hideSituacao = false, hideTipologia = false, showReclassified = false, onFilter }) => {
+const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ hideSituacao = false, hideTipologia = false, showReclassified = false, activeFilters, onFilter }) => {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
     
-    const [reclassifiedYes, setReclassifiedYes] = useState(false);
-    const [reclassifiedNo, setReclassifiedNo] = useState(false);
+    // Initialize state based on activeFilters prop to ensure persistence when reopening the panel
+    const [reclassifiedYes, setReclassifiedYes] = useState(activeFilters?.reclassified === 'yes');
+    const [reclassifiedNo, setReclassifiedNo] = useState(activeFilters?.reclassified === 'no');
 
     const handleFilter = () => {
         let reclassifiedStatus = 'all';

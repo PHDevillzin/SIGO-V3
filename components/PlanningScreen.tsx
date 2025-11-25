@@ -374,7 +374,8 @@ const PlanningScreen: React.FC = () => {
                         <AdvancedFilters 
                             hideSituacao 
                             showReclassified 
-                            onFilter={handleApplyFilters} 
+                            onFilter={handleApplyFilters}
+                            activeFilters={activeFilters}
                         />
                     )}
 
