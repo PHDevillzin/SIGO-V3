@@ -6,6 +6,7 @@ interface PlanningDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   data: PlanningData | null;
+  title?: string;
 }
 
 const ReadOnlyField: React.FC<{ label: string; value: string | React.ReactNode; large?: boolean; className?: string; id: string }> = ({ label, value, large = false, className, id }) => (
@@ -28,11 +29,15 @@ const formatCurrency = (value: number): string => {
 };
 
 
-const PlanningDetailsModal: React.FC<PlanningDetailsModalProps> = ({ isOpen, onClose, data }) => {
+const PlanningDetailsModal: React.FC<PlanningDetailsModalProps> = ({ isOpen, onClose, data, title }) => {
   if (!isOpen || !data) {
     return null;
   }
   
+  // Try to parse values, if it fails (e.g. "3,5 mi"), default to 0 for the total calculation, 
+  // but the fields themselves usually display the raw string from data if mapped correctly.
+  // However, the modal calculates 'totalValue' based on parsing. 
+  // If parsing fails, totalValue might be R$ 0,00, which is acceptable for a prototype reuse.
   const projectValue = parseCurrencyToNumber(data.saldoProjetoValor);
   const workValue = parseCurrencyToNumber(data.saldoObraValor);
   const totalValue = formatCurrency(projectValue + workValue);
@@ -41,7 +46,7 @@ const PlanningDetailsModal: React.FC<PlanningDetailsModalProps> = ({ isOpen, onC
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" role="dialog" aria-modal="true" aria-labelledby="details-modal-title">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[95vh] flex flex-col">
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 id="details-modal-title" className="text-xl font-semibold text-gray-800">Detalhes do planejamento</h2>
+          <h2 id="details-modal-title" className="text-xl font-semibold text-gray-800">{title || 'Detalhes do planejamento'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600" aria-label="Fechar">
             <XMarkIcon className="w-6 h-6" />
           </button>

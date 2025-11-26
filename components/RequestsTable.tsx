@@ -1,12 +1,13 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Request } from '../types';
+import type { Request, PlanningData } from '../types';
 import { Criticality } from '../types';
 import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon, PaperAirplaneIcon, CheckCircleIcon } from './Icons';
 import AdvancedFilters from './AdvancedFilters';
 import ReclassificationModal from './ReclassificationModal';
 import ConfirmationModal from './ConfirmationModal';
 import AlertModal from './AlertModal';
+import PlanningDetailsModal from './PlanningDetailsModal';
 
 const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Santo An...', description: 'Reforma Gera...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P' },
@@ -68,6 +69,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const [isConfirmSendModalOpen, setIsConfirmSendModalOpen] = useState(false);
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
     const [alertModalMessage, setAlertModalMessage] = useState('');
+
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedRequestForDetails, setSelectedRequestForDetails] = useState<PlanningData | null>(null);
 
     const isReclassificationView = currentView === 'solicitacoes_reclassificacao';
     const isManutencaoView = currentView === 'manutencao';
@@ -221,6 +225,39 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         setSelectedIds([]);
         setSelectedRequestForReclassification(null);
     }
+    
+    const mapRequestToPlanningData = (request: Request): PlanningData => {
+        return {
+            id: request.id,
+            criticidade: request.criticality,
+            ordem: request.ordem || 'N/A',
+            unidade: request.unit,
+            descricao: request.description,
+            situacaoObra: 'Não Iniciada', // Default as it's a new request
+            situacaoProjeto: request.status,
+            status: request.status,
+            reclassified: true, // It is in reclassification view
+            inicioProjeto: request.expectedStartDate,
+            saldoProjetoPrazo: request.prazo || 0,
+            saldoProjetoValor: request.expectedValue.includes('R$') ? request.expectedValue : `R$ ${request.expectedValue}`, // Formatting attempt
+            inicioObra: 'N/A',
+            saldoObraPrazo: 0,
+            saldoObraValor: 'R$ 0,00',
+            terminoProjeto: 'N/A',
+            terminoObra: 'N/A',
+            empenho2026: 'R$ 0,00',
+            empenho2027: 'R$ 0,00',
+            empenho2028: 'R$ 0,00',
+            empenho2029: 'R$ 0,00',
+            empenho2030: 'R$ 0,00'
+        };
+    };
+
+    const handleViewDetails = (request: Request) => {
+        const planningData = mapRequestToPlanningData(request);
+        setSelectedRequestForDetails(planningData);
+        setIsDetailsModalOpen(true);
+    };
         
     const isAnyItemReadyToSend = reclassifiedIds.length > 0;
     const showEditButton = isReclassificationView || isManutencaoView;
@@ -368,7 +405,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                     {!isReclassificationView && <td className="px-6 py-4">{request.executingUnit}</td>}
                                     <td className="px-6 py-4">
                                         <div className="flex items-center justify-center space-x-2">
-                                            <button className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" aria-label="Visualizar">
+                                            <button 
+                                                onClick={() => isReclassificationView && handleViewDetails(request)}
+                                                className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" 
+                                                aria-label="Visualizar"
+                                            >
                                                 <EyeIcon className="w-5 h-5" />
                                             </button>
                                             {(isReclassificationView) && reclassifiedIds.includes(request.id) && (
@@ -444,6 +485,12 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 onClose={() => setIsAlertModalOpen(false)}
                 title="Sucesso"
                 message={alertModalMessage}
+            />
+            <PlanningDetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                data={selectedRequestForDetails}
+                title="Detalhes da reclassificação"
             />
         </>
     );
