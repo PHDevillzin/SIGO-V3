@@ -10,28 +10,28 @@ import AlertModal from './AlertModal';
 import PlanningDetailsModal from './PlanningDetailsModal';
 
 const initialRequests: Request[] = [
-    { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Santo An...', description: 'Reforma Gera...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P' },
-    { id: 2, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Ambientação ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2025', hasInfo: false, expectedValue: '300 mil', executingUnit: 'GSO', prazo: 6, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SESI', ordem: 'SS-25-0002-O' },
-    { id: 3, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Ambientação ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO', prazo: 6, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SESI', ordem: 'SS-25-0003-O' },
-    { id: 4, criticality: Criticality.CRITICA, unit: 'Nova Unidade', description: 'Construção de...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2026', hasInfo: false, expectedValue: '50 mi', executingUnit: 'GSO', prazo: 36, categoriaInvestimento: 'Nova Unidade', entidade: 'SENAI', ordem: 'SS-26-0004-P' },
-    { id: 5, criticality: Criticality.MEDIA, unit: 'CAT Sertãozin...', description: 'Execução com...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2026', hasInfo: true, expectedValue: '350 mil', executingUnit: 'Unidade', prazo: 8, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-26-0005-O' },
-    { id: 6, criticality: Criticality.MEDIA, unit: 'CE 342 - Jardi...', description: 'Instalação de I...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2026', hasInfo: true, expectedValue: '425 mil', executingUnit: 'Unidade', prazo: 10, categoriaInvestimento: 'Reforma Operacional', entidade: 'SESI', ordem: 'SS-26-0006-O' },
-    { id: 7, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'teste ciência s...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '04/11/2025', hasInfo: false, expectedValue: '200 mil', executingUnit: 'GSO', prazo: 4, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0007-P' },
-    { id: 8, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'ciencia senai ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'Unidade', prazo: 5, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0008-P' },
-    { id: 9, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: '11350310 - ci...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '220 mil', executingUnit: 'GSO', prazo: 4, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0009-P' },
-    { id: 10, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: '02101251- tes...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO', prazo: 5, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0010-P' },
-    { id: 11, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: 'ciÊncia 03100...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '500 mil', executingUnit: 'GSO', prazo: 12, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-25-0011-O' },
-    { id: 12, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: 'teste gso', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '200 mil', executingUnit: 'GSO', prazo: 3, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0012-P' },
-    { id: 13, criticality: Criticality.MINIMA, unit: 'CAT Ribeirão ...', description: 'Instalação de ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO', prazo: 5, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0013-O' },
-    { id: 14, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: '02101306 - ci...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '04/11/2027', hasInfo: true, expectedValue: '200 mil', executingUnit: 'GSO', prazo: 4, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-27-0014-P' },
-    { id: 15, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Nova Demanda ...', status: 'Em Aprovação', currentLocation: 'Diretoria', expectedStartDate: '10/12/2025', hasInfo: false, expectedValue: '150 mil', executingUnit: 'Sede', prazo: 3, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SESI', ordem: 'SS-25-0015-P' },
-    { id: 16, criticality: Criticality.IMEDIATA, unit: 'CAT Tatuapé', description: 'Reforma Urgente', status: 'Planejamento', currentLocation: 'GSO', expectedStartDate: '01/02/2026', hasInfo: false, expectedValue: '1.2 mi', executingUnit: 'GSO', prazo: 18, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-26-0016-P' },
-    { id: 17, criticality: Criticality.MEDIA, unit: 'Escola SENAI', description: 'Upgrade de Lab...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '08/08/2026', hasInfo: false, expectedValue: '750 mil', executingUnit: 'Unidade', prazo: 12, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-26-0017-O' },
-    { id: 18, criticality: Criticality.MINIMA, unit: 'CAT Osasco', description: 'Manutenção Rot...', status: 'Concluído', currentLocation: 'Unidade', expectedStartDate: '03/03/2024', hasInfo: false, expectedValue: '50 mil', executingUnit: 'Unidade', prazo: 2, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-24-0018-P' },
-    { id: 19, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Expansão de ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '09/09/2027', hasInfo: false, expectedValue: '2.5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SESI', ordem: 'SS-27-0019-P' },
-    { id: 20, criticality: Criticality.MEDIA, unit: 'CAT Campinas', description: 'Reforma de Fachada', status: 'Em Execução', currentLocation: 'Unidade', expectedStartDate: '07/06/2025', hasInfo: false, expectedValue: '400 mil', executingUnit: 'Unidade', prazo: 9, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-25-0020-O' },
-    { id: 21, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'Pintura Interna', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '11/11/2025', hasInfo: false, expectedValue: '90 mil', executingUnit: 'GSO', prazo: 3, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0021-P' },
-    { id: 22, criticality: Criticality.MEDIA, unit: 'Oficina Central', description: 'Manutenção Preventiva Tornos', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '15/01/2026', hasInfo: false, expectedValue: '80 mil', executingUnit: 'Unidade', prazo: 3, categoriaInvestimento: 'Manutenção', entidade: 'SENAI', ordem: 'SS-26-0022-M', tipologia: 'Tipologia B' },
+    { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Santo An...', description: 'Reforma Gera...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P', situacaoProjeto: 'Em Andamento', situacaoObra: 'Não Iniciada', inicioObra: '05/01/2030', saldoObraPrazo: 12, saldoObraValor: 'R$ 3.500.000,00' },
+    { id: 2, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Ambientação ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2025', hasInfo: false, expectedValue: '300 mil', executingUnit: 'GSO', prazo: 6, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SESI', ordem: 'SS-25-0002-O', situacaoProjeto: 'Concluído', situacaoObra: 'A Realizar', inicioObra: '01/05/2026', saldoObraPrazo: 6, saldoObraValor: 'R$ 300.000,00' },
+    { id: 3, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Ambientação ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO', prazo: 6, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SESI', ordem: 'SS-25-0003-O', situacaoProjeto: 'N/A', situacaoObra: 'A Realizar', inicioObra: '01/06/2026', saldoObraPrazo: 5, saldoObraValor: 'R$ 250.000,00' },
+    { id: 4, criticality: Criticality.CRITICA, unit: 'Nova Unidade', description: 'Construção de...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2026', hasInfo: false, expectedValue: '50 mi', executingUnit: 'GSO', prazo: 36, categoriaInvestimento: 'Nova Unidade', entidade: 'SENAI', ordem: 'SS-26-0004-P', situacaoProjeto: 'A Iniciar', situacaoObra: 'Não Iniciada', inicioObra: '01/01/2029', saldoObraPrazo: 24, saldoObraValor: 'R$ 50.000.000,00' },
+    { id: 5, criticality: Criticality.MEDIA, unit: 'CAT Sertãozin...', description: 'Execução com...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2026', hasInfo: true, expectedValue: '350 mil', executingUnit: 'Unidade', prazo: 8, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-26-0005-O', situacaoProjeto: 'Em Revisão', situacaoObra: 'Aguardando', inicioObra: '10/10/2027', saldoObraPrazo: 8, saldoObraValor: 'R$ 350.000,00' },
+    { id: 6, criticality: Criticality.MEDIA, unit: 'CE 342 - Jardi...', description: 'Instalação de I...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2026', hasInfo: true, expectedValue: '425 mil', executingUnit: 'Unidade', prazo: 10, categoriaInvestimento: 'Reforma Operacional', entidade: 'SESI', ordem: 'SS-26-0006-O', situacaoProjeto: 'Concluído', situacaoObra: 'Em Licitação', inicioObra: '01/02/2027', saldoObraPrazo: 10, saldoObraValor: 'R$ 425.000,00' },
+    { id: 7, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'teste ciência s...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '04/11/2025', hasInfo: false, expectedValue: '200 mil', executingUnit: 'GSO', prazo: 4, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0007-P', situacaoProjeto: 'N/A', situacaoObra: 'A Realizar', inicioObra: '15/01/2026', saldoObraPrazo: 4, saldoObraValor: 'R$ 200.000,00' },
+    { id: 8, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'ciencia senai ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'Unidade', prazo: 5, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0008-P', situacaoProjeto: 'N/A', situacaoObra: 'A Realizar', inicioObra: '20/01/2026', saldoObraPrazo: 5, saldoObraValor: 'R$ 250.000,00' },
+    { id: 9, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: '11350310 - ci...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '220 mil', executingUnit: 'GSO', prazo: 4, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0009-P', situacaoProjeto: 'N/A', situacaoObra: 'A Realizar', inicioObra: '01/03/2026', saldoObraPrazo: 4, saldoObraValor: 'R$ 220.000,00' },
+    { id: 10, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: '02101251- tes...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO', prazo: 5, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0010-P', situacaoProjeto: 'N/A', situacaoObra: 'A Realizar', inicioObra: '10/02/2026', saldoObraPrazo: 5, saldoObraValor: 'R$ 250.000,00' },
+    { id: 11, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: 'ciÊncia 03100...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '500 mil', executingUnit: 'GSO', prazo: 12, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-25-0011-O', situacaoProjeto: 'Em Andamento', situacaoObra: 'Não Iniciada', inicioObra: '01/06/2026', saldoObraPrazo: 12, saldoObraValor: 'R$ 500.000,00' },
+    { id: 12, criticality: Criticality.MINIMA, unit: 'CAT Santos (J...', description: 'teste gso', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '200 mil', executingUnit: 'GSO', prazo: 3, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0012-P', situacaoProjeto: 'N/A', situacaoObra: 'A Realizar', inicioObra: '15/03/2026', saldoObraPrazo: 3, saldoObraValor: 'R$ 200.000,00' },
+    { id: 13, criticality: Criticality.MINIMA, unit: 'CAT Ribeirão ...', description: 'Instalação de ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '06/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO', prazo: 5, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0013-O', situacaoProjeto: 'N/A', situacaoObra: 'A Realizar', inicioObra: '20/04/2026', saldoObraPrazo: 5, saldoObraValor: 'R$ 250.000,00' },
+    { id: 14, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: '02101306 - ci...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '04/11/2027', hasInfo: true, expectedValue: '200 mil', executingUnit: 'GSO', prazo: 4, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-27-0014-P', situacaoProjeto: 'N/A', situacaoObra: 'A Realizar', inicioObra: '01/02/2028', saldoObraPrazo: 4, saldoObraValor: 'R$ 200.000,00' },
+    { id: 15, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Nova Demanda ...', status: 'Em Aprovação', currentLocation: 'Diretoria', expectedStartDate: '10/12/2025', hasInfo: false, expectedValue: '150 mil', executingUnit: 'Sede', prazo: 3, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SESI', ordem: 'SS-25-0015-P', situacaoProjeto: 'Concluído', situacaoObra: 'A Realizar', inicioObra: '01/01/2026', saldoObraPrazo: 3, saldoObraValor: 'R$ 150.000,00' },
+    { id: 16, criticality: Criticality.IMEDIATA, unit: 'CAT Tatuapé', description: 'Reforma Urgente', status: 'Planejamento', currentLocation: 'GSO', expectedStartDate: '01/02/2026', hasInfo: false, expectedValue: '1.2 mi', executingUnit: 'GSO', prazo: 18, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-26-0016-P', situacaoProjeto: 'Em Andamento', situacaoObra: 'Não Iniciada', inicioObra: '01/08/2027', saldoObraPrazo: 18, saldoObraValor: 'R$ 1.200.000,00' },
+    { id: 17, criticality: Criticality.MEDIA, unit: 'Escola SENAI', description: 'Upgrade de Lab...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '08/08/2026', hasInfo: false, expectedValue: '750 mil', executingUnit: 'Unidade', prazo: 12, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-26-0017-O', situacaoProjeto: 'Em Revisão', situacaoObra: 'Aguardando', inicioObra: '10/10/2027', saldoObraPrazo: 12, saldoObraValor: 'R$ 750.000,00' },
+    { id: 18, criticality: Criticality.MINIMA, unit: 'CAT Osasco', description: 'Manutenção Rot...', status: 'Concluído', currentLocation: 'Unidade', expectedStartDate: '03/03/2024', hasInfo: false, expectedValue: '50 mil', executingUnit: 'Unidade', prazo: 2, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-24-0018-P', situacaoProjeto: 'Concluído', situacaoObra: 'Concluída', inicioObra: '01/05/2024', saldoObraPrazo: 0, saldoObraValor: 'R$ 0,00' },
+    { id: 19, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Expansão de ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '09/09/2027', hasInfo: false, expectedValue: '2.5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SESI', ordem: 'SS-27-0019-P', situacaoProjeto: 'A Iniciar', situacaoObra: 'Não Iniciada', inicioObra: '01/01/2029', saldoObraPrazo: 24, saldoObraValor: 'R$ 2.500.000,00' },
+    { id: 20, criticality: Criticality.MEDIA, unit: 'CAT Campinas', description: 'Reforma de Fachada', status: 'Em Execução', currentLocation: 'Unidade', expectedStartDate: '07/06/2025', hasInfo: false, expectedValue: '400 mil', executingUnit: 'Unidade', prazo: 9, categoriaInvestimento: 'Reforma Operacional', entidade: 'SENAI', ordem: 'SS-25-0020-O', situacaoProjeto: 'Concluído', situacaoObra: 'Em Execução', inicioObra: '10/03/2026', saldoObraPrazo: 6, saldoObraValor: 'R$ 200.000,00' },
+    { id: 21, criticality: Criticality.MINIMA, unit: '1.01 Brás - Ro...', description: 'Pintura Interna', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '11/11/2025', hasInfo: false, expectedValue: '90 mil', executingUnit: 'GSO', prazo: 3, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SENAI', ordem: 'SS-25-0021-P', situacaoProjeto: 'N/A', situacaoObra: 'A Realizar', inicioObra: '20/01/2026', saldoObraPrazo: 3, saldoObraValor: 'R$ 90.000,00' },
+    { id: 22, criticality: Criticality.MEDIA, unit: 'Oficina Central', description: 'Manutenção Preventiva Tornos', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '15/01/2026', hasInfo: false, expectedValue: '80 mil', executingUnit: 'Unidade', prazo: 3, categoriaInvestimento: 'Manutenção', entidade: 'SENAI', ordem: 'SS-26-0022-M', tipologia: 'Tipologia B', situacaoProjeto: 'N/A', situacaoObra: 'N/A', inicioObra: 'N/A', saldoObraPrazo: 0, saldoObraValor: 'N/A' },
 ];
 
 const getCriticalityClass = (criticality: Criticality) => {
@@ -348,18 +348,32 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                 <th scope="col" className="px-6 py-3 font-semibold">Descrição</th>
                                 {(isReclassificationView || isManutencaoView) && <th scope="col" className="px-6 py-3 font-semibold">Tipologia</th>}
                                 <th scope="col" className="px-6 py-3 font-semibold">Status</th>
-                                {!isReclassificationView && <th scope="col" className="px-6 py-3 font-semibold">Local Atual</th>}
-                                <th scope="col" className="px-6 py-3 font-semibold">Início Esperado</th>
-                                {isReclassificationView && <th scope="col" className="px-6 py-3 font-semibold text-center">Prazo (meses)</th>}
-                                <th scope="col" className="px-6 py-3 font-semibold">Valor Esperado</th>
+                                
                                 {isReclassificationView && (
                                     <>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Situação Projeto</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Início Projeto</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold text-center">Saldo Projeto Prazo</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Saldo Projeto Valor</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Situação Obra</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Início Obra</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold text-center">Saldo Obra Prazo</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Saldo Obra Valor</th>
                                         <th scope="col" className="px-6 py-3 font-semibold">Categoria Investimento</th>
                                         <th scope="col" className="px-6 py-3 font-semibold">Entidade</th>
                                         <th scope="col" className="px-6 py-3 font-semibold">Ordem</th>
                                     </>
                                 )}
-                                {!isReclassificationView && <th scope="col" className="px-6 py-3 font-semibold">Unidade Exec...</th>}
+                                
+                                {!isReclassificationView && (
+                                    <>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Local Atual</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Início Esperado</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Valor Esperado</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Unidade Exec...</th>
+                                    </>
+                                )}
+                                
                                 <th scope="col" className="px-6 py-3 font-semibold text-center">Ações</th>
                             </tr>
                         </thead>
@@ -386,23 +400,37 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                     <td className="px-6 py-4">{request.description}</td>
                                     {(isReclassificationView || isManutencaoView) && <td className="px-6 py-4 whitespace-nowrap">{request.tipologia}</td>}
                                     <td className="px-6 py-4">{request.status}</td>
-                                    {!isReclassificationView && <td className="px-6 py-4">{request.currentLocation}</td>}
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center space-x-1">
-                                        <span>{request.expectedStartDate}</span>
-                                        {request.hasInfo && <InformationCircleIcon className="w-5 h-5 text-gray-400" />}
-                                        </div>
-                                    </td>
-                                    {isReclassificationView && <td className="px-6 py-4 text-center">{request.prazo}</td>}
-                                    <td className="px-6 py-4">{request.expectedValue}</td>
+                                    
                                     {isReclassificationView && (
                                         <>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.situacaoProjeto}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.expectedStartDate}</td>
+                                            <td className="px-6 py-4 text-center">{request.prazo}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.expectedValue}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.situacaoObra}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.inicioObra}</td>
+                                            <td className="px-6 py-4 text-center">{request.saldoObraPrazo}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.saldoObraValor}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">{request.categoriaInvestimento}</td>
                                             <td className="px-6 py-4">{request.entidade}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">{request.ordem}</td>
                                         </>
                                     )}
-                                    {!isReclassificationView && <td className="px-6 py-4">{request.executingUnit}</td>}
+
+                                    {!isReclassificationView && (
+                                        <>
+                                            <td className="px-6 py-4">{request.currentLocation}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center space-x-1">
+                                                <span>{request.expectedStartDate}</span>
+                                                {request.hasInfo && <InformationCircleIcon className="w-5 h-5 text-gray-400" />}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">{request.expectedValue}</td>
+                                            <td className="px-6 py-4">{request.executingUnit}</td>
+                                        </>
+                                    )}
+                                    
                                     <td className="px-6 py-4">
                                         <div className="flex items-center justify-center space-x-2">
                                             <button 

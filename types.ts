@@ -24,6 +24,12 @@ export interface Request {
   entidade?: string;
   ordem?: string;
   tipologia?: string;
+  // New fields for Reclassification view
+  situacaoProjeto?: string;
+  situacaoObra?: string;
+  inicioObra?: string;
+  saldoObraPrazo?: number;
+  saldoObraValor?: string;
 }
 
 export interface SummaryData {
