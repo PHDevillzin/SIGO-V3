@@ -63,5 +63,8 @@ export interface PlanningData {
   empenho2028: string;
   empenho2029: string;
   empenho2030: string;
+  entidade?: string;
+  categoria?: string;
+  tipologia?: string;
   changes?: Partial<PlanningData>; // Stores original values of changed fields
 }

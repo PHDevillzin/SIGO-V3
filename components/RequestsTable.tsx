@@ -2,8 +2,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Request, PlanningData } from '../types';
 import { Criticality } from '../types';
-import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon, PaperAirplaneIcon, CheckCircleIcon } from './Icons';
-import AdvancedFilters from './AdvancedFilters';
+import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon, PaperAirplaneIcon, CheckCircleIcon, XMarkIcon } from './Icons';
+import AdvancedFilters, { AdvancedFiltersState } from './AdvancedFilters';
 import ReclassificationModal from './ReclassificationModal';
 import ConfirmationModal from './ConfirmationModal';
 import AlertModal from './AlertModal';
@@ -63,6 +63,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [activeFilters, setActiveFilters] = useState<AdvancedFiltersState | null>(null);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [reclassifiedIds, setReclassifiedIds] = useState<number[]>([]);
     const [toast, setToast] = useState<Toast | null>(null);
@@ -78,18 +79,111 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
     const filteredRequests = useMemo(() => {
         let sourceRequests = requests;
+        
+        // Filter by View Mode
         if (isReclassificationView) {
             sourceRequests = requests.filter(request => request.categoriaInvestimento !== 'Manutenção');
         } else if (isManutencaoView) {
             sourceRequests = requests.filter(request => request.categoriaInvestimento === 'Manutenção');
         }
         
-        return sourceRequests.filter(request =>
-            request.unit.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            request.status.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [requests, searchTerm, isReclassificationView, isManutencaoView]);
+        // Filter by Search Term
+        if (searchTerm) {
+            const lowerSearch = searchTerm.toLowerCase();
+            sourceRequests = sourceRequests.filter(request =>
+                request.unit.toLowerCase().includes(lowerSearch) ||
+                request.description.toLowerCase().includes(lowerSearch) ||
+                request.status.toLowerCase().includes(lowerSearch)
+            );
+        }
+
+        // Apply Advanced Filters Additively
+        if (activeFilters) {
+            // Entidades
+            if (activeFilters.entidades && activeFilters.entidades.length > 0) {
+                sourceRequests = sourceRequests.filter(req => req.entidade && activeFilters.entidades!.includes(req.entidade));
+            }
+            
+            // Unidades
+            if (activeFilters.unidades && activeFilters.unidades.length > 0) {
+                sourceRequests = sourceRequests.filter(req => activeFilters.unidades!.includes(req.unit));
+            }
+
+            // Situacoes (Status)
+            if (activeFilters.situacoes && activeFilters.situacoes.length > 0) {
+                 sourceRequests = sourceRequests.filter(req => {
+                    const statusMatch = req.status && activeFilters.situacoes!.includes(req.status);
+                    const projMatch = req.situacaoProjeto && activeFilters.situacoes!.includes(req.situacaoProjeto);
+                    const obraMatch = req.situacaoObra && activeFilters.situacoes!.includes(req.situacaoObra);
+                    return statusMatch || projMatch || obraMatch;
+                 });
+            }
+
+            // Categorias
+            if (activeFilters.categorias && activeFilters.categorias.length > 0) {
+                 sourceRequests = sourceRequests.filter(req => req.categoriaInvestimento && activeFilters.categorias!.includes(req.categoriaInvestimento));
+            }
+
+            // Tipologias
+            if (activeFilters.tipologias && activeFilters.tipologias.length > 0) {
+                 sourceRequests = sourceRequests.filter(req => req.tipologia && activeFilters.tipologias!.includes(req.tipologia));
+            }
+            
+            // Origens (Year)
+            if (activeFilters.origens && activeFilters.origens.length > 0) {
+                sourceRequests = sourceRequests.filter(req => {
+                    if (!req.expectedStartDate) return false;
+                    const parts = req.expectedStartDate.split('/');
+                    const year = parts.length === 3 ? parts[2] : '';
+                    return activeFilters.origens!.includes(year);
+                });
+            }
+
+            // Reclassified Status
+            if (activeFilters.reclassified && activeFilters.reclassified !== 'all') {
+                const wantReclassified = activeFilters.reclassified === 'yes';
+                sourceRequests = sourceRequests.filter(req => {
+                    const isReclassified = reclassifiedIds.includes(req.id);
+                    return wantReclassified ? isReclassified : !isReclassified;
+                });
+            }
+
+            // Date Range
+            const parseDate = (d: string) => {
+                if (!d) return NaN;
+                if (d.includes('/')) {
+                    const [day, month, year] = d.split('/').map(Number);
+                    return new Date(year, month - 1, day).getTime();
+                }
+                if (d.includes('-')) {
+                    const [year, month, day] = d.split('-').map(Number);
+                    return new Date(year, month - 1, day).getTime();
+                }
+                return NaN;
+            };
+
+            if (activeFilters.de) {
+                const fromTime = parseDate(activeFilters.de);
+                if (!isNaN(fromTime)) {
+                     sourceRequests = sourceRequests.filter(req => {
+                        const t = parseDate(req.expectedStartDate);
+                        return !isNaN(t) && t >= fromTime;
+                     });
+                }
+            }
+            if (activeFilters.ate) {
+                const toTime = parseDate(activeFilters.ate);
+                if (!isNaN(toTime)) {
+                     sourceRequests = sourceRequests.filter(req => {
+                        const t = parseDate(req.expectedStartDate);
+                        return !isNaN(t) && t <= toTime;
+                     });
+                }
+            }
+        }
+        
+        return sourceRequests;
+    }, [requests, searchTerm, isReclassificationView, isManutencaoView, activeFilters, reclassifiedIds]);
 
     const totalPages = useMemo(() => Math.ceil(filteredRequests.length / itemsPerPage), [filteredRequests, itemsPerPage]);
 
@@ -258,7 +352,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         setSelectedRequestForDetails(planningData);
         setIsDetailsModalOpen(true);
     };
-        
+
     const isAnyItemReadyToSend = reclassifiedIds.length > 0;
     const showEditButton = isReclassificationView || isManutencaoView;
     const editButtonLabel = isManutencaoView ? 'Editar' : 'Reclassificar';
@@ -318,7 +412,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                         )}
                         <button 
                             onClick={() => setShowAdvancedFilters(prev => !prev)}
-                            className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 transition-colors"
+                            className={`flex items-center space-x-2 font-semibold py-2 px-4 rounded-md transition-colors ${showAdvancedFilters ? 'bg-sky-600 text-white' : 'bg-sky-500 text-white hover:bg-sky-600'}`}
                         >
                             <FilterIcon className="w-5 h-5" />
                             <span>Filtros Avançados</span>
@@ -326,7 +420,13 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     </div>
                 </div>
 
-                {showAdvancedFilters && <AdvancedFilters />}
+                {showAdvancedFilters && (
+                    <AdvancedFilters 
+                        onFilter={setActiveFilters} 
+                        activeFilters={activeFilters}
+                        showReclassified={isReclassificationView || isManutencaoView}
+                    />
+                )}
                 
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-gray-500">
@@ -378,7 +478,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedRequests.map(request => (
+                            {paginatedRequests.length > 0 ? paginatedRequests.map(request => (
                                 <tr key={request.id} className="bg-white border-b hover:bg-gray-50 align-middle">
                                     {(isReclassificationView || isManutencaoView) && (
                                          <td className="p-4">
@@ -452,7 +552,13 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            )) : (
+                                <tr>
+                                    <td colSpan={isReclassificationView ? 17 : 9} className="text-center py-10 text-gray-500">
+                                        Nenhum registro encontrado para os filtros selecionados.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -470,7 +576,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                         </span>
                         <button
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
+                            disabled={currentPage === totalPages || totalPages === 0}
                             className="disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <ChevronRightIcon className="w-6 h-6 text-gray-400" />
