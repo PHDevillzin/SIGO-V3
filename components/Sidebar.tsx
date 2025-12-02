@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon, WrenchScrewdriverIcon } from './Icons';
+import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon, WrenchScrewdriverIcon, TagIcon } from './Icons';
 
 interface SidebarProps {
   selectedProfile: string;
@@ -26,7 +27,14 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     "Solicitação Unidade",
     "Gestor GSO",
     "Diretoria Corporativa",
-    "Planejamento"
+    "Gerência de Infraestrutura e Suprimento",
+    "Gestor Local",
+    "Gerência de Infraestrutura e Suprimento - Aprovador",
+    "Gerência Sênior de Tecnologia da Informação",
+    "Gerência Sênior de Tecnologia da Informação - Aprovador",
+    "Gerência de Saúde e Segurança",
+    "Gerência de Educação",
+    "Gerência de Educação - Aprovador"
   ];
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -107,6 +115,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
           )}
         </div>
 
+        <NavItem icon={TagIcon} label="Tipologia" active={currentView === 'tipologias'} onClick={() => setCurrentView('tipologias')} />
+
         {/* Gerenciamento Collapsible Menu */}
         <div>
           <button
@@ -155,8 +165,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
             aria-haspopup="listbox"
             aria-expanded={isDropdownOpen}
           >
-            <span>{selectedProfile}</span>
-            <ChevronDownIcon className="w-4 h-4 text-gray-500" />
+            <span className="truncate">{selectedProfile}</span>
+            <ChevronDownIcon className="w-4 h-4 text-gray-500 flex-shrink-0" />
           </button>
 
           {isDropdownOpen && (

@@ -7,6 +7,7 @@ import RequestsTable from './components/RequestsTable';
 import PlanningScreen from './components/PlanningScreen';
 import PlurianualScreen from './components/PlurianualScreen';
 import HomeScreen from './components/HomeScreen';
+import TipologiaScreen from './components/TipologiaScreen';
 import { ListIcon, CalculatorIcon } from './components/Icons';
 
 import type { SummaryData } from './types';
@@ -63,6 +64,7 @@ const App: React.FC = () => {
         )}
         {currentView === 'planejamento' && <PlanningScreen />}
         {currentView === 'plurianual' && <PlurianualScreen />}
+        {currentView === 'tipologias' && <TipologiaScreen />}
       </main>
     </div>
   );
