@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -5,6 +6,7 @@ import SummaryCard from './components/SummaryCard';
 import RequestsTable from './components/RequestsTable';
 import PlanningScreen from './components/PlanningScreen';
 import PlurianualScreen from './components/PlurianualScreen';
+import HomeScreen from './components/HomeScreen';
 import { ListIcon, CalculatorIcon } from './components/Icons';
 
 import type { SummaryData } from './types';
@@ -12,7 +14,7 @@ import type { SummaryData } from './types';
 
 const App: React.FC = () => {
     const [selectedProfile, setSelectedProfile] = useState('Gestor GSO');
-    const [currentView, setCurrentView] = useState('solicitacoes');
+    const [currentView, setCurrentView] = useState('home');
     
     const summaryData: SummaryData[] = [
         { title: 'Nova Unidade', count: 3, value: 'R$ 130.500.000,00', color: 'border-green-500', icon: ListIcon },
@@ -47,6 +49,7 @@ const App: React.FC = () => {
         setCurrentView={setCurrentView}
       />
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        {currentView === 'home' && <HomeScreen setCurrentView={setCurrentView} />}
         {isSolicitacoesView && (
           <>
             <Header title={solicitacoesTitle} selectedProfile={selectedProfile} />
