@@ -135,6 +135,8 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
     </div>
   );
 
+  const MAX_CHARS = 3000;
+
   return (
     <>
     {showOrientation && <SedeOrientationModal onConfirm={() => setShowOrientation(false)} />}
@@ -182,9 +184,11 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                     name="titulo"
                     value={formData.titulo}
                     onChange={handleChange}
-                    placeholder="Descrever brevemente o serviço a ser realizado"
+                    maxLength={MAX_CHARS}
+                    placeholder="Descrever brevemente o serviço a ser realizado. Ver exemplo no Guia de Orientações."
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
+                <div className="text-right text-xs text-gray-500 mt-1">{formData.titulo.length}/{MAX_CHARS}</div>
             </div>
 
             <div>
@@ -194,9 +198,11 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                     rows={2}
                     value={formData.objetivo}
                     onChange={handleChange}
-                    placeholder="Detalhar objetivo da demanda"
+                    maxLength={MAX_CHARS}
+                    placeholder="Descrever o que se pretende realizar para resolver o problema central ou explorar a oportunidade identificada. Ver exemplo no Guia de Orientações."
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                 />
+                <div className="text-right text-xs text-gray-500 mt-1">{formData.objetivo.length}/{MAX_CHARS}</div>
             </div>
 
             <div>
@@ -206,9 +212,11 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                     rows={2}
                     value={formData.expectativaResultados}
                     onChange={handleChange}
-                    placeholder="Descrever os resultados esperados"
+                    maxLength={MAX_CHARS}
+                    placeholder="Descrever o resultado a ser gerado com a realização da demanda. Ver exemplo no Guia de Orientações."
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                 />
+                <div className="text-right text-xs text-gray-500 mt-1">{formData.expectativaResultados.length}/{MAX_CHARS}</div>
             </div>
 
             <div>
@@ -218,9 +226,11 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                     rows={2}
                     value={formData.justificativa}
                     onChange={handleChange}
-                    placeholder="Justificar a necessidade da demanda"
+                    maxLength={MAX_CHARS}
+                    placeholder="Descrever o problema ou a oportunidade que justifica o desenvolvimento desde projeto. Ver exemplo no Guia de Orientações."
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                 />
+                <div className="text-right text-xs text-gray-500 mt-1">{formData.justificativa.length}/{MAX_CHARS}</div>
             </div>
 
             <div>
@@ -230,9 +240,11 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                     rows={2}
                     value={formData.resumoServicos}
                     onChange={handleChange}
-                    placeholder="Descrever em tópicos os serviços a serem realizados"
+                    maxLength={MAX_CHARS}
+                    placeholder="Descrever em tópicos os serviços a serem realizados. Ver exemplo no Guia de Orientações."
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                 />
+                <div className="text-right text-xs text-gray-500 mt-1">{formData.resumoServicos.length}/{MAX_CHARS}</div>
             </div>
         </div>
 
