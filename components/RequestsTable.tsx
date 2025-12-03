@@ -9,7 +9,7 @@ import ConfirmationModal from './ConfirmationModal';
 import AlertModal from './AlertModal';
 import PlanningDetailsModal from './PlanningDetailsModal';
 
-const initialRequests: Request[] = [
+export const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Santo An...', description: 'Reforma Gera...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P', situacaoProjeto: 'Em Andamento', situacaoObra: 'Não Iniciada', inicioObra: '05/01/2030', saldoObraPrazo: 12, saldoObraValor: 'R$ 3.500.000,00' },
     { id: 2, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Ambientação ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2025', hasInfo: false, expectedValue: '300 mil', executingUnit: 'GSO', prazo: 6, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SESI', ordem: 'SS-25-0002-O', situacaoProjeto: 'Concluído', situacaoObra: 'A Realizar', inicioObra: '01/05/2026', saldoObraPrazo: 6, saldoObraValor: 'R$ 300.000,00' },
     { id: 3, criticality: Criticality.CRITICA, unit: 'Sede', description: 'Ambientação ...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '03/11/2025', hasInfo: false, expectedValue: '250 mil', executingUnit: 'GSO', prazo: 6, categoriaInvestimento: 'Baixa Complexidade', entidade: 'SESI', ordem: 'SS-25-0003-O', situacaoProjeto: 'N/A', situacaoObra: 'A Realizar', inicioObra: '01/06/2026', saldoObraPrazo: 5, saldoObraValor: 'R$ 250.000,00' },
@@ -47,6 +47,8 @@ const getCriticalityClass = (criticality: Criticality) => {
 interface RequestsTableProps {
   selectedProfile: string;
   currentView: string;
+  requests: Request[];
+  setRequests: React.Dispatch<React.SetStateAction<Request[]>>;
 }
 
 type Toast = {
@@ -55,8 +57,7 @@ type Toast = {
   isVisible: boolean;
 };
 
-const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentView }) => {
-    const [requests, setRequests] = useState<Request[]>(initialRequests);
+const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentView, requests, setRequests }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isReclassificationModalOpen, setIsReclassificationModalOpen] = useState(false);
     const [selectedRequestForReclassification, setSelectedRequestForReclassification] = useState<Request | null>(null);

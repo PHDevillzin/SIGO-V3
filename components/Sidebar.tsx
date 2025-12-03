@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon, WrenchScrewdriverIcon, TagIcon } from './Icons';
+import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon, WrenchScrewdriverIcon, TagIcon, FolderPlusIcon, Squares2x2Icon, ClipboardIcon, BuildingStorefrontIcon } from './Icons';
 
 interface SidebarProps {
   selectedProfile: string;
@@ -20,6 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isManagementMenuOpen, setIsManagementMenuOpen] = useState(false);
   const [isSolicitacoesMenuOpen, setIsSolicitacoesMenuOpen] = useState(false);
+  const [isAbrirSolicitacoesMenuOpen, setIsAbrirSolicitacoesMenuOpen] = useState(false);
 
   const profiles = [
     "Administração do Sistema",
@@ -58,9 +59,11 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
   useEffect(() => {
     const isSolicitacoes = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao'].includes(currentView);
     const isGerenciamento = currentView === 'planejamento' || currentView === 'plurianual';
+    const isAbrirSolicitacoes = ['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(currentView);
     
     setIsSolicitacoesMenuOpen(isSolicitacoes);
     setIsManagementMenuOpen(isGerenciamento);
+    setIsAbrirSolicitacoesMenuOpen(isAbrirSolicitacoes);
 
   }, [currentView]);
 
@@ -110,6 +113,42 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                 label="Manutenção"
                 active={currentView === 'manutencao'}
                 onClick={() => setCurrentView('manutencao')}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Abrir Solicitações Collapsible Menu */}
+        <div>
+          <button
+            onClick={() => setIsAbrirSolicitacoesMenuOpen(prev => !prev)}
+            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
+          >
+            <div className="flex items-center space-x-3">
+              <FolderPlusIcon className="w-5 h-5" />
+              <span className="font-medium">Abrir Solicitações</span>
+            </div>
+            <ChevronDownIcon className={`w-4 h-4 transition-transform ${isAbrirSolicitacoesMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {isAbrirSolicitacoesMenuOpen && (
+            <div className="pt-2 pl-6 space-y-2">
+              <NavItem 
+                icon={Squares2x2Icon}
+                label="Abrir Estratégica"
+                active={currentView === 'nova_estrategica'}
+                onClick={() => setCurrentView('nova_estrategica')}
+              />
+               <NavItem 
+                icon={ClipboardIcon}
+                label="Abrir Sede"
+                active={currentView === 'nova_sede'}
+                onClick={() => setCurrentView('nova_sede')}
+              />
+              <NavItem 
+                icon={BuildingStorefrontIcon}
+                label="Abrir Unidade"
+                active={currentView === 'nova_unidade'}
+                onClick={() => setCurrentView('nova_unidade')}
               />
             </div>
           )}

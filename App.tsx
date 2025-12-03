@@ -3,19 +3,21 @@ import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import SummaryCard from './components/SummaryCard';
-import RequestsTable from './components/RequestsTable';
+import RequestsTable, { initialRequests } from './components/RequestsTable';
 import PlanningScreen from './components/PlanningScreen';
 import PlurianualScreen from './components/PlurianualScreen';
 import HomeScreen from './components/HomeScreen';
 import TipologiaScreen from './components/TipologiaScreen';
+import OpenSedeRequestScreen from './components/OpenSedeRequestScreen';
 import { ListIcon, CalculatorIcon } from './components/Icons';
 
-import type { SummaryData } from './types';
+import type { SummaryData, Request } from './types';
 
 
 const App: React.FC = () => {
     const [selectedProfile, setSelectedProfile] = useState('Gestor GSO');
     const [currentView, setCurrentView] = useState('home');
+    const [requests, setRequests] = useState<Request[]>(initialRequests);
     
     const summaryData: SummaryData[] = [
         { title: 'Nova Unidade', count: 3, value: 'R$ 130.500.000,00', color: 'border-green-500', icon: ListIcon },
@@ -40,6 +42,11 @@ const App: React.FC = () => {
     };
     const solicitacoesTitle = getSolicitacoesTitle();
 
+    const handleAddRequest = (newRequest: Request) => {
+        setRequests(prev => [newRequest, ...prev]);
+        setCurrentView('solicitacoes');
+    };
+
 
   return (
     <div className="flex h-screen bg-[#F0F2F5] font-sans">
@@ -59,12 +66,18 @@ const App: React.FC = () => {
                 <SummaryCard key={index} {...data} />
               ))}
             </div>
-            <RequestsTable selectedProfile={selectedProfile} currentView={currentView} />
+            <RequestsTable 
+                selectedProfile={selectedProfile} 
+                currentView={currentView}
+                requests={requests}
+                setRequests={setRequests}
+            />
           </>
         )}
         {currentView === 'planejamento' && <PlanningScreen />}
         {currentView === 'plurianual' && <PlurianualScreen />}
         {currentView === 'tipologias' && <TipologiaScreen />}
+        {currentView === 'nova_sede' && <OpenSedeRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
       </main>
     </div>
   );

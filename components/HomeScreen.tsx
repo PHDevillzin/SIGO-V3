@@ -9,7 +9,8 @@ import {
     ShareIcon, 
     ClipboardDocumentListIcon,
     EyeIcon,
-    UserIcon
+    UserIcon,
+    BanknotesIcon
 } from './Icons';
 
 interface HomeScreenProps {
@@ -137,6 +138,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
             icon: ClipboardDocumentListIcon,
             buttonIcon: EyeIcon,
             view: 'plurianual'
+        },
+        {
+            title: 'Política de Investimento',
+            description: 'Visualize a política de investimento',
+            buttonText: 'Ver Política',
+            buttonColor: 'gray',
+            icon: BanknotesIcon,
+            buttonIcon: EyeIcon,
+            view: 'politica_investimento'
         }
     ];
 
