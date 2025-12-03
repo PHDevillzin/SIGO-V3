@@ -9,6 +9,7 @@ import PlurianualScreen from './components/PlurianualScreen';
 import HomeScreen from './components/HomeScreen';
 import TipologiaScreen from './components/TipologiaScreen';
 import OpenSedeRequestScreen from './components/OpenSedeRequestScreen';
+import OpenStrategicRequestScreen from './components/OpenStrategicRequestScreen';
 import { ListIcon, CalculatorIcon } from './components/Icons';
 
 import type { SummaryData, Request } from './types';
@@ -60,7 +61,11 @@ const App: React.FC = () => {
         {currentView === 'home' && <HomeScreen setCurrentView={setCurrentView} />}
         {isSolicitacoesView && (
           <>
-            <Header title={solicitacoesTitle} selectedProfile={selectedProfile} />
+            <Header 
+                title={solicitacoesTitle} 
+                selectedProfile={selectedProfile} 
+                setCurrentView={setCurrentView}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 my-6">
               {summaryData.map((data, index) => (
                 <SummaryCard key={index} {...data} />
@@ -78,6 +83,7 @@ const App: React.FC = () => {
         {currentView === 'plurianual' && <PlurianualScreen />}
         {currentView === 'tipologias' && <TipologiaScreen />}
         {currentView === 'nova_sede' && <OpenSedeRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
+        {currentView === 'nova_estrategica' && <OpenStrategicRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
       </main>
     </div>
   );
