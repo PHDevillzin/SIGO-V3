@@ -10,6 +10,7 @@ import HomeScreen from './components/HomeScreen';
 import TipologiaScreen from './components/TipologiaScreen';
 import OpenSedeRequestScreen from './components/OpenSedeRequestScreen';
 import OpenStrategicRequestScreen from './components/OpenStrategicRequestScreen';
+import OpenUnitRequestScreen from './components/OpenUnitRequestScreen';
 import { ListIcon, CalculatorIcon } from './components/Icons';
 
 import type { SummaryData, Request } from './types';
@@ -84,6 +85,7 @@ const App: React.FC = () => {
         {currentView === 'tipologias' && <TipologiaScreen />}
         {currentView === 'nova_sede' && <OpenSedeRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
         {currentView === 'nova_estrategica' && <OpenStrategicRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
+        {currentView === 'nova_unidade' && <OpenUnitRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
       </main>
     </div>
   );

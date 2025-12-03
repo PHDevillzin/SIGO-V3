@@ -1,19 +1,19 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
 import { Request, Criticality } from '../types';
 
-interface OpenStrategicRequestScreenProps {
+interface OpenUnitRequestScreenProps {
   onClose: () => void;
   onSave?: (request: Request) => void;
 }
 
-const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({ onClose, onSave }) => {
+const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, onSave }) => {
   const [formData, setFormData] = useState({
-    referencia: '',
-    
-    // Checkboxes Group 1
-    aumento: [] as string[],
+    entidade: 'SENAI',
+    unidade: '',
+    local: '',
+    atividade: '',
     
     // Text Fields
     titulo: '',
@@ -22,12 +22,10 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
     justificativa: '',
     resumoServicos: '',
     
-    // Areas
-    areaResponsavel: 'Administração do Sistema',
-    areasEnvolvidas: '',
-
-    // Checkboxes Group 2
+    // Checkboxes
+    aumento: [] as string[],
     necessidades: [] as string[],
+    servicosEspecificos: [] as string[],
 
     // Quantitative
     areaIntervencao: '',
@@ -36,29 +34,40 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
     valorExecucao: '',
     dataUtilizacao: '',
 
-    // Details
-    programaNecessidades: '',
-    instalacoesSesiSenai: '',
+    // Files
+    plantaBaixa: null,
+    fotos: null,
 
-    // Files ( placeholders )
-    arquivoUpload: null,
-    estudoMercado: null,
-
-    // Radios
-    localObra: '',
+    // Radios - Compliance
     possuiProjeto: '',
     possuiLaudo: '',
     temAutorizacao: '',
     realizouConsulta: '',
-    houveNotificacao: ''
+    houveNotificacao: '',
+
+    // Radios - Risk Assessment
+    problemasNaoAtendida: '',
+    prazoAcao: '',
+    probabilidadeEvolucao: ''
   });
+
+  // Mock data for auto-filling Local and Atividade
+  useEffect(() => {
+    if (formData.unidade === '7.92 Lençóis Paulista') {
+        setFormData(prev => ({ ...prev, local: '7.92 Lençóis Paulista', atividade: 'CFP' }));
+    } else if (formData.unidade) {
+        setFormData(prev => ({ ...prev, local: formData.unidade, atividade: 'Escola' }));
+    } else {
+        setFormData(prev => ({ ...prev, local: '', atividade: '' }));
+    }
+  }, [formData.unidade]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckboxChange = (group: 'aumento' | 'necessidades', value: string) => {
+  const handleCheckboxChange = (group: 'aumento' | 'necessidades' | 'servicosEspecificos', value: string) => {
     setFormData(prev => {
       const currentList = prev[group];
       if (currentList.includes(value)) {
@@ -76,7 +85,6 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onSave) {
-        // Format date from YYYY-MM-DD to DD/MM/YYYY
         const formatDate = (dateStr: string) => {
             if (!dateStr) return 'N/A';
             const [year, month, day] = dateStr.split('-');
@@ -86,17 +94,17 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
         const newRequest: Request = {
             id: Math.floor(Math.random() * 100000) + 100,
             criticality: Criticality.MEDIA,
-            unit: 'Nova Unidade',
-            description: formData.titulo || 'Solicitação Estratégica',
+            unit: formData.unidade || 'Unidade',
+            description: formData.titulo,
             status: 'Análise da Sol...',
             currentLocation: 'GSO',
             expectedStartDate: formatDate(formData.inicioExecucao),
             hasInfo: true,
             expectedValue: formData.valorExecucao ? `R$ ${formData.valorExecucao}` : 'R$ 0,00',
-            executingUnit: 'GSO',
+            executingUnit: 'Unidade',
             prazo: parseInt(formData.prazoExecucao) || 0,
-            categoriaInvestimento: 'Intervenção Estratégica',
-            entidade: 'SENAI',
+            categoriaInvestimento: 'Reforma Operacional', // Default
+            entidade: formData.entidade,
             ordem: `SS-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)}`,
             tipologia: '',
             situacaoProjeto: 'A Iniciar',
@@ -142,12 +150,34 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
 
   const MAX_CHARS = 3000;
 
+  const servicosList = [
+      'Ampliação ou construção de novas áreas cobertas de qualquer tipo',
+      'Diminuição ou demolição de áreas cobertas existentes de qualquer tipo',
+      'Construção de novos ambientes internos',
+      'Alteração de traçados de tubulações elétricas, hidráulicas ou de gases',
+      'Inclusão de pontos elétricos, hidráulicos ou de gases',
+      'Climatização de novas áreas',
+      'Contenção de talude',
+      'Execução de fundação superficial ou profunda',
+      'Pavimentação de áreas verdes',
+      'Poda ou remoção de árvores',
+      'Realização de laudo ou parecer técnico antes da execução',
+      'Recuperação ou reforço estrutural',
+      'Reforma de calçada ou áreas próximas à calçada',
+      'Sondagem do solo',
+      'Reforma de vestiário, piscina, refeitório ou cozinha',
+      'Impacto ou alteração no fluxo de pedestres ou de veículos',
+      'Reforma ou melhoria que exige aprovação prévia na Prefeitura',
+      'Necessidade de intervenção temporária em outra edificação existente durante a execução da obra',
+      'Nenhum serviço citado anteriormente'
+  ];
+
   return (
     <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md overflow-hidden my-6">
       <div className="flex justify-between items-center p-6 border-b border-gray-200">
         <div>
             <h1 className="text-xl font-bold text-gray-800">Abrir uma solicitação</h1>
-            <p className="text-sm text-gray-500 font-semibold">(Estratégica)</p>
+            <p className="text-sm text-gray-500 font-semibold">(Unidade)</p>
         </div>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <XMarkIcon className="w-5 h-5" />
@@ -156,23 +186,126 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
 
       <form onSubmit={handleSubmit} className="p-8 space-y-8">
         
-        {/* Section 1: Classification */}
+        {/* Section 1: Basic Info */}
         <div className="space-y-6">
             <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">A demanda refere-se a: <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Entidade <span className="text-red-500">*</span></label>
                 <select 
-                    name="referencia" 
-                    value={formData.referencia} 
+                    name="entidade" 
+                    value={formData.entidade} 
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-gray-600"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-100"
                 >
-                    <option value="">Selecione uma opção</option>
-                    <option value="Nova Obra">Nova Obra</option>
-                    <option value="Reforma">Reforma</option>
-                    <option value="Ampliação">Ampliação</option>
+                    <option value="SESI">SESI</option>
+                    <option value="SENAI">SENAI</option>
                 </select>
             </div>
 
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Unidade <span className="text-red-500">*</span></label>
+                <select 
+                    name="unidade" 
+                    value={formData.unidade} 
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                >
+                    <option value="">Selecione uma opção</option>
+                    <option value="7.92 Lençóis Paulista">7.92 Lençóis Paulista</option>
+                    <option value="CE 114 - Agudos">CE 114 - Agudos</option>
+                    <option value="CAT Tatuapé">CAT Tatuapé</option>
+                </select>
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Local:</label>
+                <div className="w-full text-sm text-gray-800 font-medium">
+                    {formData.local || '-'}
+                </div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Atividade principal da edificação:</label>
+                <div className="w-full text-sm text-gray-800 font-medium">
+                    {formData.atividade || '-'}
+                </div>
+            </div>
+        </div>
+
+        {/* Section 2: Text Fields */}
+        <div className="space-y-6">
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Breve descrição ou título do serviço <span className="text-red-500">*</span></label>
+                <input 
+                    type="text" 
+                    name="titulo"
+                    value={formData.titulo}
+                    onChange={handleChange}
+                    maxLength={MAX_CHARS}
+                    placeholder="[Descrever brevemente o serviço a ser realizado. Ver exemplo no Guia de Orientações.]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <div className="text-right text-xs text-gray-500 mt-1">{formData.titulo.length}/{MAX_CHARS}</div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Objetivo <span className="text-red-500">*</span></label>
+                <textarea 
+                    name="objetivo"
+                    rows={2}
+                    value={formData.objetivo}
+                    onChange={handleChange}
+                    maxLength={MAX_CHARS}
+                    placeholder="[Descrever o que se pretende realizar para resolver o problema central ou explorar a oportunidade identificada. Ver exemplo no Guia de Orientações.]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                />
+                <div className="text-right text-xs text-gray-500 mt-1">{formData.objetivo.length}/{MAX_CHARS}</div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Expectativa de resultados <span className="text-red-500">*</span></label>
+                <textarea 
+                    name="expectativaResultados"
+                    rows={2}
+                    value={formData.expectativaResultados}
+                    onChange={handleChange}
+                    maxLength={MAX_CHARS}
+                    placeholder="[Descrever o resultado a ser gerado com a realização da demanda. Ver exemplo no Guia de Orientações.]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                />
+                <div className="text-right text-xs text-gray-500 mt-1">{formData.expectativaResultados.length}/{MAX_CHARS}</div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Justificativa <span className="text-red-500">*</span></label>
+                <textarea 
+                    name="justificativa"
+                    rows={2}
+                    value={formData.justificativa}
+                    onChange={handleChange}
+                    maxLength={MAX_CHARS}
+                    placeholder="[Descrever o problema ou a oportunidade que justifica o desenvolvimento desde projeto. Ver exemplo no Guia de Orientações.]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                />
+                <div className="text-right text-xs text-gray-500 mt-1">{formData.justificativa.length}/{MAX_CHARS}</div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Resumo dos Serviços <span className="text-red-500">*</span></label>
+                <textarea 
+                    name="resumoServicos"
+                    rows={2}
+                    value={formData.resumoServicos}
+                    onChange={handleChange}
+                    maxLength={MAX_CHARS}
+                    placeholder="[Descrever em tópicos os serviços a serem realizados. Ver exemplo no Guia de Orientações.]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                />
+                <div className="text-right text-xs text-gray-500 mt-1">{formData.resumoServicos.length}/{MAX_CHARS}</div>
+            </div>
+        </div>
+
+        {/* Section 3: Checkboxes */}
+        <div className="space-y-6 pt-4">
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Após o término da demanda, haverá aumento de: <span className="text-red-500">*</span></label>
                 <div className="space-y-2">
@@ -189,136 +322,51 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                     ))}
                 </div>
             </div>
-        </div>
 
-        {/* Section 2: Text Fields */}
-        <div className="space-y-6">
-            {/* Titulo */}
             <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Breve descrição ou título do serviço <span className="text-red-500">*</span></label>
-                <input 
-                    type="text" 
-                    name="titulo"
-                    value={formData.titulo}
-                    onChange={handleChange}
-                    maxLength={MAX_CHARS}
-                    placeholder="[Descrever brevemente o serviço a ser realizado. Ver exemplo no Guia de Orientações.]"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <div className="text-right text-xs text-gray-500 mt-1">{formData.titulo.length}/{MAX_CHARS}</div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Selecione as necessidades da unidade após execução da demanda: <span className="text-red-500">*</span></label>
+                <div className="space-y-2">
+                    {[
+                        'Aquisição de mobiliário', 
+                        'Aquisição de equipamentos gerais', 
+                        'Aquisição de equipamentos de TI', 
+                        'Instalação de Dados de Voz',
+                        'Alteração nos Contratos Facilities',
+                        'Não haverá necessidades ou alterações adicionais'
+                    ].map(opt => (
+                        <label key={opt} className="flex items-center space-x-2">
+                            <input 
+                                type="checkbox" 
+                                checked={formData.necessidades.includes(opt)}
+                                onChange={() => handleCheckboxChange('necessidades', opt)}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-500">{opt}</span>
+                        </label>
+                    ))}
+                </div>
             </div>
 
-            {/* Objetivo */}
             <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Objetivo <span className="text-red-500">*</span></label>
-                <textarea 
-                    name="objetivo"
-                    rows={3}
-                    value={formData.objetivo}
-                    onChange={handleChange}
-                    maxLength={MAX_CHARS}
-                    placeholder="[Descrever o que se pretende realizar para resolver o problema central ou explorar a oportunidade identificada. Ver exemplo no Guia de Orientações.]"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-                />
-                <div className="text-right text-xs text-gray-500 mt-1">{formData.objetivo.length}/{MAX_CHARS}</div>
-            </div>
-
-            {/* Expectativa de resultados */}
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Expectativa de resultados <span className="text-red-500">*</span></label>
-                <textarea 
-                    name="expectativaResultados"
-                    rows={3}
-                    value={formData.expectativaResultados}
-                    onChange={handleChange}
-                    maxLength={MAX_CHARS}
-                    placeholder="[Descrever o resultado a ser gerado com a realização da demanda. Ver exemplo no Guia de Orientações.]"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-                />
-                <div className="text-right text-xs text-gray-500 mt-1">{formData.expectativaResultados.length}/{MAX_CHARS}</div>
-            </div>
-
-            {/* Justificativa */}
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Justificativa <span className="text-red-500">*</span></label>
-                <textarea 
-                    name="justificativa"
-                    rows={3}
-                    value={formData.justificativa}
-                    onChange={handleChange}
-                    maxLength={MAX_CHARS}
-                    placeholder="[Descrever o problema ou a oportunidade que justifica o desenvolvimento desde projeto. Ver exemplo no Guia de Orientações.]"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-                />
-                <div className="text-right text-xs text-gray-500 mt-1">{formData.justificativa.length}/{MAX_CHARS}</div>
-            </div>
-
-            {/* Resumo dos Serviços */}
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Resumo dos Serviços <span className="text-red-500">*</span></label>
-                <textarea 
-                    name="resumoServicos"
-                    rows={3}
-                    value={formData.resumoServicos}
-                    onChange={handleChange}
-                    maxLength={MAX_CHARS}
-                    placeholder="[Descrever em tópicos os serviços a serem realizados. Ver exemplo no Guia de Orientações.]"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-                />
-                <div className="text-right text-xs text-gray-500 mt-1">{formData.resumoServicos.length}/{MAX_CHARS}</div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Selecione se algum dos serviços listados serão necessários à realização da demanda: <span className="text-red-500">*</span></label>
+                <div className="space-y-2">
+                    {servicosList.map(opt => (
+                        <label key={opt} className="flex items-center space-x-2">
+                            <input 
+                                type="checkbox" 
+                                checked={formData.servicosEspecificos.includes(opt)}
+                                onChange={() => handleCheckboxChange('servicosEspecificos', opt)}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-500">{opt}</span>
+                        </label>
+                    ))}
+                </div>
             </div>
         </div>
 
-        {/* Section 3: Responsibility */}
-        <div className="space-y-6">
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Área Fim responsável pela aprovação <span className="text-red-500">*</span></label>
-                <input 
-                    type="text" 
-                    value={formData.areaResponsavel} 
-                    disabled
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"
-                />
-            </div>
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Áreas Fim a serem envolvidas: <span className="text-red-500">*</span></label>
-                <input 
-                    type="text" 
-                    name="areasEnvolvidas"
-                    value={formData.areasEnvolvidas} 
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-            </div>
-        </div>
-
-        {/* Section 4: Needs */}
-        <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Selecione as necessidades da unidade após a execução da demanda: <span className="text-red-500">*</span></label>
-            <div className="space-y-2">
-                {[
-                    'Aquisição de mobiliário', 
-                    'Aquisição de equipamentos gerais', 
-                    'Aquisição de equipamentos de TI', 
-                    'Instalação de Dados e Voz',
-                    'Alteração nos Contratos Facilities',
-                    'Não haverá necessidades ou alterações adicionais'
-                ].map(opt => (
-                    <label key={opt} className="flex items-center space-x-2">
-                        <input 
-                            type="checkbox" 
-                            checked={formData.necessidades.includes(opt)}
-                            onChange={() => handleCheckboxChange('necessidades', opt)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-500">{opt}</span>
-                    </label>
-                ))}
-            </div>
-        </div>
-
-        {/* Section 5: Quantitative */}
-        <div className="space-y-6">
+        {/* Section 4: Quantitative Inputs */}
+        <div className="space-y-6 pt-4">
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Qual a expectativa da área de intervenção (m2)? (somente números) <span className="text-red-500">*</span></label>
                 <input 
@@ -329,7 +377,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
             </div>
-             <div>
+            <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Qual a expectativa de prazo para execução (meses) <span className="text-red-500">*</span></label>
                 <input 
                     type="number" 
@@ -374,24 +422,10 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
             </div>
         </div>
 
-        {/* Section 6: Large Text Inputs & File Uploads */}
-        <div className="space-y-6">
+        {/* Section 5: File Uploads */}
+        <div className="space-y-6 pt-4">
             <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Programa de Necessidades <span className="text-red-500">*</span></label>
-                <textarea 
-                    name="programaNecessidades"
-                    rows={4}
-                    value={formData.programaNecessidades}
-                    onChange={handleChange}
-                    maxLength={2000}
-                    placeholder="Escreva aqui..."
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-                />
-                <div className="text-xs text-gray-400 mt-1">Limite máximo de 2000 caracteres.</div>
-            </div>
-
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Upload de Arquivo <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Indicar em planta baixa a localização e área de intervenção: <span className="text-red-500">*</span></label>
                 <div className="flex w-full border border-gray-300 rounded-md overflow-hidden">
                     <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm">
                         Escolher Arquivo
@@ -399,11 +433,10 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                     </label>
                     <span className="px-4 py-2 text-gray-500 text-sm flex items-center">Nenhum arquivo escolhido</span>
                 </div>
-                <div className="text-xs text-blue-400 mt-1 cursor-pointer hover:underline">*Link para download do modelo do arquivo disponibilizado</div>
             </div>
 
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Estudo de Mercado <span className="text-red-500">*</span></label>
+             <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Incluir fotografias do local da intervenção: <span className="text-red-500">*</span></label>
                 <div className="flex w-full border border-gray-300 rounded-md overflow-hidden">
                     <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm">
                         Escolher Arquivo
@@ -411,35 +444,43 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                     </label>
                     <span className="px-4 py-2 text-gray-500 text-sm flex items-center">Nenhum arquivo escolhido</span>
                 </div>
-                <div className="text-xs text-blue-400 mt-1 cursor-pointer hover:underline">*Link para download do modelo do arquivo disponibilizado</div>
-            </div>
-
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Instalações SESI / SENAI próximas: <span className="text-red-500">*</span></label>
-                <textarea 
-                    name="instalacoesSesiSenai"
-                    rows={4}
-                    value={formData.instalacoesSesiSenai}
-                    onChange={handleChange}
-                    maxLength={500}
-                    placeholder="Descreva as instalações próximas"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-                />
-                <div className="text-xs text-gray-400 mt-1">Limite máximo de 500 caracteres.</div>
             </div>
         </div>
 
-        {/* Section 7: Radio Groups (Compliance) */}
-        <div className="space-y-6">
-            {renderRadioGroup('A obra será realizada em:', 'localObra', [
-                { label: 'Área de terreno disponível na unidade', value: 'Disponivel' },
-                { label: 'Novo terreno doado', value: 'Novo' }
+        {/* Section 6: Yes/No Questions - Compliance */}
+        <div className="space-y-6 pt-4">
+            {renderYesNoRadioGroup('A demanda possui algum projeto de construção elaborado ou contratado pela Unidade?', 'possuiProjeto')}
+            {renderYesNoRadioGroup('A demanda possui algum laudo, relatório técnico ou documento complementar elaborado ou contratado pela Unidade?', 'possuiLaudo')}
+            {renderYesNoRadioGroup('A unidade tem autorização da Prefeitura para realizar a demanda?', 'temAutorizacao')}
+            {renderYesNoRadioGroup('A unidade realizou consulta à Prefeitura quanto ao tempo médio de aprovação do processo?', 'realizouConsulta')}
+            {renderYesNoRadioGroup('Houve notificação a algum órgão público sobre a realização da demanda?', 'houveNotificacao')}
+        </div>
+
+        {/* Section 7: Risk Assessment */}
+        <div className="space-y-6 pt-4">
+            {renderRadioGroup('Quais problemas podem ocorrer se a demanda não for atendida?', 'problemasNaoAtendida', [
+                { value: 'Perda de vidas', label: 'Perda de vidas humanas e/ou alta probabilidade de ocorrência de eventos destrutivos ao patrimônio ou meio ambiente e/ou alta probabilidade de ocorrência de invasões' },
+                { value: 'Ferimentos', label: 'Ferimentos aos usuários e/ou possível ocorrência de eventos destrutivos ao patrimônio ou meio ambiente e/ou possível ocorrência de invasões' },
+                { value: 'Desconforto', label: 'Desconforto aos usuários e/ou reduzida possibilidade de ocorrência de eventos destrutivos ao patrimônio ou meio ambiente e/ou reduzida possibilidade de ocorrência de invasões' },
+                { value: 'Pequenos incomodos', label: 'Pequenos incômodos aos usuários e/ou sem a ocorrência de eventos destrutivos ao patrimônio ou meio ambiente e/ou nenhuma possibilidade de ocorrência de invasões' },
+                { value: 'Nao se aplica', label: 'Não se aplica' },
             ])}
-            {renderYesNoRadioGroup('A demanda possui algum projeto de construção elaborado ou contratado?', 'possuiProjeto')}
-            {renderYesNoRadioGroup('A demanda possui algum laudo, relatório técnico ou documento complementar?', 'possuiLaudo')}
-            {renderYesNoRadioGroup('A Unidade tem autorização da Prefeitura para realizar a demanda?', 'temAutorizacao')}
-            {renderYesNoRadioGroup('A Unidade realizou consulta na Prefeitura quanto ao tempo médio de aprovação do processo?', 'realizouConsulta')}
-            {renderYesNoRadioGroup('Houve alguma notificação de órgão público para a realização da demanda?', 'houveNotificacao')}
+
+            {renderRadioGroup('Qual é o prazo de ação antes que os problemas piorem?', 'prazoAcao', [
+                { value: 'Imediata', label: 'Evento em ocorrência, cuja intervenção deve ser imediata' },
+                { value: 'Urgencia', label: 'Evento prestes a ocorrer, cuja intervenção deve ocorrer com alguma urgência' },
+                { value: 'Medio Prazo', label: 'Evento com expectativa de ocorrer a médio prazo, cuja intervenção deve ocorrer assim que possível' },
+                { value: 'Longo Prazo', label: 'Evento com expectativa de ocorrer a longo prazo, podendo realizar intervenção de acordo com o planejamento plurianual' },
+                { value: 'Nao se aplica', label: 'Não se aplica' },
+            ])}
+
+            {renderRadioGroup('Qual é a probabilidade de evolução dos problemas?', 'probabilidadeEvolucao', [
+                { value: 'Imediata', label: 'Evolução imediata' },
+                { value: 'Curto Prazo', label: 'Evolução em curto prazo, com tendência a piorar rapidamente se nada for feito' },
+                { value: 'Medio Prazo', label: 'Evolução em médio prazo, com tendência a piorar moderadamente se nada for feito' },
+                { value: 'Longo Prazo', label: 'Evolução em longo prazo, com tendência a piorar lentamente se nada for feito' },
+                { value: 'Nao se aplica', label: 'Não se aplica' },
+            ])}
         </div>
 
         {/* Action Buttons */}
@@ -465,4 +506,4 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
   );
 };
 
-export default OpenStrategicRequestScreen;
+export default OpenUnitRequestScreen;
