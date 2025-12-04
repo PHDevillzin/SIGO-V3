@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
 import AlertModal from './AlertModal';
@@ -152,7 +151,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
       ])
   );
 
-  const renderFileUpload = (label: string, accept: string, helperText: string) => (
+  const renderFileUpload = (label: string, accept: string) => (
     <div>
         <label className="block text-sm font-semibold text-gray-700 mb-1">{label} <span className="text-red-500">*</span></label>
         <div className="flex w-full border border-gray-300 rounded-md overflow-hidden bg-white">
@@ -162,7 +161,6 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
             </label>
             <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">Nenhum arquivo escolhido</span>
         </div>
-        <div className="text-xs text-gray-500 mt-1">{helperText}</div>
     </div>
   );
 
@@ -425,14 +423,12 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
 
             {renderFileUpload(
                 "Upload de Arquivo",
-                ".pdf, .doc, .docx",
-                "Formatos aceitos: PDF, DOC, DOCX. Tamanho máximo: 10MB."
+                ".pdf, .doc, .docx"
             )}
 
             {renderFileUpload(
                 "Estudo de Mercado",
-                ".pdf, .doc, .docx",
-                "Formatos aceitos: PDF, DOC, DOCX. Tamanho máximo: 10MB."
+                ".pdf, .doc, .docx"
             )}
 
             <div>

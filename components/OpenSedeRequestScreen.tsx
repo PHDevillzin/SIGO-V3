@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
 import SedeOrientationModal from './SedeOrientationModal';
@@ -147,7 +146,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
     </div>
   );
   
-  const renderFileUpload = (label: string, accept: string, helperText: string) => (
+  const renderFileUpload = (label: string, accept: string) => (
     <div>
         <label className="block text-sm font-semibold text-gray-700 mb-1">{label} <span className="text-red-500">*</span></label>
         <div className="flex w-full border border-gray-300 rounded-md overflow-hidden bg-white">
@@ -157,7 +156,6 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
             </label>
             <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">Nenhum arquivo escolhido</span>
         </div>
-        <div className="text-xs text-gray-500 mt-1">{helperText}</div>
     </div>
   );
 
@@ -409,13 +407,11 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
         <div className="space-y-6 pt-4">
             {renderFileUpload(
                 "Indicar em planta baixa a localização e área de intervenção:",
-                ".pdf, .doc, .docx",
-                "Formatos aceitos: PDF, DOC, DOCX. Tamanho máximo: 10MB."
+                ".pdf, .doc, .docx"
             )}
             {renderFileUpload(
                 "Incluir fotografias do local da intervenção:",
-                ".jpeg, .jpg, .png, .pdf",
-                "Formatos aceitos: JPEG, PNG, PDF. Tamanho máximo: 10MB."
+                ".jpeg, .jpg, .png, .pdf"
             )}
         </div>
 

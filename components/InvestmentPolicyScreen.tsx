@@ -70,8 +70,7 @@ const InvestmentPolicyScreen: React.FC<InvestmentPolicyScreenProps> = ({ selecte
 
   const handleUpload = () => {
     if (fileToUpload) {
-        // Here you would implement the actual upload logic
-        alert(`Arquivo "${fileToUpload.name}" enviado com sucesso!`);
+        showToast(`Arquivo "${fileToUpload.name}" enviado com sucesso!`, 'success');
         setFileToUpload(null);
     }
   };
@@ -194,15 +193,13 @@ const InvestmentPolicyScreen: React.FC<InvestmentPolicyScreenProps> = ({ selecte
                               </div>
                           </div>
                           <div className="flex items-center space-x-2">
-                            {isGestor && (
-                                <button 
-                                    onClick={() => handleDeleteClick(policy.id)}
-                                    className="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
-                                    title="Excluir arquivo"
-                                >
-                                    <TrashIcon className="w-6 h-6" />
-                                </button>
-                            )}
+                            <button 
+                                onClick={() => handleDeleteClick(policy.id)}
+                                className="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
+                                title="Excluir arquivo"
+                            >
+                                <TrashIcon className="w-6 h-6" />
+                            </button>
                             <button className="text-gray-400 hover:text-sky-600 p-2 rounded-full hover:bg-sky-50 transition-colors" title="Baixar arquivo">
                                 <ArrowDownTrayIcon className="w-6 h-6" />
                             </button>
