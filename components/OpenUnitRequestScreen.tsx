@@ -459,13 +459,13 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
         <div className="space-y-6 pt-4">
              {renderFileUpload(
                 "Indicar em planta baixa a localização e área de intervenção:",
-                ".jpeg, .jpg, .png, .pdf",
-                "Formatos aceitos: JPEG, PNG, PDF. Tamanho máximo: 10MB."
+                ".pdf, .doc, .docx",
+                "Formatos aceitos: PDF, DOC, DOCX. Tamanho máximo: 10MB."
             )}
              {renderFileUpload(
                 "Incluir fotografias do local da intervenção:",
-                ".pdf, .doc, .docx",
-                "Formatos aceitos: PDF, DOC, DOCX. Tamanho máximo: 10MB."
+                ".jpeg, .jpg, .png, .pdf",
+                "Formatos aceitos: JPEG, PNG, PDF. Tamanho máximo: 10MB."
             )}
         </div>
 

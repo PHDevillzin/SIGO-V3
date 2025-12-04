@@ -8,6 +8,7 @@ import ReclassificationModal from './ReclassificationModal';
 import ConfirmationModal from './ConfirmationModal';
 import AlertModal from './AlertModal';
 import PlanningDetailsModal from './PlanningDetailsModal';
+import RequestDetailsModal from './RequestDetailsModal';
 
 export const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Santo An...', description: 'Reforma Gera...', status: 'Análise da Sol...', currentLocation: 'GSO', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P', situacaoProjeto: 'Em Andamento', situacaoObra: 'Não Iniciada', inicioObra: '05/01/2030', saldoObraPrazo: 12, saldoObraValor: 'R$ 3.500.000,00' },
@@ -74,6 +75,10 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [selectedRequestForDetails, setSelectedRequestForDetails] = useState<PlanningData | null>(null);
+
+    // New state for General Request Details Modal
+    const [isRequestDetailsModalOpen, setIsRequestDetailsModalOpen] = useState(false);
+    const [selectedRequestForView, setSelectedRequestForView] = useState<Request | null>(null);
 
     const isReclassificationView = currentView === 'solicitacoes_reclassificacao';
     const isManutencaoView = currentView === 'manutencao';
@@ -348,10 +353,15 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         };
     };
 
-    const handleViewDetails = (request: Request) => {
+    const handleViewReclassificationDetails = (request: Request) => {
         const planningData = mapRequestToPlanningData(request);
         setSelectedRequestForDetails(planningData);
         setIsDetailsModalOpen(true);
+    };
+
+    const handleOpenRequestDetails = (request: Request) => {
+        setSelectedRequestForView(request);
+        setIsRequestDetailsModalOpen(true);
     };
 
     const isAnyItemReadyToSend = reclassifiedIds.length > 0;
@@ -535,7 +545,14 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                     <td className="px-6 py-4">
                                         <div className="flex items-center justify-center space-x-2">
                                             <button 
-                                                onClick={() => isReclassificationView && handleViewDetails(request)}
+                                                onClick={() => {
+                                                    if (isReclassificationView) {
+                                                        handleViewReclassificationDetails(request);
+                                                    } else if (!isManutencaoView) {
+                                                        // Default view (Solicitacoes Gerais)
+                                                        handleOpenRequestDetails(request);
+                                                    }
+                                                }}
                                                 className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors" 
                                                 aria-label="Visualizar"
                                             >
@@ -626,6 +643,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 onClose={() => setIsDetailsModalOpen(false)}
                 data={selectedRequestForDetails}
                 title="Detalhes da reclassificação"
+            />
+            <RequestDetailsModal 
+                isOpen={isRequestDetailsModalOpen}
+                onClose={() => setIsRequestDetailsModalOpen(false)}
+                request={selectedRequestForView}
             />
         </>
     );
