@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
+import AlertModal from './AlertModal';
 import { Request, Criticality } from '../types';
 
 interface OpenUnitRequestScreenProps {
@@ -9,6 +10,8 @@ interface OpenUnitRequestScreenProps {
 }
 
 const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, onSave }) => {
+  const [alertMessage, setAlertMessage] = useState('');
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [formData, setFormData] = useState({
     entidade: 'SENAI',
     unidade: '',
@@ -84,6 +87,15 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.inicioExecucao && formData.dataUtilizacao) {
+        if (formData.inicioExecucao > formData.dataUtilizacao) {
+            setAlertMessage("Data de início da obra não pode ser maior que data de uso");
+            setIsAlertOpen(true);
+            return;
+        }
+    }
+
     if (onSave) {
         const formatDate = (dateStr: string) => {
             if (!dateStr) return 'N/A';
@@ -148,6 +160,20 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
       ])
   );
 
+  const renderFileUpload = (label: string, accept: string, helperText: string) => (
+    <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">{label} <span className="text-red-500">*</span></label>
+        <div className="flex w-full border border-gray-300 rounded-md overflow-hidden bg-white">
+            <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm font-medium transition-colors">
+                Escolher Arquivo
+                <input type="file" className="hidden" accept={accept} />
+            </label>
+            <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">Nenhum arquivo escolhido</span>
+        </div>
+        <div className="text-xs text-gray-500 mt-1">{helperText}</div>
+    </div>
+  );
+
   const MAX_CHARS = 3000;
 
   const servicosList = [
@@ -173,6 +199,13 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
   ];
 
   return (
+    <>
+    <AlertModal 
+        isOpen={isAlertOpen} 
+        onClose={() => setIsAlertOpen(false)} 
+        title="Atenção" 
+        message={alertMessage} 
+    />
     <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md overflow-hidden my-6">
       <div className="flex justify-between items-center p-6 border-b border-gray-200">
         <div>
@@ -330,7 +363,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                         'Aquisição de mobiliário', 
                         'Aquisição de equipamentos gerais', 
                         'Aquisição de equipamentos de TI', 
-                        'Instalação de Dados de Voz',
+                        'Instalação de Dados e Voz',
                         'Alteração nos Contratos Facilities',
                         'Não haverá necessidades ou alterações adicionais'
                     ].map(opt => (
@@ -424,27 +457,16 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
 
         {/* Section 5: File Uploads */}
         <div className="space-y-6 pt-4">
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Indicar em planta baixa a localização e área de intervenção: <span className="text-red-500">*</span></label>
-                <div className="flex w-full border border-gray-300 rounded-md overflow-hidden">
-                    <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm">
-                        Escolher Arquivo
-                        <input type="file" className="hidden" />
-                    </label>
-                    <span className="px-4 py-2 text-gray-500 text-sm flex items-center">Nenhum arquivo escolhido</span>
-                </div>
-            </div>
-
-             <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Incluir fotografias do local da intervenção: <span className="text-red-500">*</span></label>
-                <div className="flex w-full border border-gray-300 rounded-md overflow-hidden">
-                    <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm">
-                        Escolher Arquivo
-                        <input type="file" className="hidden" />
-                    </label>
-                    <span className="px-4 py-2 text-gray-500 text-sm flex items-center">Nenhum arquivo escolhido</span>
-                </div>
-            </div>
+             {renderFileUpload(
+                "Indicar em planta baixa a localização e área de intervenção:",
+                ".jpeg, .jpg, .png, .pdf",
+                "Formatos aceitos: JPEG, PNG, PDF. Tamanho máximo: 10MB."
+            )}
+             {renderFileUpload(
+                "Incluir fotografias do local da intervenção:",
+                ".pdf, .doc, .docx",
+                "Formatos aceitos: PDF, DOC, DOCX. Tamanho máximo: 10MB."
+            )}
         </div>
 
         {/* Section 6: Yes/No Questions - Compliance */}
@@ -503,6 +525,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
 
       </form>
     </div>
+    </>
   );
 };
 

@@ -169,7 +169,8 @@ const PlurianualScreen: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
-    const parseValueForSort = (value: string | number | boolean) => {
+    const parseValueForSort = (value: string | number | boolean | undefined | Partial<PlanningData>) => {
+        if (value === undefined || value === null || typeof value === 'object') return 0;
         if (typeof value === 'boolean') return value ? 1 : 0;
         if (typeof value === 'number') return value;
         if (typeof value === 'string') {

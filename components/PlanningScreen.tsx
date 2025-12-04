@@ -194,8 +194,8 @@ const PlanningScreen: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
-    const parseValueForSort = (value: string | number | boolean | undefined) => {
-        if (value === undefined) return 0;
+    const parseValueForSort = (value: string | number | boolean | undefined | Partial<PlanningData>) => {
+        if (value === undefined || value === null || typeof value === 'object') return 0;
         if (typeof value === 'boolean') return value ? 1 : 0;
         if (typeof value === 'number') return value;
         if (typeof value === 'string') {
@@ -302,8 +302,8 @@ const PlanningScreen: React.FC = () => {
                     const oldValue = item[key];
                     
                     if (newValue !== oldValue) {
-                         if (newChanges[key] === undefined) {
-                             newChanges[key] = oldValue as any; 
+                         if ((newChanges as any)[key] === undefined) {
+                             (newChanges as any)[key] = oldValue; 
                          }
                          hasChanges = true;
                     }

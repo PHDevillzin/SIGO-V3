@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
+import AlertModal from './AlertModal';
 import { Request, Criticality } from '../types';
 
 interface OpenStrategicRequestScreenProps {
@@ -9,6 +10,8 @@ interface OpenStrategicRequestScreenProps {
 }
 
 const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({ onClose, onSave }) => {
+  const [alertMessage, setAlertMessage] = useState('');
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [formData, setFormData] = useState({
     referencia: '',
     
@@ -75,6 +78,15 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.inicioExecucao && formData.dataUtilizacao) {
+        if (formData.inicioExecucao > formData.dataUtilizacao) {
+            setAlertMessage("Data de início da obra não pode ser maior que data de uso");
+            setIsAlertOpen(true);
+            return;
+        }
+    }
+
     if (onSave) {
         // Format date from YYYY-MM-DD to DD/MM/YYYY
         const formatDate = (dateStr: string) => {
@@ -140,9 +152,33 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
       ])
   );
 
+  const renderFileUpload = (label: string, accept: string, helperText: string, showDownloadLink: boolean = false) => (
+    <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">{label} <span className="text-red-500">*</span></label>
+        <div className="flex w-full border border-gray-300 rounded-md overflow-hidden bg-white">
+            <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm font-medium transition-colors">
+                Escolher Arquivo
+                <input type="file" className="hidden" accept={accept} />
+            </label>
+            <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">Nenhum arquivo escolhido</span>
+        </div>
+        <div className="text-xs text-gray-500 mt-1">{helperText}</div>
+        {showDownloadLink && (
+            <div className="text-xs text-blue-400 mt-1 cursor-pointer hover:underline">*Link para download do modelo do arquivo disponibilizado</div>
+        )}
+    </div>
+  );
+
   const MAX_CHARS = 3000;
 
   return (
+    <>
+    <AlertModal 
+        isOpen={isAlertOpen} 
+        onClose={() => setIsAlertOpen(false)} 
+        title="Atenção" 
+        message={alertMessage} 
+    />
     <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md overflow-hidden my-6">
       <div className="flex justify-between items-center p-6 border-b border-gray-200">
         <div>
@@ -390,29 +426,19 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                 <div className="text-xs text-gray-400 mt-1">Limite máximo de 2000 caracteres.</div>
             </div>
 
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Upload de Arquivo <span className="text-red-500">*</span></label>
-                <div className="flex w-full border border-gray-300 rounded-md overflow-hidden">
-                    <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm">
-                        Escolher Arquivo
-                        <input type="file" className="hidden" />
-                    </label>
-                    <span className="px-4 py-2 text-gray-500 text-sm flex items-center">Nenhum arquivo escolhido</span>
-                </div>
-                <div className="text-xs text-blue-400 mt-1 cursor-pointer hover:underline">*Link para download do modelo do arquivo disponibilizado</div>
-            </div>
+            {renderFileUpload(
+                "Upload de Arquivo",
+                ".pdf, .doc, .docx",
+                "Formatos aceitos: PDF, DOC, DOCX. Tamanho máximo: 10MB.",
+                true
+            )}
 
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Estudo de Mercado <span className="text-red-500">*</span></label>
-                <div className="flex w-full border border-gray-300 rounded-md overflow-hidden">
-                    <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm">
-                        Escolher Arquivo
-                        <input type="file" className="hidden" />
-                    </label>
-                    <span className="px-4 py-2 text-gray-500 text-sm flex items-center">Nenhum arquivo escolhido</span>
-                </div>
-                <div className="text-xs text-blue-400 mt-1 cursor-pointer hover:underline">*Link para download do modelo do arquivo disponibilizado</div>
-            </div>
+            {renderFileUpload(
+                "Estudo de Mercado",
+                ".pdf, .doc, .docx",
+                "Formatos aceitos: PDF, DOC, DOCX. Tamanho máximo: 10MB.",
+                true
+            )}
 
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Instalações SESI / SENAI próximas: <span className="text-red-500">*</span></label>
@@ -462,6 +488,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
 
       </form>
     </div>
+    </>
   );
 };
 

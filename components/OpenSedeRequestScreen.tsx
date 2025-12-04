@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
 import SedeOrientationModal from './SedeOrientationModal';
+import AlertModal from './AlertModal';
 import { Request, Criticality } from '../types';
 
 interface OpenSedeRequestScreenProps {
@@ -11,6 +12,8 @@ interface OpenSedeRequestScreenProps {
 
 const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, onSave }) => {
   const [showOrientation, setShowOrientation] = useState(true);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [formData, setFormData] = useState({
     solicitante: '',
     gerencia: 'Administração do Sistema',
@@ -66,6 +69,15 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.inicioExecucao && formData.dataUtilizacao) {
+        if (formData.inicioExecucao > formData.dataUtilizacao) {
+            setAlertMessage("Data de início da obra não pode ser maior que data de uso");
+            setIsAlertOpen(true);
+            return;
+        }
+    }
+
     if (onSave) {
         // Format date from YYYY-MM-DD to DD/MM/YYYY
         const formatDate = (dateStr: string) => {
@@ -105,7 +117,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
   // Helper for rendering radio group
   const renderRadioGroup = (label: string, name: string, required: boolean = true) => (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-semibold text-gray-700">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <div className="flex items-center space-x-6">
@@ -134,12 +146,32 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
       </div>
     </div>
   );
+  
+  const renderFileUpload = (label: string, accept: string, helperText: string) => (
+    <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">{label} <span className="text-red-500">*</span></label>
+        <div className="flex w-full border border-gray-300 rounded-md overflow-hidden bg-white">
+            <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm font-medium transition-colors">
+                Escolher Arquivo
+                <input type="file" className="hidden" accept={accept} />
+            </label>
+            <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">Nenhum arquivo escolhido</span>
+        </div>
+        <div className="text-xs text-gray-500 mt-1">{helperText}</div>
+    </div>
+  );
 
   const MAX_CHARS = 3000;
 
   return (
     <>
     {showOrientation && <SedeOrientationModal onConfirm={() => setShowOrientation(false)} />}
+    <AlertModal 
+        isOpen={isAlertOpen} 
+        onClose={() => setIsAlertOpen(false)} 
+        title="Atenção" 
+        message={alertMessage} 
+    />
     <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md overflow-hidden my-6">
       <div className="flex justify-between items-center p-6 border-b border-gray-200">
         <div>
@@ -156,7 +188,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
         {/* Section 1: Basic Info */}
         <div className="space-y-6">
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Solicitante <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Solicitante <span className="text-red-500">*</span></label>
                 <select 
                     name="solicitante" 
                     value={formData.solicitante} 
@@ -171,14 +203,14 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gerência <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Gerência <span className="text-red-500">*</span></label>
                 <div className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-600">
                     {formData.gerencia}
                 </div>
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Breve descrição ou título do serviço <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Breve descrição ou título do serviço <span className="text-red-500">*</span></label>
                 <input 
                     type="text" 
                     name="titulo"
@@ -192,7 +224,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Objetivo <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Objetivo <span className="text-red-500">*</span></label>
                 <textarea 
                     name="objetivo"
                     rows={2}
@@ -206,7 +238,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Expectativa de resultados <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Expectativa de resultados <span className="text-red-500">*</span></label>
                 <textarea 
                     name="expectativaResultados"
                     rows={2}
@@ -220,7 +252,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Justificativa <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Justificativa <span className="text-red-500">*</span></label>
                 <textarea 
                     name="justificativa"
                     rows={2}
@@ -234,7 +266,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Resumo dos Serviços <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Resumo dos Serviços <span className="text-red-500">*</span></label>
                 <textarea 
                     name="resumoServicos"
                     rows={2}
@@ -251,9 +283,9 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
         {/* Section 2: Checkboxes */}
         <div className="space-y-6 pt-4">
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Após o término da demanda, haverá aumento de: <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Após o término da demanda, haverá aumento de: <span className="text-red-500">*</span></label>
                 <div className="space-y-2">
-                    {['Pessoal', 'Produção', 'Não haverá aumento'].map(opt => (
+                    {['Pessoal', 'Produção', 'Receitas de serviço ou custeio', 'Não haverá aumento'].map(opt => (
                         <label key={opt} className="flex items-center space-x-2">
                             <input 
                                 type="checkbox" 
@@ -268,13 +300,13 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Selecione as necessidades da sede após execução da demanda: <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Selecione as necessidades da sede após execução da demanda: <span className="text-red-500">*</span></label>
                 <div className="space-y-2">
                     {[
                         'Aquisição de mobiliário', 
                         'Aquisição de equipamentos gerais', 
                         'Aquisição de equipamentos de TI', 
-                        'Instalação de Dados de Voz',
+                        'Instalação de Dados e Voz',
                         'Alteração nos Contratos Facilities',
                         'Não haverá necessidades ou alterações adicionais'
                     ].map(opt => (
@@ -292,7 +324,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Selecione se algum dos serviços listados serão necessários à realização da demanda: <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Selecione se algum dos serviços listados serão necessários à realização da demanda: <span className="text-red-500">*</span></label>
                 <div className="space-y-2">
                     {[
                         'Diminuição ou demolição de áreas cobertas existentes de qualquer tipo',
@@ -319,7 +351,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
         {/* Section 3: Quantitative Inputs */}
         <div className="space-y-6 pt-4">
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Qual a expectativa da área de intervenção (m2)? (somente números) <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Qual a expectativa da área de intervenção (m2)? (somente números) <span className="text-red-500">*</span></label>
                 <input 
                     type="number" 
                     name="areaIntervencao"
@@ -329,7 +361,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                 />
             </div>
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Qual a expectativa de prazo para execução (meses) <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Qual a expectativa de prazo para execução (meses) <span className="text-red-500">*</span></label>
                 <input 
                     type="number" 
                     name="prazoExecucao"
@@ -339,7 +371,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                 />
             </div>
              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Qual é a expectativa para início da execução (data aproximada) ? <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Qual é a expectativa para início da execução (data aproximada) ? <span className="text-red-500">*</span></label>
                 <input 
                     type="date" 
                     name="inicioExecucao"
@@ -350,7 +382,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                 />
             </div>
              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Qual é a expectativa de valor para a execução da obra (em R$)? (somente números) <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Qual é a expectativa de valor para a execução da obra (em R$)? (somente números) <span className="text-red-500">*</span></label>
                 <input 
                     type="text" 
                     name="valorExecucao"
@@ -361,7 +393,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                 />
             </div>
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Qual a expectativa de data para utilização do local totalmente equipado? <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Qual a expectativa de data para utilização do local totalmente equipado? <span className="text-red-500">*</span></label>
                 <input 
                     type="date" 
                     name="dataUtilizacao"
@@ -375,27 +407,16 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
 
         {/* Section 4: File Uploads */}
         <div className="space-y-6 pt-4">
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Indicar em planta baixa a localização e área de intervenção: <span className="text-red-500">*</span></label>
-                <div className="flex w-full border border-gray-300 rounded-md overflow-hidden">
-                    <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm">
-                        Escolher Arquivo
-                        <input type="file" className="hidden" />
-                    </label>
-                    <span className="px-4 py-2 text-gray-500 text-sm flex items-center">Nenhum arquivo escolhido</span>
-                </div>
-            </div>
-
-             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Incluir fotografias do local da intervenção: <span className="text-red-500">*</span></label>
-                <div className="flex w-full border border-gray-300 rounded-md overflow-hidden">
-                    <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm">
-                        Escolher Arquivo
-                        <input type="file" className="hidden" />
-                    </label>
-                    <span className="px-4 py-2 text-gray-500 text-sm flex items-center">Nenhum arquivo escolhido</span>
-                </div>
-            </div>
+            {renderFileUpload(
+                "Indicar em planta baixa a localização e área de intervenção:",
+                ".jpeg, .jpg, .png, .pdf",
+                "Formatos aceitos: JPEG, PNG, PDF. Tamanho máximo: 10MB."
+            )}
+            {renderFileUpload(
+                "Incluir fotografias do local da intervenção:",
+                ".pdf, .doc, .docx",
+                "Formatos aceitos: PDF, DOC, DOCX. Tamanho máximo: 10MB."
+            )}
         </div>
 
         {/* Section 5: Yes/No Questions */}
