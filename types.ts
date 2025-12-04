@@ -30,6 +30,8 @@ export interface Request {
   inicioObra?: string;
   saldoObraPrazo?: number;
   saldoObraValor?: string;
+  // New field for Approval view
+  gestorLocal?: string;
 }
 
 export interface SummaryData {

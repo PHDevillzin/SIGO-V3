@@ -6,6 +6,7 @@ import { MagnifyingGlassIcon, FilterIcon, PencilIcon, ArrowDownTrayIcon, Chevron
 import ProjectWorkDataModal from './ProjectWorkDataModal';
 import PlanningDetailsModal from './PlanningDetailsModal';
 import { Criticality, PlanningData } from '../types';
+import ConfirmationModal from './ConfirmationModal';
 
 const planningData: PlanningData[] = [
     { id: 1, criticidade: Criticality.MEDIA, ordem: 'SS-24-0102-O1', unidade: 'CE 114 - Agudos', descricao: 'Ampliação de 03 salas de aula', situacaoObra: 'Concluída', situacaoProjeto: 'Concluído', status: 'Em dia', reclassified: true, inicioProjeto: '15/01/2024', saldoProjetoPrazo: 2, saldoProjetoValor: 'R$ 1.907.299,65', inicioObra: '15/03/2024', saldoObraPrazo: 3, saldoObraValor: 'R$ 1.812.699,83', terminoProjeto: '15/03/2024', terminoObra: '15/06/2024', empenho2026: 'R$ 0,00', empenho2027: 'R$ 0,00', empenho2028: 'R$ 0,00', empenho2029: 'R$ 0,00', empenho2030: 'R$ 0,00', entidade: 'SENAI', categoria: 'Reforma Operacional', tipologia: 'Tipologia A' },
@@ -105,6 +106,10 @@ const PlanningScreen: React.FC = () => {
         type: 'success',
         isVisible: false
     });
+
+    // Download Modal State
+    const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+    const [itemToDownload, setItemToDownload] = useState<number | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error') => {
         setToast({ message, type, isVisible: true });
@@ -345,6 +350,17 @@ const PlanningScreen: React.FC = () => {
             setSelectedIds(prev => [...new Set([...prev, ...paginatedIds])]);
         }
     };
+
+    const handleOpenDownloadModal = (id: number) => {
+        setItemToDownload(id);
+        setIsDownloadModalOpen(true);
+    };
+
+    const handleConfirmDownload = () => {
+        showToast('Arquivo baixado com sucesso', 'success');
+        setIsDownloadModalOpen(false);
+        setItemToDownload(null);
+    };
     
     const SortableHeader: React.FC<{
         columnKey: keyof PlanningData;
@@ -534,6 +550,13 @@ const PlanningScreen: React.FC = () => {
                                                 >
                                                     <EyeIcon className="w-5 h-5" />
                                                 </button>
+                                                <button
+                                                    onClick={() => handleOpenDownloadModal(item.id)}
+                                                    className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors"
+                                                    aria-label="Baixar Formulário"
+                                                >
+                                                    <ArrowDownTrayIcon className="w-5 h-5" />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -600,6 +623,15 @@ const PlanningScreen: React.FC = () => {
                 isOpen={isDetailsModalOpen}
                 onClose={() => setIsDetailsModalOpen(false)}
                 data={selectedItemForDetails}
+            />
+            <ConfirmationModal
+                isOpen={isDownloadModalOpen}
+                onClose={() => setIsDownloadModalOpen(false)}
+                onConfirm={handleConfirmDownload}
+                title="Confirmar Download"
+                message="Deseja realmente baixar o arquivo: Formulário de solicitação?"
+                confirmLabel="Sim"
+                cancelLabel="Não"
             />
         </>
     );

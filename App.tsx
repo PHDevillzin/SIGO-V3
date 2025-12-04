@@ -30,13 +30,15 @@ const App: React.FC = () => {
         { title: 'Total Geral', count: 20, value: 'R$ 154.890.000,00', color: 'border-orange-400', icon: CalculatorIcon },
     ];
 
-    const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao'].includes(currentView);
+    const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao'].includes(currentView);
     const getSolicitacoesTitle = () => {
         switch (currentView) {
             case 'solicitacoes':
                 return 'Solicitações';
             case 'solicitacoes_reclassificacao':
                 return 'Solicitações para Reclassificação';
+            case 'aprovacao':
+                return 'Solicitações para Aprovação';
             case 'manutencao':
                 return 'Manutenção';
             default:
