@@ -7,6 +7,7 @@ import ProjectWorkDataModal from './ProjectWorkDataModal';
 import PlanningDetailsModal from './PlanningDetailsModal';
 import { Criticality, PlanningData } from '../types';
 import ConfirmationModal from './ConfirmationModal';
+import AlertModal from './AlertModal';
 
 const planningData: PlanningData[] = [
     { id: 1, criticidade: Criticality.MEDIA, ordem: 'SS-24-0102-O1', unidade: 'CE 114 - Agudos', descricao: 'Ampliação de 03 salas de aula', situacaoObra: 'Concluída', situacaoProjeto: 'Concluído', status: 'Em dia', reclassified: true, inicioProjeto: '15/01/2024', saldoProjetoPrazo: 2, saldoProjetoValor: 'R$ 1.907.299,65', inicioObra: '15/03/2024', saldoObraPrazo: 3, saldoObraValor: 'R$ 1.812.699,83', terminoProjeto: '15/03/2024', terminoObra: '15/06/2024', empenho2026: 'R$ 0,00', empenho2027: 'R$ 0,00', empenho2028: 'R$ 0,00', empenho2029: 'R$ 0,00', empenho2030: 'R$ 0,00', entidade: 'SENAI', categoria: 'Reforma Operacional', tipologia: 'Tipologia A' },
@@ -110,6 +111,7 @@ const PlanningScreen: React.FC = () => {
     // Download Modal State
     const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
     const [itemToDownload, setItemToDownload] = useState<number | null>(null);
+    const [isExportAlertOpen, setIsExportAlertOpen] = useState(false);
 
     const showToast = (message: string, type: 'success' | 'error') => {
         setToast({ message, type, isVisible: true });
@@ -432,6 +434,7 @@ const PlanningScreen: React.FC = () => {
                                 <span>Editar</span>
                             </button>
                              <button
+                                onClick={() => setIsExportAlertOpen(true)}
                                 className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 transition-colors"
                             >
                                 <ArrowDownTrayIcon className="w-5 h-5" />
@@ -632,6 +635,12 @@ const PlanningScreen: React.FC = () => {
                 message="Deseja realmente baixar o arquivo: Formulário de solicitação?"
                 confirmLabel="Sim"
                 cancelLabel="Não"
+            />
+            <AlertModal
+                isOpen={isExportAlertOpen}
+                onClose={() => setIsExportAlertOpen(false)}
+                title="Sucesso"
+                message="Planilha exportada com sucesso"
             />
         </>
     );
