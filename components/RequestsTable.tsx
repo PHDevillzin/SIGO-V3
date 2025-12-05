@@ -368,19 +368,47 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         setIsRequestDetailsModalOpen(true);
     };
 
-    const handleDownload = (id: number) => {
-        // Create a dummy PDF blob
-        const blob = new Blob(['Dummy PDF Content'], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'SS250618_Demanda_Estrategica_SENAI041220251424.pdf';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        
-        showToast('Arquivo salvo com sucesso', 'success');
+    const handleDownload = async (id: number) => {
+        const fileName = 'SS250618_Demanda_Estrategica_SENAI041220251424.pdf';
+        const blob = new Blob(['Conteúdo do arquivo PDF simulado'], { type: 'application/pdf' });
+
+        const downloadFallback = () => {
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            showToast('Arquivo salvo com sucesso', 'success');
+        };
+
+        try {
+            // Check if the File System Access API is supported
+            if ('showSaveFilePicker' in window) {
+                const handle = await (window as any).showSaveFilePicker({
+                    suggestedName: fileName,
+                    types: [{
+                        description: 'PDF Document',
+                        accept: { 'application/pdf': ['.pdf'] },
+                    }],
+                });
+                const writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+                showToast('Arquivo salvo com sucesso', 'success');
+            } else {
+               downloadFallback();
+            }
+        } catch (err) {
+            // User cancelled the picker
+            if ((err as Error).name === 'AbortError') {
+                return;
+            }
+            // If the API fails (e.g. cross-origin iframe), fallback to legacy download
+            downloadFallback();
+        }
     };
 
     const isAnyItemReadyToSend = reclassifiedIds.length > 0;
