@@ -385,28 +385,41 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         };
 
         try {
-            // Check if the File System Access API is supported
-            if ('showSaveFilePicker' in window) {
-                const handle = await (window as any).showSaveFilePicker({
-                    suggestedName: fileName,
-                    types: [{
-                        description: 'PDF Document',
-                        accept: { 'application/pdf': ['.pdf'] },
-                    }],
-                });
-                const writable = await handle.createWritable();
-                await writable.write(blob);
-                await writable.close();
-                showToast('Arquivo salvo com sucesso', 'success');
+            // Check if running in an iframe safely
+            let isIframe = false;
+            try {
+                isIframe = window.self !== window.top;
+            } catch (e) {
+                isIframe = true;
+            }
+
+            // Only attempt File System Access API if NOT in an iframe and if supported
+            // This prevents "Cross origin sub frames" error in preview environments
+            if ('showSaveFilePicker' in window && !isIframe) {
+                try {
+                    const handle = await (window as any).showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{
+                            description: 'PDF Document',
+                            accept: { 'application/pdf': ['.pdf'] },
+                        }],
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+                    showToast('Arquivo salvo com sucesso', 'success');
+                } catch (err: any) {
+                    if (err.name === 'AbortError') {
+                        return; // User cancelled
+                    }
+                    console.warn('File System Access API error:', err);
+                    downloadFallback();
+                }
             } else {
-               downloadFallback();
+                downloadFallback();
             }
         } catch (err) {
-            // User cancelled the picker
-            if ((err as Error).name === 'AbortError') {
-                return;
-            }
-            // If the API fails (e.g. cross-origin iframe), fallback to legacy download
+            console.error('Unexpected download error:', err);
             downloadFallback();
         }
     };
