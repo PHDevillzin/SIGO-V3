@@ -80,10 +80,6 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const [isRequestDetailsModalOpen, setIsRequestDetailsModalOpen] = useState(false);
     const [selectedRequestForView, setSelectedRequestForView] = useState<Request | null>(null);
 
-    // Download Modal State
-    const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-    const [itemToDownload, setItemToDownload] = useState<number | null>(null);
-
     const isReclassificationView = currentView === 'solicitacoes_reclassificacao';
     const isManutencaoView = currentView === 'manutencao';
     const isAprovacaoView = currentView === 'aprovacao';
@@ -372,15 +368,19 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         setIsRequestDetailsModalOpen(true);
     };
 
-    const handleOpenDownloadModal = (id: number) => {
-        setItemToDownload(id);
-        setIsDownloadModalOpen(true);
-    };
-
-    const handleConfirmDownload = () => {
-        showToast('Arquivo baixado com sucesso', 'success');
-        setIsDownloadModalOpen(false);
-        setItemToDownload(null);
+    const handleDownload = (id: number) => {
+        // Create a dummy PDF blob
+        const blob = new Blob(['Dummy PDF Content'], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'SS250618_Demanda_Estrategica_SENAI041220251424.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        showToast('Arquivo salvo com sucesso', 'success');
     };
 
     const isAnyItemReadyToSend = reclassifiedIds.length > 0;
@@ -613,7 +613,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                             </button>
                                             {(isAprovacaoView || (!isReclassificationView && !isManutencaoView)) && (
                                                 <button
-                                                    onClick={() => handleOpenDownloadModal(request.id)}
+                                                    onClick={() => handleDownload(request.id)}
                                                     className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors"
                                                     aria-label="Baixar Formulário"
                                                 >
@@ -710,15 +710,6 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 isOpen={isRequestDetailsModalOpen}
                 onClose={() => setIsRequestDetailsModalOpen(false)}
                 request={selectedRequestForView}
-            />
-            <ConfirmationModal
-                isOpen={isDownloadModalOpen}
-                onClose={() => setIsDownloadModalOpen(false)}
-                onConfirm={handleConfirmDownload}
-                title="Confirmar Download"
-                message="Deseja realmente baixar o arquivo: Formulário de solicitação?"
-                confirmLabel="Sim"
-                cancelLabel="Não"
             />
         </>
     );
