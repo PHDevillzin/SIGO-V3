@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
-import SedeOrientationModal from './SedeOrientationModal';
+import OrientationModal from './OrientationModal';
 import AlertModal from './AlertModal';
 import { Request, Criticality } from '../types';
 
@@ -163,7 +164,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
 
   return (
     <>
-    {showOrientation && <SedeOrientationModal onConfirm={() => setShowOrientation(false)} />}
+    {showOrientation && <OrientationModal type="Sede" onConfirm={() => setShowOrientation(false)} />}
     <AlertModal 
         isOpen={isAlertOpen} 
         onClose={() => setIsAlertOpen(false)} 

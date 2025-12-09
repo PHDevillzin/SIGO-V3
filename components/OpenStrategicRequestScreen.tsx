@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
 import AlertModal from './AlertModal';
+import OrientationModal from './OrientationModal';
 import { Request, Criticality } from '../types';
 
 interface OpenStrategicRequestScreenProps {
@@ -9,6 +11,7 @@ interface OpenStrategicRequestScreenProps {
 }
 
 const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({ onClose, onSave }) => {
+  const [showOrientation, setShowOrientation] = useState(true);
   const [alertMessage, setAlertMessage] = useState('');
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -168,6 +171,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
 
   return (
     <>
+    {showOrientation && <OrientationModal type="Estratégica" onConfirm={() => setShowOrientation(false)} />}
     <AlertModal 
         isOpen={isAlertOpen} 
         onClose={() => setIsAlertOpen(false)} 

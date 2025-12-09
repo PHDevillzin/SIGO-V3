@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
 import AlertModal from './AlertModal';
+import OrientationModal from './OrientationModal';
 import { Request, Criticality } from '../types';
 
 interface OpenUnitRequestScreenProps {
@@ -9,6 +11,7 @@ interface OpenUnitRequestScreenProps {
 }
 
 const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, onSave }) => {
+  const [showOrientation, setShowOrientation] = useState(true);
   const [alertMessage, setAlertMessage] = useState('');
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -198,6 +201,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
 
   return (
     <>
+    {showOrientation && <OrientationModal type="Unidade" onConfirm={() => setShowOrientation(false)} />}
     <AlertModal 
         isOpen={isAlertOpen} 
         onClose={() => setIsAlertOpen(false)} 
