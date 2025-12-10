@@ -9,8 +9,11 @@ interface InvestmentPolicyScreenProps {
 const InvestmentPolicyScreen: React.FC<InvestmentPolicyScreenProps> = ({ selectedProfile }) => {
   // State for policies list
   const [policies] = useState([
-    { id: 1, name: 'Política de Investimento 2025.pdf', date: '10/01/2025', size: '2.4 MB' },
-    { id: 2, name: 'Diretrizes de Infraestrutura v2.docx', date: '15/12/2024', size: '1.1 MB' },
+    { id: 1, name: 'Política de Investimento - Revisão 2025.pdf', date: '10/01/2025', size: '2.4 MB' },
+    { id: 2, name: 'Política de Investimento - Revisão 2024.pdf', date: '15/12/2024', size: '2.3 MB' },
+    { id: 3, name: 'Política de Investimento - v2023.pdf', date: '20/11/2023', size: '2.1 MB' },
+    { id: 4, name: 'Política de Investimento - Anexo I - Diretrizes.pdf', date: '15/11/2023', size: '1.5 MB' },
+    { id: 5, name: 'Política de Investimento - Histórico 2022.pdf', date: '05/01/2022', size: '1.8 MB' },
   ]);
 
   // State for toast notifications
@@ -50,7 +53,7 @@ const InvestmentPolicyScreen: React.FC<InvestmentPolicyScreenProps> = ({ selecte
         <div className="bg-white rounded-lg shadow p-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Política de Investimento</h1>
           <p className="text-gray-500 mb-6">
-            Faça o download dos documentos vigentes da política de investimento.
+            Faça o download dos documentos vigentes e históricos da política de investimento.
           </p>
 
           <div>
