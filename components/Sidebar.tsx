@@ -231,39 +231,27 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
             <div className="pt-2 pl-6 space-y-2">
                 <NavItem 
                     icon={UserIcon}
-                    label="Adm. Acesso – Admin GSO"
+                    label="Acesso Gestores"
                     active={currentView === 'adm_acesso_gso'}
                     onClick={() => setCurrentView('adm_acesso_gso')}
                 />
                 <NavItem 
                     icon={UserIcon}
-                    label="Adm. Acesso - Gestor/Solic."
+                    label="Acesso solicitantes"
                     active={currentView === 'adm_acesso_solicitantes'}
                     onClick={() => setCurrentView('adm_acesso_solicitantes')}
                 />
                 <NavItem 
-                    icon={BuildingOfficeIcon}
-                    label="Cadastro de Unidades"
-                    active={currentView === 'cadastro_unidades'}
-                    onClick={() => setCurrentView('cadastro_unidades')}
-                />
-                <NavItem 
-                    icon={CalendarDaysIcon}
-                    label="Cadastro Períodos Solic."
-                    active={currentView === 'cadastro_periodos'}
-                    onClick={() => setCurrentView('cadastro_periodos')}
-                />
-                <NavItem 
-                    icon={TagIcon}
-                    label="Cadastro tipo de local"
-                    active={currentView === 'cadastro_tipo_local'}
-                    onClick={() => setCurrentView('cadastro_tipo_local')}
-                />
-                <NavItem 
                     icon={CloudArrowUpIcon}
-                    label="Gerenciador de arquivos"
+                    label="Arquivos"
                     active={currentView === 'gerenciador_arquivos'}
                     onClick={() => setCurrentView('gerenciador_arquivos')}
+                />
+                <NavItem 
+                    icon={SparklesIcon}
+                    label="Criticidade"
+                    active={currentView === 'painel_criticidade'}
+                    onClick={() => setCurrentView('painel_criticidade')}
                 />
                 <NavItem 
                     icon={InformationCircleIcon}
@@ -278,16 +266,28 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                     onClick={() => setCurrentView('notificacoes_requisitos')}
                 />
                 <NavItem 
-                    icon={SparklesIcon}
-                    label="Painel de criticidade"
-                    active={currentView === 'painel_criticidade'}
-                    onClick={() => setCurrentView('painel_criticidade')}
+                    icon={CalendarDaysIcon}
+                    label="Período Solicitação"
+                    active={currentView === 'cadastro_periodos'}
+                    onClick={() => setCurrentView('cadastro_periodos')}
+                />
+                <NavItem 
+                    icon={TagIcon}
+                    label="Tipo local"
+                    active={currentView === 'cadastro_tipo_local'}
+                    onClick={() => setCurrentView('cadastro_tipo_local')}
                 />
                 <NavItem 
                     icon={TagIcon} 
                     label="Tipologia" 
                     active={currentView === 'tipologias'} 
                     onClick={() => setCurrentView('tipologias')} 
+                />
+                <NavItem 
+                    icon={BuildingOfficeIcon}
+                    label="Unidades"
+                    active={currentView === 'cadastro_unidades'}
+                    onClick={() => setCurrentView('cadastro_unidades')}
                 />
             </div>
           )}
