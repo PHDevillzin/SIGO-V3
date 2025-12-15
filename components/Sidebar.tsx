@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon, WrenchScrewdriverIcon, TagIcon, FolderPlusIcon, Squares2x2Icon, ClipboardIcon, BuildingStorefrontIcon, CheckCircleIcon } from './Icons';
+import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon, WrenchScrewdriverIcon, TagIcon, FolderPlusIcon, Squares2x2Icon, ClipboardIcon, BuildingStorefrontIcon, CheckCircleIcon, UserIcon, CalendarDaysIcon, InformationCircleIcon, ExclamationTriangleIcon, SparklesIcon, CloudArrowUpIcon, ClipboardDocumentListIcon } from './Icons';
 
 interface SidebarProps {
   selectedProfile: string;
@@ -11,8 +11,8 @@ interface SidebarProps {
 
 const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boolean, onClick?: () => void }> = ({ icon: Icon, label, active = false, onClick }) => (
   <a href="#" onClick={(e) => { e.preventDefault(); onClick?.(); }} className={`flex items-center space-x-3 px-4 py-2.5 rounded-md transition-colors ${active ? 'bg-white/10 text-white' : 'text-gray-300 hover:bg-white/5'}`}>
-    <Icon className="w-5 h-5" />
-    <span className="font-medium">{label}</span>
+    <Icon className="w-5 h-5 flex-shrink-0" />
+    <span className="font-medium text-sm">{label}</span>
   </a>
 );
 
@@ -21,6 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
   const [isManagementMenuOpen, setIsManagementMenuOpen] = useState(false);
   const [isSolicitacoesMenuOpen, setIsSolicitacoesMenuOpen] = useState(false);
   const [isAbrirSolicitacoesMenuOpen, setIsAbrirSolicitacoesMenuOpen] = useState(false);
+  const [isConfiguracoesMenuOpen, setIsConfiguracoesMenuOpen] = useState(false);
 
   const profiles = [
     "Administração do Sistema",
@@ -60,17 +61,30 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     const isSolicitacoes = ['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao'].includes(currentView);
     const isGerenciamento = currentView === 'planejamento' || currentView === 'plurianual';
     const isAbrirSolicitacoes = ['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(currentView);
+    const isConfiguracoes = [
+        'tipologias',
+        'adm_acesso_gso',
+        'adm_acesso_solicitantes',
+        'cadastro_unidades',
+        'cadastro_periodos',
+        'cadastro_tipo_local',
+        'gerenciador_arquivos',
+        'avisos_globais',
+        'notificacoes_requisitos',
+        'painel_criticidade'
+    ].includes(currentView);
     
     setIsSolicitacoesMenuOpen(isSolicitacoes);
     setIsManagementMenuOpen(isGerenciamento);
     setIsAbrirSolicitacoesMenuOpen(isAbrirSolicitacoes);
+    setIsConfiguracoesMenuOpen(isConfiguracoes);
 
   }, [currentView]);
 
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-[#0B1A4E] text-white">
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
+    <aside className="hidden md:flex flex-col w-64 bg-[#0B1A4E] text-white overflow-y-auto">
+      <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
         <div className="flex items-end">
             <span className="text-2xl font-bold tracking-wider">SESI</span>
             <span className="text-2xl font-bold tracking-wider text-red-600 bg-white px-1 ml-1">SENAI</span>
@@ -89,8 +103,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
             className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
           >
             <div className="flex items-center space-x-3">
-              <ListIcon className="w-5 h-5" />
-              <span className="font-medium">Menu Solicitações</span>
+              <ListIcon className="w-5 h-5 flex-shrink-0" />
+              <span className="font-medium text-sm">Menu Solicitações</span>
             </div>
             <ChevronDownIcon className={`w-4 h-4 transition-transform ${isSolicitacoesMenuOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -131,8 +145,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
             className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
           >
             <div className="flex items-center space-x-3">
-              <FolderPlusIcon className="w-5 h-5" />
-              <span className="font-medium">Abrir Solicitações</span>
+              <FolderPlusIcon className="w-5 h-5 flex-shrink-0" />
+              <span className="font-medium text-sm">Abrir Solicitações</span>
             </div>
             <ChevronDownIcon className={`w-4 h-4 transition-transform ${isAbrirSolicitacoesMenuOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -160,8 +174,6 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
           )}
         </div>
 
-        <NavItem icon={TagIcon} label="Tipologia" active={currentView === 'tipologias'} onClick={() => setCurrentView('tipologias')} />
-
         {/* Gerenciamento Collapsible Menu */}
         <div>
           <button
@@ -169,8 +181,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
             className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${(currentView === 'planejamento' || currentView === 'plurianual') ? 'bg-white/10 text-white' : ''}`}
           >
             <div className="flex items-center space-x-3">
-              <Cog8ToothIcon className="w-5 h-5" />
-              <span className="font-medium">Gerenciamento</span>
+              <ClipboardDocumentListIcon className="w-5 h-5 flex-shrink-0" />
+              <span className="font-medium text-sm">Gerenciamento</span>
             </div>
             <ChevronDownIcon className={`w-4 h-4 transition-transform ${isManagementMenuOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -191,8 +203,97 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
             </div>
           )}
         </div>
+
+        {/* Configurações Collapsible Menu */}
+        <div>
+          <button
+            onClick={() => setIsConfiguracoesMenuOpen(prev => !prev)}
+            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${[
+                'tipologias',
+                'adm_acesso_gso',
+                'adm_acesso_solicitantes',
+                'cadastro_unidades',
+                'cadastro_periodos',
+                'cadastro_tipo_local',
+                'gerenciador_arquivos',
+                'avisos_globais',
+                'notificacoes_requisitos',
+                'painel_criticidade'
+            ].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
+          >
+            <div className="flex items-center space-x-3">
+              <Cog8ToothIcon className="w-5 h-5 flex-shrink-0" />
+              <span className="font-medium text-sm">Configurações</span>
+            </div>
+            <ChevronDownIcon className={`w-4 h-4 transition-transform ${isConfiguracoesMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {isConfiguracoesMenuOpen && (
+            <div className="pt-2 pl-6 space-y-2">
+                <NavItem 
+                    icon={UserIcon}
+                    label="Adm. Acesso – Admin GSO"
+                    active={currentView === 'adm_acesso_gso'}
+                    onClick={() => setCurrentView('adm_acesso_gso')}
+                />
+                <NavItem 
+                    icon={UserIcon}
+                    label="Adm. Acesso - Gestor/Solic."
+                    active={currentView === 'adm_acesso_solicitantes'}
+                    onClick={() => setCurrentView('adm_acesso_solicitantes')}
+                />
+                <NavItem 
+                    icon={BuildingOfficeIcon}
+                    label="Cadastro de Unidades"
+                    active={currentView === 'cadastro_unidades'}
+                    onClick={() => setCurrentView('cadastro_unidades')}
+                />
+                <NavItem 
+                    icon={CalendarDaysIcon}
+                    label="Cadastro Períodos Solic."
+                    active={currentView === 'cadastro_periodos'}
+                    onClick={() => setCurrentView('cadastro_periodos')}
+                />
+                <NavItem 
+                    icon={TagIcon}
+                    label="Cadastro tipo de local"
+                    active={currentView === 'cadastro_tipo_local'}
+                    onClick={() => setCurrentView('cadastro_tipo_local')}
+                />
+                <NavItem 
+                    icon={CloudArrowUpIcon}
+                    label="Gerenciador de arquivos"
+                    active={currentView === 'gerenciador_arquivos'}
+                    onClick={() => setCurrentView('gerenciador_arquivos')}
+                />
+                <NavItem 
+                    icon={InformationCircleIcon}
+                    label="Gerenciamento de avisos"
+                    active={currentView === 'avisos_globais'}
+                    onClick={() => setCurrentView('avisos_globais')}
+                />
+                <NavItem 
+                    icon={ExclamationTriangleIcon}
+                    label="Notificações e requisitos"
+                    active={currentView === 'notificacoes_requisitos'}
+                    onClick={() => setCurrentView('notificacoes_requisitos')}
+                />
+                <NavItem 
+                    icon={SparklesIcon}
+                    label="Painel de criticidade"
+                    active={currentView === 'painel_criticidade'}
+                    onClick={() => setCurrentView('painel_criticidade')}
+                />
+                <NavItem 
+                    icon={TagIcon} 
+                    label="Tipologia" 
+                    active={currentView === 'tipologias'} 
+                    onClick={() => setCurrentView('tipologias')} 
+                />
+            </div>
+          )}
+        </div>
       </nav>
-      <div className="p-4 border-t border-white/10">
+      <div className="p-4 border-t border-white/10 shrink-0">
         <div className="flex items-center space-x-3 mb-4">
           <img
             className="w-10 h-10 rounded-full object-cover"
