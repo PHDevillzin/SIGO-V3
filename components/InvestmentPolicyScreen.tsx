@@ -30,8 +30,58 @@ const InvestmentPolicyScreen: React.FC<InvestmentPolicyScreenProps> = ({ selecte
     }, 3000);
   };
 
-  const handleDownload = (fileName: string) => {
-      showToast(`Download iniciado: ${fileName}`, 'success');
+  const handleDownload = async (fileName: string) => {
+    const blob = new Blob(['Conteúdo simulado do arquivo PDF para ' + fileName], { type: 'application/pdf' });
+
+    const downloadFallback = () => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        showToast(`Download de ${fileName} concluído com sucesso`, 'success');
+    };
+
+    try {
+        // Check if running in an iframe safely to avoid cross-origin errors in some environments
+        let isIframe = false;
+        try {
+            isIframe = window.self !== window.top;
+        } catch (e) {
+            isIframe = true;
+        }
+
+        // Only attempt File System Access API if supported and NOT in an iframe (often blocked)
+        if ('showSaveFilePicker' in window && !isIframe) {
+            try {
+                const handle = await (window as any).showSaveFilePicker({
+                    suggestedName: fileName,
+                    types: [{
+                        description: 'PDF Document',
+                        accept: { 'application/pdf': ['.pdf'] },
+                    }],
+                });
+                const writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+                showToast(`Arquivo ${fileName} salvo com sucesso`, 'success');
+            } catch (err: any) {
+                if (err.name === 'AbortError') {
+                    return; // User cancelled
+                }
+                console.warn('File System Access API error:', err);
+                downloadFallback();
+            }
+        } else {
+            downloadFallback();
+        }
+    } catch (err) {
+        console.error('Unexpected download error:', err);
+        downloadFallback();
+    }
   };
 
   return (
