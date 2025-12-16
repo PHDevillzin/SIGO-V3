@@ -42,44 +42,35 @@ const InvestmentPolicyScreen: React.FC<InvestmentPolicyScreenProps> = ({ selecte
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-        showToast(`Download de ${fileName} concluído com sucesso`, 'success');
+        showToast(`Download de ${fileName} iniciado`, 'success');
     };
 
-    try {
-        // Check if running in an iframe safely to avoid cross-origin errors in some environments
-        let isIframe = false;
+    // Tenta usar a API nativa de "Salvar Como" (File System Access API)
+    // Suportada no Edge, Chrome e Opera.
+    if ('showSaveFilePicker' in window) {
         try {
-            isIframe = window.self !== window.top;
-        } catch (e) {
-            isIframe = true;
-        }
-
-        // Only attempt File System Access API if supported and NOT in an iframe (often blocked)
-        if ('showSaveFilePicker' in window && !isIframe) {
-            try {
-                const handle = await (window as any).showSaveFilePicker({
-                    suggestedName: fileName,
-                    types: [{
-                        description: 'PDF Document',
-                        accept: { 'application/pdf': ['.pdf'] },
-                    }],
-                });
-                const writable = await handle.createWritable();
-                await writable.write(blob);
-                await writable.close();
-                showToast(`Arquivo ${fileName} salvo com sucesso`, 'success');
-            } catch (err: any) {
-                if (err.name === 'AbortError') {
-                    return; // User cancelled
-                }
-                console.warn('File System Access API error:', err);
-                downloadFallback();
+            const handle = await (window as any).showSaveFilePicker({
+                suggestedName: fileName,
+                types: [{
+                    description: 'PDF Document',
+                    accept: { 'application/pdf': ['.pdf'] },
+                }],
+            });
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            showToast(`Arquivo ${fileName} salvo com sucesso`, 'success');
+        } catch (err: any) {
+            // Se o usuário cancelar a seleção, não fazemos nada (AbortError)
+            if (err.name === 'AbortError') {
+                return; 
             }
-        } else {
+            // Para qualquer outro erro (ex: restrição de iframe, ou erro de segurança), usamos o fallback
+            console.warn('File System Access API error or unsupported context:', err);
             downloadFallback();
         }
-    } catch (err) {
-        console.error('Unexpected download error:', err);
+    } else {
+        // Fallback para navegadores que não suportam a API (Firefox, Safari, etc.)
         downloadFallback();
     }
   };
