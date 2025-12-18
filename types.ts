@@ -34,6 +34,32 @@ export interface Request {
   gestorLocal?: string;
 }
 
+export interface Unit {
+  id: number;
+  codigoUnidade: string;
+  entidade: 'SESI' | 'SENAI';
+  tipo: string;
+  centro: string;
+  cat: string;
+  unidade: string;
+  cidade: string;
+  bairro: string;
+  endereco: string;
+  cep: string;
+  re: string;
+  responsavelRE: string;
+  ra: string;
+  responsavelRA: string;
+  responsavelRAR: string;
+  tipoDeUnidade: string;
+  unidadeResumida: string;
+  gerenteRegional: string;
+  emailGR: string;
+  site: string;
+  latitude: string;
+  longitude: string;
+}
+
 export interface SummaryData {
     title: string;
     count: number;
