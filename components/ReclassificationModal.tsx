@@ -29,6 +29,16 @@ const typologyOptions = [
     'Tipologia D',
 ].sort();
 
+const tipoLocalOptions = [
+    'CAT – Qualidade de Vida',
+    'CAT – Suporte ao Negócio',
+    'Escola',
+    'Estação de Cultura',
+    'Sede',
+    'Sede – Galeria',
+    'Sede – Teatro'
+];
+
 // Helper functions
 const formatDateForInput = (dateString: string | undefined): string => {
     if (!dateString || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) return '';
@@ -75,6 +85,8 @@ const initialFormData = {
     prazoObra: '',
     valorObra: '',
     terminoObra: '',
+    tipoLocal: '',
+    observacoes: '',
 };
 
 const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, onClose, onSave, onCancelSave, selectedCount, request, isMaintenanceMode = false }) => {
@@ -149,7 +161,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     }
   }, [isOpen, request, calculateDerivedFields]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
     if (name === 'tipologia' && value) {
@@ -161,7 +173,7 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
     // If category changes, reset fields according to the new category rules
     if (name === 'categoria') {
       const newCategory = value;
-      baseState = { ...initialFormData, categoria: newCategory, tipologia: formData.tipologia };
+      baseState = { ...initialFormData, categoria: newCategory, tipologia: formData.tipologia, tipoLocal: formData.tipoLocal, observacoes: formData.observacoes };
 
       if (request) {
         const startDate = formatDateForInput(request.expectedStartDate);
@@ -219,6 +231,8 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
   const modalTitle = isMaintenanceMode 
     ? `Editar Solicitação de Manutenção${selectedCount > 1 ? 's' : ''}`
     : `Reclassificação de Solicitação${selectedCount > 1 ? 's' : ''}`;
+
+  const MAX_CHARS_OBS = 3000;
 
   return (
     <>
@@ -328,6 +342,43 @@ const ReclassificationModal: React.FC<ReclassificationModalProps> = ({ isOpen, o
               </div>
             </div>
           </fieldset>
+
+          {/* New Fields: Tipo Local and Observações */}
+          <div className="space-y-6">
+            <div>
+              <label htmlFor="tipoLocal" className="block text-sm font-medium text-gray-700 mb-1">Tipo local</label>
+              <select
+                id="tipoLocal"
+                name="tipoLocal"
+                value={formData.tipoLocal}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              >
+                <option value="">selecione...</option>
+                {tipoLocalOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="observacoes" className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+              <textarea
+                id="observacoes"
+                name="observacoes"
+                rows={4}
+                value={formData.observacoes}
+                onChange={handleChange}
+                maxLength={MAX_CHARS_OBS}
+                placeholder="Insira uma observação."
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none"
+              />
+              <div className="text-right text-xs text-gray-500 mt-1">
+                {formData.observacoes.length}/{MAX_CHARS_OBS}
+              </div>
+            </div>
+          </div>
+
         </form>
         <div className="flex justify-end items-center p-4 border-t bg-gray-50 space-x-2">
             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">
