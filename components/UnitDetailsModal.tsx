@@ -36,11 +36,7 @@ const UnitDetailsModal: React.FC<UnitDetailsModalProps> = ({ isOpen, onClose, un
                 responsavelRAR: '',
                 tipoDeUnidade: '',
                 unidadeResumida: '',
-                gerenteRegional: '',
-                emailGR: '',
-                site: '',
-                latitude: '',
-                longitude: ''
+                gerenteRegional: ''
             });
         }
     }, [unit, mode, isOpen]);
@@ -93,8 +89,30 @@ const UnitDetailsModal: React.FC<UnitDetailsModalProps> = ({ isOpen, onClose, un
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClass}>Tipo</label>
-                                <input type="text" name="tipo" value={formData.tipo} onChange={handleChange} readOnly={isReadOnly} className={inputClass} />
+                                <label className={labelClass}>Tipo local</label>
+                                <select 
+                                    name="tipo" 
+                                    value={formData.tipo} 
+                                    onChange={handleChange} 
+                                    disabled={isReadOnly} 
+                                    className={inputClass}
+                                >
+                                    <option value="">Selecione...</option>
+                                    <option value="CAT – Qualidade de Vida">CAT – Qualidade de Vida</option>
+                                    <option value="CAT – Suporte ao Negócio">CAT – Suporte ao Negócio</option>
+                                    <option value="Escola">Escola</option>
+                                    <option value="Estação de Cultura">Estação de Cultura</option>
+                                    <option value="Sede">Sede</option>
+                                    <option value="Sede – Galeria">Sede – Galeria</option>
+                                    <option value="Sede – Teatro">Sede – Teatro</option>
+                                    <option value="CAT">CAT</option>
+                                    <option value="CE">CE</option>
+                                    <option value="CFP">CFP</option>
+                                    <option value="Alugado caixa">Alugado caixa</option>
+                                    <option value="CT">CT</option>
+                                    <option value="EAD">EAD</option>
+                                    <option value="Faculdade">Faculdade</option>
+                                </select>
                             </div>
                             <div>
                                 <label className={labelClass}>Centro</label>
@@ -121,7 +139,7 @@ const UnitDetailsModal: React.FC<UnitDetailsModalProps> = ({ isOpen, onClose, un
 
                     {/* Location Section */}
                     <div>
-                        <h3 className="text-sm font-bold text-sky-600 mb-4 border-b border-sky-100 pb-1">Localização e Georreferenciamento</h3>
+                        <h3 className="text-sm font-bold text-sky-600 mb-4 border-b border-sky-100 pb-1">Localização</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <div>
                                 <label className={labelClass}>Cidade</label>
@@ -135,21 +153,9 @@ const UnitDetailsModal: React.FC<UnitDetailsModalProps> = ({ isOpen, onClose, un
                                 <label className={labelClass}>CEP</label>
                                 <input type="text" name="cep" value={formData.cep} onChange={handleChange} readOnly={isReadOnly} className={inputClass} />
                             </div>
-                            <div className="lg:col-span-1">
-                                <label className={labelClass}>Site</label>
-                                <input type="text" name="site" value={formData.site} onChange={handleChange} readOnly={isReadOnly} className={inputClass} />
-                            </div>
                             <div className="lg:col-span-2">
                                 <label className={labelClass}>Endereço Completo</label>
                                 <input type="text" name="endereco" value={formData.endereco} onChange={handleChange} readOnly={isReadOnly} className={inputClass} />
-                            </div>
-                            <div>
-                                <label className={labelClass}>Latitude</label>
-                                <input type="text" name="latitude" value={formData.latitude} onChange={handleChange} readOnly={isReadOnly} className={inputClass} />
-                            </div>
-                            <div>
-                                <label className={labelClass}>Longitude</label>
-                                <input type="text" name="longitude" value={formData.longitude} onChange={handleChange} readOnly={isReadOnly} className={inputClass} />
                             </div>
                         </div>
                     </div>
@@ -181,10 +187,6 @@ const UnitDetailsModal: React.FC<UnitDetailsModalProps> = ({ isOpen, onClose, un
                             <div>
                                 <label className={labelClass}>Gerente Regional</label>
                                 <input type="text" name="gerenteRegional" value={formData.gerenteRegional} onChange={handleChange} readOnly={isReadOnly} className={inputClass} />
-                            </div>
-                            <div className="lg:col-span-2">
-                                <label className={labelClass}>E-mail Regional</label>
-                                <input type="email" name="emailGR" value={formData.emailGR} onChange={handleChange} readOnly={isReadOnly} className={inputClass} />
                             </div>
                         </div>
                     </div>
