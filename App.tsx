@@ -9,6 +9,7 @@ import PlurianualScreen from './components/PlurianualScreen';
 import HomeScreen from './components/HomeScreen';
 import TipologiaScreen from './components/TipologiaScreen';
 import UnitsScreen from './components/UnitsScreen';
+import TipoLocalScreen from './components/TipoLocalScreen';
 import OpenSedeRequestScreen from './components/OpenSedeRequestScreen';
 import OpenStrategicRequestScreen from './components/OpenStrategicRequestScreen';
 import OpenUnitRequestScreen from './components/OpenUnitRequestScreen';
@@ -88,6 +89,7 @@ const App: React.FC = () => {
         {currentView === 'plurianual' && <PlurianualScreen />}
         {currentView === 'tipologias' && <TipologiaScreen />}
         {currentView === 'cadastro_unidades' && <UnitsScreen />}
+        {currentView === 'cadastro_tipo_local' && <TipoLocalScreen />}
         {currentView === 'politica_investimento' && <InvestmentPolicyScreen selectedProfile={selectedProfile} />}
         {currentView === 'nova_sede' && <OpenSedeRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
         {currentView === 'nova_estrategica' && <OpenStrategicRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
