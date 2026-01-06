@@ -63,8 +63,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     const isAbrirSolicitacoes = ['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(currentView);
     const isConfiguracoes = [
         'tipologias',
-        'adm_acesso_gso',
-        'adm_acesso_solicitantes',
+        'gestao_acesso',
+        'perfil_acesso',
         'cadastro_unidades',
         'cadastro_periodos',
         'cadastro_tipo_local',
@@ -210,8 +210,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
             onClick={() => setIsConfiguracoesMenuOpen(prev => !prev)}
             className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${[
                 'tipologias',
-                'adm_acesso_gso',
-                'adm_acesso_solicitantes',
+                'gestao_acesso',
+                'perfil_acesso',
                 'cadastro_unidades',
                 'cadastro_periodos',
                 'cadastro_tipo_local',
@@ -231,15 +231,15 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
             <div className="pt-2 pl-6 space-y-2">
                 <NavItem 
                     icon={UserIcon}
-                    label="Acesso Gestores"
-                    active={currentView === 'adm_acesso_gso'}
-                    onClick={() => setCurrentView('adm_acesso_gso')}
+                    label="Gestão acesso"
+                    active={currentView === 'gestao_acesso'}
+                    onClick={() => setCurrentView('gestao_acesso')}
                 />
                 <NavItem 
                     icon={UserIcon}
-                    label="Acesso solicitantes"
-                    active={currentView === 'adm_acesso_solicitantes'}
-                    onClick={() => setCurrentView('adm_acesso_solicitantes')}
+                    label="Perfil acesso"
+                    active={currentView === 'perfil_acesso'}
+                    onClick={() => setCurrentView('perfil_acesso')}
                 />
                 <NavItem 
                     icon={CloudArrowUpIcon}
@@ -312,7 +312,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
             aria-expanded={isDropdownOpen}
           >
             <span className="truncate">{selectedProfile}</span>
-            <ChevronDownIcon className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <ChevronDownIcon className="w-4 h-4 text-gray-500 flex-shrink-0 ml-2" />
           </button>
 
           {isDropdownOpen && (

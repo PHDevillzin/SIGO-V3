@@ -76,23 +76,41 @@ export const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ label,
         }
     };
 
-    const displayText = selectedValues.length > 0 
-        ? `${selectedValues.length} selecionado${selectedValues.length > 1 ? 's' : ''}` 
-        : placeholder;
+    const handleRemoveTag = (e: React.MouseEvent, option: string) => {
+        e.stopPropagation();
+        onChange(selectedValues.filter(v => v !== option));
+    };
 
     return (
         <div className="relative" ref={containerRef}>
             <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-            <button
-                type="button"
+            <div
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm flex justify-between items-center"
+                className="w-full bg-white border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-sky-500 focus-within:border-sky-500 sm:text-sm flex justify-between items-center min-h-[38px]"
             >
-                <span className="block truncate">
-                    {displayText}
-                </span>
-                <ChevronDownIcon className="w-4 h-4 text-gray-500" />
-            </button>
+                <div className="flex flex-wrap gap-1 items-center overflow-hidden">
+                    {selectedValues.length > 0 ? (
+                        selectedValues.map(val => (
+                            <span 
+                                key={val} 
+                                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200"
+                            >
+                                {val}
+                                <button
+                                    type="button"
+                                    onClick={(e) => handleRemoveTag(e, val)}
+                                    className="ml-1 flex-shrink-0 h-3 w-3 text-sky-400 hover:text-sky-600 focus:outline-none"
+                                >
+                                    <XMarkIcon className="h-3 w-3" />
+                                </button>
+                            </span>
+                        ))
+                    ) : (
+                        <span className="text-gray-400">{placeholder}</span>
+                    )}
+                </div>
+                <ChevronDownIcon className="w-4 h-4 text-gray-500 flex-shrink-0 ml-2" />
+            </div>
 
             {isOpen && (
                 <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200">

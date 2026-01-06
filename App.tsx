@@ -8,21 +8,40 @@ import PlanningScreen from './components/PlanningScreen';
 import PlurianualScreen from './components/PlurianualScreen';
 import HomeScreen from './components/HomeScreen';
 import TipologiaScreen from './components/TipologiaScreen';
-import UnitsScreen from './components/UnitsScreen';
+import UnitsScreen, { initialUnits } from './components/UnitsScreen';
 import TipoLocalScreen from './components/TipoLocalScreen';
+import AccessManagementScreen from './components/AccessManagementScreen';
+import AccessProfileScreen from './components/AccessProfileScreen';
 import OpenSedeRequestScreen from './components/OpenSedeRequestScreen';
 import OpenStrategicRequestScreen from './components/OpenStrategicRequestScreen';
 import OpenUnitRequestScreen from './components/OpenUnitRequestScreen';
 import InvestmentPolicyScreen from './components/InvestmentPolicyScreen';
 import { ListIcon, CalculatorIcon } from './components/Icons';
 
-import type { SummaryData, Request } from './types';
+import type { SummaryData, Request, Unit, AccessProfile } from './types';
 
+const INITIAL_PROFILES: AccessProfile[] = [
+    { id: '1', name: 'Administração do Sistema', permissions: ['all'] },
+    { id: '2', name: 'Alta Administração Senai', permissions: ['home', 'solicitacoes', 'aprovacao'] },
+    { id: '3', name: 'Solicitação Unidade', permissions: ['home', 'solicitacoes', 'nova_unidade'] },
+    { id: '4', name: 'Gestor GSO', permissions: ['home', 'solicitacoes'] },
+    { id: '5', name: 'Diretoria Corporativa', permissions: ['home', 'solicitacoes', 'aprovacao'] },
+    { id: '6', name: 'Gerência de Infraestrutura e Suprimento', permissions: ['home', 'solicitacoes', 'nova_estrategica', 'nova_sede'] },
+    { id: '7', name: 'Gestor Local', permissions: ['home', 'solicitacoes', 'aprovacao'] },
+    { id: '8', name: 'Gerência de Infraestrutura e Suprimento - Aprovador', permissions: ['home', 'solicitacoes', 'aprovacao'] },
+    { id: '9', name: 'Gerência Sênior de Tecnologia da Informação', permissions: ['home', 'solicitacoes', 'nova_sede'] },
+    { id: '10', name: 'Gerência Sênior de Tecnologia da Informação - Aprovador', permissions: ['home', 'solicitacoes', 'aprovacao'] },
+    { id: '11', name: 'Gerência de Saúde e Segurança', permissions: ['home', 'solicitacoes', 'nova_estrategica', 'nova_sede'] },
+    { id: '12', name: 'Gerência de Educação', permissions: ['home', 'solicitacoes', 'nova_estrategica', 'nova_sede'] },
+    { id: '13', name: 'Gerência de Educação - Aprovador', permissions: ['home', 'solicitacoes', 'aprovacao'] },
+];
 
 const App: React.FC = () => {
     const [selectedProfile, setSelectedProfile] = useState('Gestor GSO');
     const [currentView, setCurrentView] = useState('home');
     const [requests, setRequests] = useState<Request[]>(initialRequests);
+    const [units, setUnits] = useState<Unit[]>(initialUnits);
+    const [profiles, setProfiles] = useState<AccessProfile[]>(INITIAL_PROFILES);
     
     const summaryData: SummaryData[] = [
         { title: 'Nova Unidade', count: 3, value: 'R$ 130.500.000,00', color: 'border-green-500', icon: ListIcon },
@@ -88,8 +107,10 @@ const App: React.FC = () => {
         {currentView === 'planejamento' && <PlanningScreen />}
         {currentView === 'plurianual' && <PlurianualScreen />}
         {currentView === 'tipologias' && <TipologiaScreen />}
-        {currentView === 'cadastro_unidades' && <UnitsScreen />}
+        {currentView === 'cadastro_unidades' && <UnitsScreen units={units} setUnits={setUnits} />}
         {currentView === 'cadastro_tipo_local' && <TipoLocalScreen />}
+        {currentView === 'gestao_acesso' && <AccessManagementScreen units={units} profiles={profiles} />}
+        {currentView === 'perfil_acesso' && <AccessProfileScreen profiles={profiles} setProfiles={setProfiles} />}
         {currentView === 'politica_investimento' && <InvestmentPolicyScreen selectedProfile={selectedProfile} />}
         {currentView === 'nova_sede' && <OpenSedeRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
         {currentView === 'nova_estrategica' && <OpenStrategicRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}

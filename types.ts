@@ -34,6 +34,24 @@ export interface Request {
   gestorLocal?: string;
 }
 
+export interface User {
+  id: string;
+  nif: string;
+  name: string;
+  email: string;
+  unidade: string;
+  profile: string;
+  createdBy: string;
+  createdAt: string;
+  lastEditedBy?: string;
+  lastEditedAt?: string;
+  updatedAt: string;
+  // Fields added after registration
+  sigoProfiles?: string[];
+  linkedUnits?: string[];
+  registrationDate?: string;
+}
+
 export interface Unit {
   id: number;
   codigoUnidade: string;
@@ -95,4 +113,10 @@ export interface PlanningData {
   categoria?: string;
   tipologia?: string;
   changes?: Partial<PlanningData>; // Stores original values of changed fields
+}
+
+export interface AccessProfile {
+  id: string;
+  name: string;
+  permissions: string[]; // List of view IDs or functionality names
 }
