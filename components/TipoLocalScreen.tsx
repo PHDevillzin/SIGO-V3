@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
     MagnifyingGlassIcon, 
     FilterIcon, 
@@ -41,15 +41,6 @@ const ToggleSwitch: React.FC<{ checked: boolean; onChange: () => void }> = ({ ch
 
 const TipoLocalScreen: React.FC = () => {
   const [items, setItems] = useState<TipoLocal[]>(initialTipoLocais);
-
-  useEffect(() => {
-    fetch('/api/tipo-locais')
-      .then(res => res.json())
-      .then(data => {
-          if (Array.isArray(data) && data.length > 0) setItems(data);
-      })
-      .catch(err => console.error('Failed to fetch tipo locais', err));
-  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);

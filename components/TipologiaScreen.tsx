@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MagnifyingGlassIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon, ListIcon, SparklesIcon } from './Icons';
 import NewTipologiaModal from './NewTipologiaModal';
 import EditTipologiaModal from './EditTipologiaModal';
@@ -33,15 +33,6 @@ const ToggleSwitch: React.FC<{ checked: boolean; onChange: () => void; label?: s
 
 const TipologiaScreen: React.FC = () => {
   const [tipologias, setTipologias] = useState<Tipologia[]>(initialTipologias);
-
-  useEffect(() => {
-    fetch('/api/tipologias')
-      .then(res => res.json())
-      .then(data => {
-          if (Array.isArray(data) && data.length > 0) setTipologias(data);
-      })
-      .catch(err => console.error('Failed to fetch tipologias', err));
-  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);

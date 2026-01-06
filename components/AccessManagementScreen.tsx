@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
     MagnifyingGlassIcon, 
     PlusIcon, 
@@ -34,23 +34,8 @@ interface AccessManagementScreenProps {
 }
 
 const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, profiles }) => {
-    const [allUsers] = useState<User[]>(csvDataRaw as User[]); // Keep "csvDataRaw" as source for "Available" for now if dynamic fetching isn't ready for "Source"
+    const [allUsers] = useState<User[]>(csvDataRaw as User[]);
     const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
-
-    useEffect(() => {
-        fetch('/api/users')
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) {
-                    // Filter or map if necessary. "Registered Users" are those in the DB.
-                    // The UI distinguishes between "CSV Source" (Available) and "Registered".
-                    // If the API returns all users, we might need to split them or just use the API for Registered.
-                    // For now, let's assume API users = Registered Users.
-                    setRegisteredUsers(data);
-                }
-            })
-            .catch(err => console.error('Failed to fetch users', err));
-    }, []);
     const [filterText, setFilterText] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUserForRegistration, setSelectedUserForRegistration] = useState<User | null>(null);
