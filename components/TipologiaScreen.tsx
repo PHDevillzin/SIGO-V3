@@ -4,22 +4,12 @@ import { MagnifyingGlassIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRi
 import NewTipologiaModal from './NewTipologiaModal';
 import EditTipologiaModal from './EditTipologiaModal';
 import { MultiSelectDropdown } from './AdvancedFilters';
+import { Tipologia } from '../types';
 
-interface Tipologia {
-  id: number;
-  titulo: string;
-  descricao: string;
-  dataInclusao: string;
-  criadoPor: string;
-  status: boolean;
+interface TipologiaScreenProps {
+    tipologias: Tipologia[];
+    setTipologias: React.Dispatch<React.SetStateAction<Tipologia[]>>;
 }
-
-const initialTipologias: Tipologia[] = [
-  { id: 1, titulo: 'Ambientes CQV', descricao: 'Adequações, construções...', dataInclusao: '10/11/2025 16:21', criadoPor: 'RAPHAEL SUAVE BOR...', status: true },
-  { id: 2, titulo: 'Climatização / exaustão', descricao: 'Projetos, instalações ou ...', dataInclusao: '10/11/2025 16:21', criadoPor: 'RAPHAEL SUAVE BOR...', status: true },
-  { id: 3, titulo: 'Bloco anexo', descricao: 'Intervenções voltadas à ...', dataInclusao: '10/11/2025 16:21', criadoPor: 'RAPHAEL SUAVE BOR...', status: true },
-  { id: 4, titulo: 'Reforma', descricao: 'reforma', dataInclusao: '05/11/2025 15:06', criadoPor: 'JULIA ANDRADE SILVA', status: false },
-];
 
 const ToggleSwitch: React.FC<{ checked: boolean; onChange: () => void; label?: string }> = ({ checked, onChange, label }) => {
   return (
@@ -31,9 +21,9 @@ const ToggleSwitch: React.FC<{ checked: boolean; onChange: () => void; label?: s
 };
 
 
-const TipologiaScreen: React.FC = () => {
-  const [tipologias, setTipologias] = useState<Tipologia[]>(initialTipologias);
+const TipologiaScreen: React.FC<TipologiaScreenProps> = ({ tipologias, setTipologias }) => {
   const [searchTerm, setSearchTerm] = useState('');
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);

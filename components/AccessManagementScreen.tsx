@@ -31,11 +31,12 @@ const csvDataRaw = [
 interface AccessManagementScreenProps {
     units: Unit[];
     profiles: AccessProfile[];
+    registeredUsers: User[];
+    setRegisteredUsers: React.Dispatch<React.SetStateAction<User[]>>;
 }
 
-const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, profiles }) => {
+const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, profiles, registeredUsers, setRegisteredUsers }) => {
     const [allUsers] = useState<User[]>(csvDataRaw as User[]);
-    const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
     const [filterText, setFilterText] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUserForRegistration, setSelectedUserForRegistration] = useState<User | null>(null);

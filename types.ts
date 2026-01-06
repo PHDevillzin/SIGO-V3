@@ -118,5 +118,23 @@ export interface PlanningData {
 export interface AccessProfile {
   id: string;
   name: string;
+  description?: string;
   permissions: string[]; // List of view IDs or functionality names
+}
+
+export interface Tipologia {
+  id: number;
+  titulo: string;
+  descricao: string;
+  dataInclusao: string;
+  criadoPor: string;
+  status: boolean;
+}
+
+export interface TipoLocal {
+  id: number;
+  descricao: string;
+  dataInclusao: string;
+  criadoPor: string;
+  status: boolean;
 }

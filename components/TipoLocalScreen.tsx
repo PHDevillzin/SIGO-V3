@@ -14,21 +14,12 @@ import {
 import TipoLocalModal from './TipoLocalModal';
 import ConfirmationModal from './ConfirmationModal';
 import { MultiSelectDropdown } from './AdvancedFilters';
+import { TipoLocal } from '../types';
 
-interface TipoLocal {
-  id: number;
-  descricao: string;
-  dataInclusao: string;
-  criadoPor: string;
-  status: boolean;
+interface TipoLocalScreenProps {
+    tipoLocais: TipoLocal[];
+    setTipoLocais: React.Dispatch<React.SetStateAction<TipoLocal[]>>;
 }
-
-const initialTipoLocais: TipoLocal[] = [
-  { id: 1, descricao: 'Faculdade', dataInclusao: '10/11/2025 16:21', criadoPor: 'RAPHAEL SUAVE BOR...', status: true },
-  { id: 2, descricao: 'CAT', dataInclusao: '10/11/2025 16:21', criadoPor: 'RAPHAEL SUAVE BOR...', status: true },
-  { id: 3, descricao: 'CE', dataInclusao: '10/11/2025 16:21', criadoPor: 'RAPHAEL SUAVE BOR...', status: true },
-  { id: 4, descricao: 'Sede', dataInclusao: '05/11/2025 15:06', criadoPor: 'JULIA ANDRADE SILVA', status: false },
-];
 
 const ToggleSwitch: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked, onChange }) => (
   <div className="flex items-center cursor-pointer" onClick={onChange}>
@@ -39,8 +30,8 @@ const ToggleSwitch: React.FC<{ checked: boolean; onChange: () => void }> = ({ ch
   </div>
 );
 
-const TipoLocalScreen: React.FC = () => {
-  const [items, setItems] = useState<TipoLocal[]>(initialTipoLocais);
+const TipoLocalScreen: React.FC<TipoLocalScreenProps> = ({ tipoLocais, setTipoLocais }) => {
+  const [items, setItems] = useState<TipoLocal[]>(tipoLocais);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);
