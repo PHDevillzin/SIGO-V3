@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import SummaryCard from './components/SummaryCard';
@@ -42,6 +42,32 @@ const App: React.FC = () => {
     const [requests, setRequests] = useState<Request[]>(initialRequests);
     const [units, setUnits] = useState<Unit[]>(initialUnits);
     const [profiles, setProfiles] = useState<AccessProfile[]>(INITIAL_PROFILES);
+
+    useEffect(() => {
+        // Fetch Profiles
+        fetch('/api/profiles')
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) setProfiles(data);
+            })
+            .catch(err => console.error('Failed to fetch profiles', err));
+
+        // Fetch Units
+        fetch('/api/units')
+            .then(res => res.json())
+            .then(data => {
+                 if (Array.isArray(data) && data.length > 0) setUnits(data);
+            })
+            .catch(err => console.error('Failed to fetch units', err));
+
+        // Fetch Requests
+        fetch('/api/requests')
+            .then(res => res.json())
+            .then(data => {
+                 if (Array.isArray(data) && data.length > 0) setRequests(data);
+            })
+            .catch(err => console.error('Failed to fetch requests', err));
+    }, []);
     
     const summaryData: SummaryData[] = [
         { title: 'Nova Unidade', count: 3, value: 'R$ 130.500.000,00', color: 'border-green-500', icon: ListIcon },
