@@ -23,49 +23,52 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
     units, 
     profiles 
 }) => {
-    // Selection State (for Create Mode)
+    // Selection state matches the "Single Step" flow
     const [selectedUser, setSelectedUser] = useState<User | null>(initialUser);
     const [filterText, setFilterText] = useState('');
 
-    // Form State
     const [selectedProfiles, setSelectedProfiles] = useState<string[]>([]);
     const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
 
-    // Reset state when modal opens
     useEffect(() => {
         if (isOpen) {
             setSelectedUser(initialUser);
             setFilterText('');
             if (initialUser) {
-                // Pre-fill for Edit Mode
-                // initialUser.sigoProfiles stores IDs. We need to map to Names for the Dropdown.
+                // Edit Mode: Pre-fill
                 const profileNames = initialUser.sigoProfiles 
-                    ? initialUser.sigoProfiles.map(id => profiles.find(p => p.id === id)?.name || id) // Fallback to ID if name not found
+                    ? initialUser.sigoProfiles.map(id => profiles.find(p => p.id === id)?.name || id)
                     : [];
                 
                 setSelectedProfiles(profileNames);
                 setSelectedUnits(initialUser.linkedUnits || []);
             } else {
-                // Reset for Create Mode
+                // Create Mode: Reset
                 setSelectedProfiles([]);
                 setSelectedUnits([]);
             }
             setError(null);
         }
-    }, [isOpen, initialUser, profiles]); // profiles dependency added
+    }, [isOpen, initialUser, profiles]); 
 
-    // Dynamic unit options
-    const unitOptions = useMemo(() => {
-        return Array.from(new Set(units.map(u => u.unidade))).sort();
-    }, [units]);
+    // Reset Form when switching selected user in the grid (Create Mode)
+    useEffect(() => {
+        if (!initialUser && selectedUser) { 
+             // When user picks someone new in Grid, reset the form Access fields
+             // (Or keep them? Usually resetting is safer unless we want bulk add)
+             // User Request: "data of this user will complete textbox below... and I will select profile"
+             // Implies fresh start for each user selection.
+             setSelectedProfiles([]);
+             setSelectedUnits([]);
+             setError(null);
+        }
+    }, [selectedUser, initialUser]);
 
-    // Dynamic profile options (Names)
-    const profileOptions = useMemo(() => {
-        return profiles.map(p => p.name).sort();
-    }, [profiles]);
 
-    // Filter source users
+    const unitOptions = useMemo(() => Array.from(new Set(units.map(u => u.unidade))).sort(), [units]);
+    const profileOptions = useMemo(() => profiles.map(p => p.name).sort(), [profiles]);
+
     const filteredSourceUsers = useMemo(() => {
         return sourceUsers.filter(u => 
             u.name.toLowerCase().includes(filterText.toLowerCase()) || 
@@ -80,27 +83,25 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
     const handleConfirm = (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Validation
         if (selectedProfiles.length === 0) {
             setError('Por favor, selecione ao menos um perfil de acesso.');
             return;
         }
 
+        // Admin Validation Logic
         const isAdmin = selectedProfiles.includes('Administração do sistema');
         if (selectedUnits.length === 0 && !isAdmin) {
              setError('Por favor, selecione ao menos uma unidade (ou Perfil Administrador).');
              return;
         }
 
-        // Map Names back to IDs
-        // selectedProfiles contains Names. We need IDs.
         const profileIds = selectedProfiles.map(name => {
              const profile = profiles.find(p => p.name === name);
-             return profile ? profile.id : name; // Should always find, but fallback safely
+             return profile ? profile.id : name;
         });
 
         onConfirm({ 
-            profiles: profileIds, // Send IDs
+            profiles: profileIds,
             units: selectedUnits,
             selectedUser: selectedUser || undefined
         });
@@ -120,7 +121,7 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                 </div>
 
                 <div className="overflow-y-auto flex-1 p-8 space-y-8">
-                    {/* Grid Section - Visible if NOT editing (Create Mode) */}
+                    {/* Grid Section: Always visible in Create Mode */}
                     {!isEditing && (
                          <div className="space-y-6">
                             <h3 className="text-sm font-bold text-[#0B1A4E] uppercase tracking-wide flex items-center gap-2">
@@ -174,7 +175,7 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                         </div>
                     )}
 
-                    {/* Form Section - Visible if User Selected */}
+                    {/* Form Section: Visible when User Selected */}
                     {selectedUser && (
                         <form id="access-form" onSubmit={handleConfirm} className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div className="flex items-center space-x-2 text-[#0B1A4E] border-b border-gray-200 pb-2 mt-8">
@@ -190,7 +191,6 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                                     <p className="text-sm font-bold text-gray-800">{selectedUser.name}</p>
                                 </div>
                                 <div className="text-right sm:text-left"> 
-                                    {/* Adjusted for alignment */}
                                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">NIF</label>
                                     <p className="text-sm font-bold text-gray-800">{selectedUser.nif}</p>
                                 </div>
@@ -208,7 +208,7 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                                         selectedValues={selectedProfiles}
                                         onChange={(vals) => {
                                             setSelectedProfiles(vals);
-                                            if (error) setError(null);
+                                            setError(null);
                                         }}
                                         placeholder="Selecione os perfis..."
                                     />
@@ -221,7 +221,7 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                                         selectedValues={selectedUnits}
                                         onChange={(vals) => {
                                             setSelectedUnits(vals);
-                                            if (error) setError(null);
+                                            setError(null);
                                         }}
                                         placeholder="Selecione as unidades..."
                                     />
@@ -241,7 +241,7 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                     )}
                 </div>
 
-                {/* Footer Buttons */}
+                {/* Footer */}
                 <div className="p-6 border-t bg-gray-50 flex justify-end items-center space-x-4 rounded-b-lg shrink-0">
                     <button 
                         onClick={onClose}
@@ -251,13 +251,13 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                         Cancelar
                     </button>
                     <button 
-                        form="access-form" // Link to form
+                        form="access-form" 
                         type="submit"
                         disabled={!selectedUser}
                         className={`px-6 py-2.5 rounded-md font-bold transition-all flex items-center space-x-2 shadow-lg uppercase tracking-wide text-sm ${selectedUser ? 'bg-[#0EA5E9] text-white hover:bg-sky-600 shadow-sky-100' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
                     >
                         <PaperAirplaneIcon className="w-4 h-4 -rotate-45" />
-                        <span>{isEditing ? 'Atualizar Dados' : 'Salvar Cadastro'}</span>
+                        <span>{isEditing ? 'Atualizar Acesso' : 'Vincular Acesso'}</span>
                     </button>
                 </div>
             </div>
