@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from './db';
+import pg from 'pg';
 
 // Simple interface for User to help with type checking inside the handler
 interface UserData {
@@ -25,6 +25,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.status(200).end();
         return;
     }
+
+    const pool = new pg.Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+
+    const query = async (text: string, params: any[] = []) => {
+        const client = await pool.connect();
+        try {
+            return await client.query(text, params);
+        } finally {
+            client.release();
+        }
+    };
 
     try {
         if (req.method === 'GET') {
@@ -115,9 +129,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             let result;
             if (id) {
-                result = await query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
+                result = await query('DELETE FROM users WHERE id = $1 RETURNING id', [id as string]);
             } else {
-                result = await query('DELETE FROM users WHERE nif = $1 RETURNING id', [nif]);
+                result = await query('DELETE FROM users WHERE nif = $1 RETURNING id', [nif as string]);
             }
 
             if (result.rows.length === 0) {
@@ -130,5 +144,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (error: any) {
         console.error('API Error:', error);
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    } finally {
+        await pool.end();
     }
 }

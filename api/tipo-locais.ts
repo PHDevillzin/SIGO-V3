@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from './db';
+import pg from 'pg';
 
 function sanitizeDate(date: string | null | undefined): string | null {
     return date || null;
@@ -18,6 +18,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.status(200).end();
         return;
     }
+
+    const pool = new pg.Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+
+    const query = async (text: string, params: any[] = []) => {
+        const client = await pool.connect();
+        try {
+            return await client.query(text, params);
+        } finally {
+            client.release();
+        }
+    };
 
     try {
         if (req.method === 'GET') {
@@ -41,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const { id, descricao, status } = req.body;
             if (!id) return res.status(400).json({ error: 'Missing ID' });
             
-             const result = await query(
+            const result = await query(
                 `UPDATE tipo_locais SET
                     descricao = COALESCE($1, descricao),
                     status = COALESCE($2, status)
@@ -60,5 +74,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (error: any) {
         console.error('API Error:', error);
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    } finally {
+        await pool.end();
     }
 }

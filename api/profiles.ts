@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from './db';
+import pg from 'pg';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -15,15 +15,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return;
     }
 
+    const pool = new pg.Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+
     try {
         if (req.method === 'GET') {
-            const result = await query('SELECT * FROM profiles ORDER BY id ASC');
-            return res.status(200).json(result.rows);
+            const client = await pool.connect();
+             try {
+                const result = await client.query('SELECT * FROM profiles ORDER BY id ASC');
+                return res.status(200).json(result.rows);
+             } finally {
+                client.release();
+             }
         }
 
         res.status(405).json({ error: 'Method not allowed' });
     } catch (error: any) {
         console.error('API Error:', error);
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    } finally {
+        await pool.end();
     }
 }

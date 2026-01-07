@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from './db';
+import pg from 'pg';
 
 // Helper to sanitize dates for DB
 function sanitizeDate(date: string | null | undefined): string | null {
@@ -19,6 +19,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.status(200).end();
         return;
     }
+
+    const pool = new pg.Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+
+    const query = async (text: string, params: any[] = []) => {
+        const client = await pool.connect();
+        try {
+            return await client.query(text, params);
+        } finally {
+            client.release();
+        }
+    };
 
     try {
         if (req.method === 'GET') {
@@ -64,5 +78,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (error: any) {
         console.error('API Error:', error);
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    } finally {
+        await pool.end();
     }
 }
