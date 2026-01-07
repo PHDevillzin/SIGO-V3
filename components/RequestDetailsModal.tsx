@@ -140,6 +140,28 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
                             <ReadOnlyField label="Valor esperado" value={request.expectedValue} />
                             <ReadOnlyField label="Início esperado" value={formatDate(request.expectedStartDate)} />
                             <ReadOnlyField label="Início uso esperado" value={formatDate(request.dataUtilizacao)} />
+                            
+                            <ReadOnlyField label="Área Responsável" value={request.areaResponsavel || '-'} />
+                            <ReadOnlyField label="Áreas Envolvidas" value={request.areasEnvolvidas || '-'} />
+                            <ReadOnlyField label="Referência" value={request.referencia || '-'} />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-x-4 mt-2">
+                             <TextAreaField label="Expectativa de Resultados" value={request.expectativaResultados || '-'} />
+                             <TextAreaField label="Programa de Necessidades" value={request.programaNecessidades || '-'} />
+                             <TextAreaField label="Instalações SESI/SENAI próximas" value={request.instalacoesSesiSenai || '-'} />
+                        </div>
+
+                        <div className="mt-4 border-t pt-4">
+                            <h4 className="font-bold text-gray-800 mb-2">Informações Complementares</h4>
+                            <div className="grid grid-cols-2 gap-x-4 text-sm">
+                                <ReadOnlyField label="Possui Projeto?" value={request.possuiProjeto || '-'} />
+                                <ReadOnlyField label="Possui Laudo?" value={request.possuiLaudo || '-'} />
+                                <ReadOnlyField label="Tem Autorização?" value={request.temAutorizacao || '-'} />
+                                <ReadOnlyField label="Realizou Consulta?" value={request.realizouConsulta || '-'} />
+                                <ReadOnlyField label="Houve Notificação?" value={request.houveNotificacao || '-'} />
+                                <ReadOnlyField label="Local da Obra" value={request.localObra || '-'} />
+                            </div>
                         </div>
                     </div>
 

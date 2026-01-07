@@ -177,6 +177,9 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
             </label>
             <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">Nenhum arquivo escolhido</span>
         </div>
+        <div className="mt-1">
+            <a href="#" className="text-xs text-blue-400 hover:text-blue-600 hover:underline">*Link para download do modelo do arquivo disponibilizado</a>
+        </div>
     </div>
   );
 
