@@ -8,7 +8,7 @@ import {
     PencilIcon,
     TrashIcon
 } from './Icons';
-import AccessRegistrationModal from './AccessRegistrationModal';
+import AccessRegistrationForm from './AccessRegistrationForm';
 import ConfirmationModal from './ConfirmationModal';
 import type { User, Unit, AccessProfile } from '../types';
 
@@ -55,6 +55,9 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
         setTimeout(() => setToast(prev => prev ? { ...prev, visible: false } : null), 3000);
     };
 
+    // View Mode State: 'LIST' | 'REGISTER'
+    const [viewMode, setViewMode] = useState<'LIST' | 'REGISTER'>('LIST');
+
     // Filter out already registered users from the source list passed to the modal
     // Any user present in the registeredUsers list (DB) is considered "unavailable" for new registration
     const availableSourceUsers = useMemo(() => {
@@ -63,17 +66,22 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
 
     const handleNewUserClick = () => {
         setSelectedUserForRegistration(null); // Create Mode
-        setIsModalOpen(true);
+        setViewMode('REGISTER'); // Switch to Register View
     };
 
     const handleEditClick = (user: User) => {
         setSelectedUserForRegistration(user); // Edit Mode
-        setIsModalOpen(true);
+        setViewMode('REGISTER'); // Switch to Register View
     };
 
     const handleDeleteClick = (user: User) => {
         setUserToDelete(user);
         setIsDeleteConfirmOpen(true);
+    };
+
+    const handleCancelRegistration = () => {
+        setViewMode('LIST');
+        setSelectedUserForRegistration(null);
     };
 
     const confirmDelete = () => {
@@ -86,6 +94,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
     };
 
     const handleConfirmRegistration = async (data: { profiles: string[], units: string[], selectedUser?: User }) => {
+        // ... (Same logic as before) ...
         // If editing, we use the selectedUserForRegistration.
         // If creating, we MUST have a selectedUser returned from the modal.
         const targetUser = selectedUserForRegistration || data.selectedUser;
@@ -146,7 +155,8 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 showToast('Usuário cadastrado com sucesso!', 'success');
             }
             
-            setIsModalOpen(false);
+            // Return to list view
+            setViewMode('LIST');
             setSelectedUserForRegistration(null);
 
         } catch (err: any) {
@@ -155,6 +165,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
         }
     };
 
+    // RENDER
     return (
         <div className="space-y-8">
             {toast?.visible && (
@@ -164,105 +175,109 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 </div>
             )}
 
-            {/* Header */}
-            <div className="bg-white rounded-lg shadow p-6 flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">Gestão de acessos</h1>
-                <button 
-                    onClick={handleNewUserClick}
-                    className="bg-[#0B1A4E] text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 text-sm uppercase tracking-wide"
-                >
-                    <PlusIcon className="w-5 h-5" />
-                    Novo Usuário
-                </button>
-            </div>
+            {/* View Mode Switching */}
+            {viewMode === 'LIST' ? (
+                <>
+                    {/* Header */}
+                    <div className="bg-white rounded-lg shadow p-6 flex justify-between items-center animate-in fade-in slide-in-from-left duration-300">
+                        <h1 className="text-2xl font-bold text-gray-800">Gestão de acessos</h1>
+                        <button 
+                            onClick={handleNewUserClick}
+                            className="bg-[#0B1A4E] text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 text-sm uppercase tracking-wide"
+                        >
+                            <PlusIcon className="w-5 h-5" />
+                            Novo Usuário
+                        </button>
+                    </div>
 
-            {/* Registered Users Section */}
-            <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                    <CheckCircleIcon className="w-5 h-5 text-green-500" />
-                    Usuários Cadastrados no Sistema
-                </h2>
-                
-                <div className="overflow-x-auto border rounded-lg">
-                    <table className="w-full text-sm text-left text-gray-500">
-                        <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
-                            <tr>
-                                <th className="px-6 py-4 font-semibold">NIF</th>
-                                <th className="px-6 py-4 font-semibold">Nome</th>
-                                <th className="px-6 py-4 font-semibold">E-mail</th>
-                                <th className="px-6 py-4 font-semibold">Perfis SIGO</th>
-                                <th className="px-6 py-4 font-semibold">Unidades Vinculadas</th>
-                                <th className="px-6 py-4 font-semibold text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {registeredUsers.length > 0 ? registeredUsers.map(user => (
-                                <tr key={user.nif} className="bg-white hover:bg-gray-50 animate-in fade-in slide-in-from-top-1 duration-300">
-                                    <td className="px-6 py-4 font-medium text-gray-900">{user.nif}</td>
-                                    <td className="px-6 py-4 text-gray-700">{user.name}</td>
-                                    <td className="px-6 py-4">{user.email}</td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-wrap gap-1">
-                                            {user.sigoProfiles?.map(profileId => {
-                                                // Map ID to Name using profiles prop
-                                                const profile = profiles.find(p => p.id === profileId);
-                                                return (
-                                                    <span key={profileId} className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded text-[10px] border border-sky-100 font-bold uppercase">
-                                                        {profile ? profile.name : profileId}
-                                                    </span>
-                                                );
-                                            })}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 max-w-xs">
-                                        <div className="flex flex-wrap gap-1">
-                                            {user.linkedUnits?.map((unit: string) => (
-                                                <span key={unit} className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[10px] border border-gray-200">
-                                                    {unit}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <div className="flex justify-center items-center gap-2">
-                                            <button 
-                                                onClick={() => handleEditClick(user)}
-                                                className="p-1.5 bg-purple-100 text-purple-600 rounded-md hover:bg-purple-200 transition-colors"
-                                                title="Editar Acesso"
-                                            >
-                                                <PencilIcon className="w-4 h-4" />
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDeleteClick(user)}
-                                                className="p-1.5 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors"
-                                                title="Excluir Acesso"
-                                            >
-                                                <TrashIcon className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )) : (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400 italic">
-                                        Nenhum usuário cadastrado até o momento.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <AccessRegistrationModal 
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                user={selectedUserForRegistration}
-                sourceUsers={availableSourceUsers}
-                onConfirm={handleConfirmRegistration}
-                units={units}
-                profiles={profiles}
-            />
+                    {/* Registered Users Grid */}
+                    <div className="bg-white rounded-lg shadow p-6 animate-in fade-in slide-in-from-left duration-300">
+                        <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                            <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                            Usuários Cadastrados no Sistema
+                        </h2>
+                        
+                        <div className="overflow-x-auto border rounded-lg">
+                            <table className="w-full text-sm text-left text-gray-500">
+                                <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
+                                    <tr>
+                                        <th className="px-6 py-4 font-semibold">NIF</th>
+                                        <th className="px-6 py-4 font-semibold">Nome</th>
+                                        <th className="px-6 py-4 font-semibold">E-mail</th>
+                                        <th className="px-6 py-4 font-semibold">Perfis SIGO</th>
+                                        <th className="px-6 py-4 font-semibold">Unidades Vinculadas</th>
+                                        <th className="px-6 py-4 font-semibold text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {registeredUsers.length > 0 ? registeredUsers.map(user => (
+                                        <tr key={user.nif} className="bg-white hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4 font-medium text-gray-900">{user.nif}</td>
+                                            <td className="px-6 py-4 text-gray-700">{user.name}</td>
+                                            <td className="px-6 py-4">{user.email}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {user.sigoProfiles?.map(profileId => {
+                                                        const profile = profiles.find(p => p.id === profileId);
+                                                        return (
+                                                            <span key={profileId} className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded text-[10px] border border-sky-100 font-bold uppercase">
+                                                                {profile ? profile.name : profileId}
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 max-w-xs">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {user.linkedUnits?.map((unit: string) => (
+                                                        <span key={unit} className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[10px] border border-gray-200">
+                                                            {unit}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex justify-center items-center gap-2">
+                                                    <button 
+                                                        onClick={() => handleEditClick(user)}
+                                                        className="p-1.5 bg-purple-100 text-purple-600 rounded-md hover:bg-purple-200 transition-colors"
+                                                        title="Editar Acesso"
+                                                    >
+                                                        <PencilIcon className="w-4 h-4" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeleteClick(user)}
+                                                        className="p-1.5 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors"
+                                                        title="Excluir Acesso"
+                                                    >
+                                                        <TrashIcon className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )) : (
+                                        <tr>
+                                            <td colSpan={6} className="px-6 py-12 text-center text-gray-400 italic">
+                                                Nenhum usuário cadastrado até o momento.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            ) : (
+                /* Registration View */
+                <AccessRegistrationForm 
+                    user={selectedUserForRegistration}
+                    sourceUsers={availableSourceUsers}
+                    onConfirm={handleConfirmRegistration}
+                    onCancel={handleCancelRegistration}
+                    units={units}
+                    profiles={profiles}
+                />
+            )}
 
             <ConfirmationModal 
                 isOpen={isDeleteConfirmOpen}
