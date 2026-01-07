@@ -58,10 +58,15 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
 
 
     // Filter out already registered users from the source list passed to the modal
-    // Any user present in the registeredUsers list (DB) is considered "unavailable" for new registration
+    // Only exclude users who are registered AND have at least one profile associated.
     const availableSourceUsers = useMemo(() => {
-        return sourceUsers.filter(u => !registeredUsers.some(r => r.nif === u.nif));
+        return sourceUsers.filter(u => !registeredUsers.some(r => r.nif === u.nif && r.sigoProfiles && r.sigoProfiles.length > 0));
     }, [sourceUsers, registeredUsers]);
+
+    // Derived list for the Grid: Only show users with profiles
+    const usersWithAccess = useMemo(() => {
+        return registeredUsers.filter(u => u.sigoProfiles && u.sigoProfiles.length > 0);
+    }, [registeredUsers]);
 
     const handleNewUserClick = () => {
         setSelectedUserForRegistration(null); // Create Mode
@@ -142,7 +147,14 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 setRegisteredUsers(prev => prev.map(u => u.nif === newUserState.nif ? newUserState : u));
                 showToast('Acesso atualizado com sucesso!', 'success');
             } else {
-                setRegisteredUsers(prev => [newUserState, ...prev]);
+                 // Check if user already exists locally (e.g. had no profiles, so wasn't in "usersWithAccess" but was in "registeredUsers")
+                 // If so, update them. If not, add them.
+                 const exists = registeredUsers.some(u => u.nif === newUserState.nif);
+                 if (exists) {
+                    setRegisteredUsers(prev => prev.map(u => u.nif === newUserState.nif ? newUserState : u));
+                 } else {
+                    setRegisteredUsers(prev => [newUserState, ...prev]);
+                 }
                 showToast('Usuário cadastrado com sucesso!', 'success');
             }
             
@@ -196,7 +208,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                             </tr>
                         </thead>
                         <tbody className="divide-y">
-                            {registeredUsers.length > 0 ? registeredUsers.map(user => (
+                            {usersWithAccess.length > 0 ? usersWithAccess.map(user => (
                                 <tr key={user.nif} className="bg-white hover:bg-gray-50 animate-in fade-in slide-in-from-top-1 duration-300">
                                     <td className="px-6 py-4 font-medium text-gray-900">{user.nif}</td>
                                     <td className="px-6 py-4 text-gray-700">{user.name}</td>
@@ -244,7 +256,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                             )) : (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-gray-400 italic">
-                                        Nenhum usuário cadastrado até o momento.
+                                        Nenhum usuário com acesso cadastrado.
                                     </td>
                                 </tr>
                             )}
