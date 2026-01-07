@@ -543,7 +543,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                             <button
                                 onClick={handleOpenReclassificationModal}
                                 disabled={selectedIds.length === 0}
-                                className="flex items-center space-x-2 bg-purple-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-purple-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className={`flex items-center space-x-2 font-semibold py-2 px-4 rounded-md transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed ${isManutencaoView ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                             >
                                 <PencilIcon className="w-5 h-5" />
                                 <span>{editButtonLabel}</span>
@@ -583,6 +583,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                     </th>
                                 )}
                                 <th scope="col" className="px-6 py-3 font-semibold">Criticidade</th>
+                                {isReclassificationView && <th scope="col" className="px-6 py-3 font-semibold">Local Atual</th>}
                                 <th scope="col" className="px-6 py-3 font-semibold">Unidade</th>
                                 <th scope="col" className="px-6 py-3 font-semibold">Descrição</th>
                                 {(isReclassificationView || isManutencaoView) && <th scope="col" className="px-6 py-3 font-semibold">Tipologia</th>}
@@ -590,17 +591,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                 
                                 {isReclassificationView && (
                                     <>
-                                        <th scope="col" className="px-6 py-3 font-semibold">Situação Projeto</th>
-                                        <th scope="col" className="px-6 py-3 font-semibold">Início Projeto</th>
-                                        <th scope="col" className="px-6 py-3 font-semibold text-center">Saldo Projeto Prazo</th>
-                                        <th scope="col" className="px-6 py-3 font-semibold">Saldo Projeto Valor</th>
-                                        <th scope="col" className="px-6 py-3 font-semibold">Situação Obra</th>
-                                        <th scope="col" className="px-6 py-3 font-semibold">Início Obra</th>
-                                        <th scope="col" className="px-6 py-3 font-semibold text-center">Saldo Obra Prazo</th>
-                                        <th scope="col" className="px-6 py-3 font-semibold">Saldo Obra Valor</th>
-                                        <th scope="col" className="px-6 py-3 font-semibold">Categoria Investimento</th>
-                                        <th scope="col" className="px-6 py-3 font-semibold">Entidade</th>
-                                        <th scope="col" className="px-6 py-3 font-semibold">Ordem</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold text-center">Situação Projeto</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold text-center">Início Projeto</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Saldo P</th>
                                     </>
                                 )}
                                 
@@ -617,6 +610,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                     <>
                                         <th scope="col" className="px-6 py-3 font-semibold">Local Atual</th>
                                         <th scope="col" className="px-6 py-3 font-semibold">Gestor Local</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Início Esperado</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Valor Esperado</th>
                                     </>
                                 )}
                                 
@@ -642,24 +637,17 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                             {request.criticality}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{request.unit}</td>
-                                    <td className="px-6 py-4">{request.description}</td>
-                                    {(isReclassificationView || isManutencaoView) && <td className="px-6 py-4 whitespace-nowrap">{request.tipologia}</td>}
-                                    <td className="px-6 py-4">{request.status}</td>
-                                    
                                     {isReclassificationView && (
                                         <>
-                                            <td className="px-6 py-4 whitespace-nowrap">{request.situacaoProjeto}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{request.expectedStartDate}</td>
+                                            <td className="px-6 py-4">{request.currentLocation}</td>
+                                            <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{request.unit}</td>
+                                            <td className="px-6 py-4">{request.description}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.tipologia}</td>
+                                            <td className="px-6 py-4">{request.status}</td>
+
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">{request.situacaoProjeto}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">{request.expectedStartDate}</td>
                                             <td className="px-6 py-4 text-center">{request.prazo}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{request.expectedValue}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{request.situacaoObra}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{request.inicioObra}</td>
-                                            <td className="px-6 py-4 text-center">{request.saldoObraPrazo}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{request.saldoObraValor}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{request.categoriaInvestimento}</td>
-                                            <td className="px-6 py-4">{request.entidade}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{request.ordem}</td>
                                         </>
                                     )}
 
@@ -681,6 +669,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                         <>
                                             <td className="px-6 py-4">{request.currentLocation}</td>
                                             <td className="px-6 py-4 uppercase">{request.gestorLocal || '-'}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.expectedStartDate}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.expectedValue}</td>
                                         </>
                                     )}
                                     
@@ -723,7 +713,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                             {(isAprovacaoView || (!isReclassificationView && !isManutencaoView)) && (
                                                 <button
                                                     onClick={() => handleDownload(request.id)}
-                                                    className="bg-sky-500 text-white p-2 rounded-md hover:bg-sky-600 transition-colors"
+                                                    className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
                                                     aria-label="Baixar Formulário"
                                                 >
                                                     <ArrowDownTrayIcon className="w-5 h-5" />
@@ -739,20 +729,26 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                 </button>
                                             )}
 
-                                            <button 
-                                                onClick={() => handleEditRequest(request)}
-                                                className="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600 transition-colors"
-                                                aria-label="Editar"
-                                            >
-                                                <PencilIcon className="w-5 h-5" />
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDeleteRequest(request)}
-                                                className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors"
-                                                aria-label="Excluir"
-                                            >
-                                                <TrashIcon className="w-5 h-5" />
-                                            </button>
+
+
+                                            {(isManutencaoView) && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => handleEditRequest(request)}
+                                                        className="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600 transition-colors"
+                                                        aria-label="Editar"
+                                                    >
+                                                        <PencilIcon className="w-5 h-5" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeleteRequest(request)}
+                                                        className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors"
+                                                        aria-label="Excluir"
+                                                    >
+                                                        <TrashIcon className="w-5 h-5" />
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
