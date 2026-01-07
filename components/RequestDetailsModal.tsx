@@ -64,15 +64,14 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
 
   if (!isOpen || !request) return null;
 
-  // Mock data for contents (Keep existing mock for form fields until those APIs are ready)
-  const mockData = {
-    planoDiretor: 'Não',
-    cat: '-',
-    descricao: request.description.length > 20 ? request.description : 'reforma do balneário do CAT Cubatão - 6 piscinas, 2 casas de máquinas e a esplanada toda',
-    objetivo: 'melhor atendimento do usuário e aluno da escola que atualmente está utilizando a instalação parcialmente devido ao fechamento de 2 piscinas que estão com problemas de vazamento e otimização dos recursos físicos, materiais e financeiros devido as constantes manutenção e aumento da demanda para o tratamento das piscinas',
-    justificativa: 'Atualmente o balneário está com diversas áreas de desnível de piso, podendo acarretar acidentes, 2 piscinas fechadas devido a vazamentos e as casas de máquinas obsoletas, os azulejos das piscinas estão velhos e constantemente quebram causando acidentes nos frequentadores do espaço. O balneário possui uma alta demanda de utilização, chegando a ter no verão 2.000 pessoas por dia.',
-    resumo: 'reforma das 6 piscinas, reforma das 2 casas de máquinas e troca de todo o piso da esplanada',
-    inicioUso: '02/01/2028'
+  // Format date helper
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '-';
+    // If ISODate (contains T), split by T. Valid for YYYY-MM-DD too.
+    const datePart = dateStr.split('T')[0];
+    const [year, month, day] = datePart.split('-');
+    if (!day) return dateStr; // fallback
+    return `${day}/${month}/${year}`;
   };
 
   return (
@@ -128,19 +127,19 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
                             <ReadOnlyField label="Unidade" value={request.unit} />
                             <ReadOnlyField label="Criticidade" value={request.criticality} />
                             
-                            <ReadOnlyField label="Plano diretor" value={mockData.planoDiretor} />
-                            <ReadOnlyField label="CAT" value={mockData.cat} />
+                            <ReadOnlyField label="Plano diretor" value={'-'} />
+                            <ReadOnlyField label="CAT" value={request.unit || '-'} /> 
                             
-                            <TextAreaField label="Descrição" value={mockData.descricao} />
-                            <TextAreaField label="Objetivo" value={mockData.objetivo} />
-                            <TextAreaField label="Justificativa" value={mockData.justificativa} />
-                            <TextAreaField label="Resumo dos Serviços" value={mockData.resumo} />
+                            <TextAreaField label="Descrição" value={request.description} />
+                            <TextAreaField label="Objetivo" value={request.objetivo || '-'} />
+                            <TextAreaField label="Justificativa" value={request.justificativa || '-'} />
+                            <TextAreaField label="Resumo dos Serviços" value={request.resumoServicos || '-'} />
                         </div>
                         
                         <div className="grid grid-cols-3 gap-x-4 mt-2">
                             <ReadOnlyField label="Valor esperado" value={request.expectedValue} />
-                            <ReadOnlyField label="Início esperado" value={request.expectedStartDate} />
-                            <ReadOnlyField label="Início uso esperado" value={mockData.inicioUso} />
+                            <ReadOnlyField label="Início esperado" value={formatDate(request.expectedStartDate)} />
+                            <ReadOnlyField label="Início uso esperado" value={formatDate(request.dataUtilizacao)} />
                         </div>
                     </div>
 
@@ -148,18 +147,7 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
                     <div className="w-full lg:w-1/3">
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Anexos</h3>
                         <div className="space-y-4">
-                            <AttachmentItem 
-                                name="relatorio_de_vistoria_tecnica.pdf" 
-                                type="pdf" 
-                            />
-                            <AttachmentItem 
-                                name="planta_baixa.png" 
-                                type="image" 
-                            />
-                            <AttachmentItem 
-                                name="fotos_local.jpg" 
-                                type="image" 
-                            />
+                            <div className="text-sm text-gray-500 italic">Nenhum anexo disponível.</div>
                         </div>
                     </div>
                 </div>

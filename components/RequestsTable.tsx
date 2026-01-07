@@ -2,13 +2,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Request, PlanningData } from '../types';
 import { Criticality } from '../types';
-import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon, PaperAirplaneIcon, CheckCircleIcon, XMarkIcon, CheckIcon, ArrowDownTrayIcon } from './Icons';
+import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon, PaperAirplaneIcon, CheckCircleIcon, XMarkIcon, CheckIcon, ArrowDownTrayIcon, TrashIcon } from './Icons';
 import AdvancedFilters, { AdvancedFiltersState } from './AdvancedFilters';
 import ReclassificationModal from './ReclassificationModal';
 import ConfirmationModal from './ConfirmationModal';
 import AlertModal from './AlertModal';
 import PlanningDetailsModal from './PlanningDetailsModal';
 import RequestDetailsModal from './RequestDetailsModal';
+import EditRequestModal from './EditRequestModal';
 
 export const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Cubatão (Par...', description: 'reforma do balneá...', status: 'Análise da Solicit...', currentLocation: 'Gestão Local', gestorLocal: 'MARIO SERGIO ALVES QUAR...', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P', situacaoProjeto: 'Em Andamento', situacaoObra: 'Não Iniciada', inicioObra: '05/01/2030', saldoObraPrazo: 12, saldoObraValor: 'R$ 3.500.000,00' },
@@ -73,10 +74,48 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const [isConfirmSendModalOpen, setIsConfirmSendModalOpen] = useState(false);
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
     const [alertModalMessage, setAlertModalMessage] = useState('');
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedRequestForEdit, setSelectedRequestForEdit] = useState<Request | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState<Request | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => { 
         setAlertModalMessage(message);
         setIsAlertModalOpen(true);
+    };
+
+    const handleEditRequest = (request: Request) => {
+        setSelectedRequestForEdit(request);
+        setIsEditModalOpen(true);
+    };
+
+    const handleSaveEditedRequest = (updatedRequest: Request) => {
+        setRequests(prev => prev.map(r => r.id === updatedRequest.id ? updatedRequest : r));
+        showToast('Solicitação atualizada com sucesso!', 'success');
+        setIsEditModalOpen(false);
+    };
+
+    const handleDeleteRequest = (request: Request) => {
+        setRequestToDelete(request);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDeleteRequest = async () => {
+        if (!requestToDelete) return;
+        try {
+            const response = await fetch(`/api/requests?id=${requestToDelete.id}`, { method: 'DELETE' });
+            if (response.ok) {
+                setRequests(prev => prev.filter(r => r.id !== requestToDelete.id));
+                showToast('Solicitação excluída com sucesso!', 'success');
+            } else {
+                 showToast('Falha ao excluir solicitação.', 'error');
+            }
+        } catch (e) {
+             showToast('Erro ao excluir solicitação.', 'error');
+        } finally {
+            setIsDeleteModalOpen(false);
+            setRequestToDelete(null);
+        }
     };
 
     const handleUpdateRequestStatus = async (request: Request, newStatus: string) => {
@@ -699,6 +738,21 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                     <PaperAirplaneIcon className="w-5 h-5" />
                                                 </button>
                                             )}
+
+                                            <button 
+                                                onClick={() => handleEditRequest(request)}
+                                                className="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600 transition-colors"
+                                                aria-label="Editar"
+                                            >
+                                                <PencilIcon className="w-5 h-5" />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDeleteRequest(request)}
+                                                className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors"
+                                                aria-label="Excluir"
+                                            >
+                                                <TrashIcon className="w-5 h-5" />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -770,6 +824,17 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 title="Sucesso"
                 message={alertModalMessage}
             />
+            {isDeleteModalOpen && (
+                <ConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    onConfirm={confirmDeleteRequest}
+                    title="Excluir Solicitação"
+                    message="Tem certeza que deseja excluir esta solicitação? Esta ação não pode ser desfeita."
+                    confirmLabel="Excluir"
+                    cancelLabel="Cancelar"
+                />
+            )}
             <PlanningDetailsModal
                 isOpen={isDetailsModalOpen}
                 onClose={() => setIsDetailsModalOpen(false)}

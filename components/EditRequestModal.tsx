@@ -27,6 +27,9 @@ const typologyOptions = [
 
 const EditRequestModal: React.FC<EditRequestModalProps> = ({ isOpen, onClose, request, onSave, title }) => {
   const [formData, setFormData] = useState({
+    description: '',
+    objetivo: '',
+    justificativa: '',
     tipologia: '',
     categoria: '',
     prazoObra: '',
@@ -41,14 +44,19 @@ const EditRequestModal: React.FC<EditRequestModalProps> = ({ isOpen, onClose, re
   useEffect(() => {
     if (request) {
       setFormData({
-        tipologia: '', // Start with placeholder
-        categoria: '', // Start with placeholder
-        prazoObra: '',
-        valorObra: '',
-        inicioObra: '',
-        finalObra: '',
-        inicioProjeto: '',
-        prazoProjeto: '',
+        // General fields
+        description: request.description || '',
+        objetivo: request.objetivo || '',
+        justificativa: request.justificativa || '',
+        // Technical fields
+        tipologia: request.tipologia || '',
+        categoria: request.categoriaInvestimento || '',
+        prazoObra: request.prazo ? request.prazo.toString() : '',
+        valorObra: request.expectedValue || '',
+        inicioObra: request.inicioObra ? request.inicioObra.split('T')[0] : '', // Format for date input
+        finalObra: '', // Calculated or stored?
+        inicioProjeto: request.situacaoProjeto === 'A Iniciar' ? '' : '', // Mapping simplistic for now
+        prazoProjeto: '', 
         valorProjeto: '',
       });
     }
@@ -63,11 +71,40 @@ const EditRequestModal: React.FC<EditRequestModalProps> = ({ isOpen, onClose, re
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // The description field was removed, so we pass the original request object back.
-    // In a real scenario, other form fields would be saved here.
-    onSave(request);
+    if (!request) return;
+
+    try {
+        const payload = {
+            id: request.id,
+            ...request, // Keep existing fields
+            description: formData.description,
+            objetivo: formData.objetivo,
+            justificativa: formData.justificativa,
+            tipologia: formData.tipologia,
+            categoriaInvestimento: formData.categoria,
+            prazo: parseInt(formData.prazoObra) || 0,
+            expectedValue: formData.valorObra,
+            inicioObra: formData.inicioObra, // YYYY-MM-DD
+            // Update other fields as needed
+        };
+
+        const response = await fetch('/api/requests', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error('Falha ao atualizar solicitação');
+        
+        const updatedRequest = await response.json();
+        onSave(updatedRequest);
+        onClose();
+    } catch (error) {
+        console.error('Update failed:', error);
+        // Alert?
+    }
   };
 
   return (
@@ -80,6 +117,25 @@ const EditRequestModal: React.FC<EditRequestModalProps> = ({ isOpen, onClose, re
           </button>
         </div>
         <form id="edit-form" onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-6">
+          {/* General Info */}
+          <fieldset className="border rounded-md p-4">
+            <legend className="text-lg font-medium text-gray-900 px-2">Informações Gerais</legend>
+            <div className="grid grid-cols-1 gap-4 mt-2">
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Título / Descrição</label>
+                  <input type="text" id="description" name="description" value={formData.description} onChange={handleChange} className="mt-1 block w-full rounded-md border-black shadow-sm sm:text-sm border p-2"/>
+                </div>
+                <div>
+                  <label htmlFor="objetivo" className="block text-sm font-medium text-gray-700 mb-1">Objetivo</label>
+                  <textarea id="objetivo" name="objetivo" rows={3} value={formData.objetivo} onChange={handleChange} className="mt-1 block w-full rounded-md border-black shadow-sm sm:text-sm border p-2"/>
+                </div>
+                <div>
+                  <label htmlFor="justificativa" className="block text-sm font-medium text-gray-700 mb-1">Justificativa</label>
+                  <textarea id="justificativa" name="justificativa" rows={3} value={formData.justificativa} onChange={handleChange} className="mt-1 block w-full rounded-md border-black shadow-sm sm:text-sm border p-2"/>
+                </div>
+            </div>
+          </fieldset>
+
           {/* Section for Tipologia and Categoria */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

@@ -1,9 +1,127 @@
+
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
 
 // Helper to sanitize dates for DB
 function sanitizeDate(date: string | null | undefined): string | null {
-    return date || null;
+    if (!date) return null;
+    // Basic check if date is valid
+    const timestamp = Date.parse(date);
+    if (isNaN(timestamp)) return null;
+    return new Date(timestamp).toISOString();
+}
+
+// Map Request (Frontend camelCase) to DB (snake_case)
+function mapToDb(body: any) {
+    return {
+        criticality: body.criticality,
+        unit: body.unit,
+        description: body.description || body.titulo, // Fallback for titulo
+        status: body.status,
+        current_location: body.currentLocation,
+        gestor_local: body.gestorLocal,
+        expected_start_date: sanitizeDate(body.expectedStartDate || body.inicioExecucao), // Fallback
+        has_info: body.hasInfo,
+        expected_value: body.expectedValue || body.valorExecucao, // Fallback
+        executing_unit: body.executingUnit,
+        prazo: body.prazo || body.prazoExecucao, // Fallback
+        categoria_investimento: body.categoriaInvestimento,
+        entidade: body.entidade,
+        ordem: body.ordem,
+        situacao_projeto: body.situacaoProjeto,
+        situacao_obra: body.situacaoObra,
+        inicio_obra: sanitizeDate(body.inicioObra),
+        saldo_obra_prazo: body.saldoObraPrazo,
+        saldo_obra_valor: body.saldoObraValor,
+        tipologia: body.tipologia,
+        // New Fields
+        solicitante: body.solicitante,
+        gerencia: body.gerencia,
+        objetivo: body.objetivo,
+        expectativa_resultados: body.expectativaResultados,
+        justificativa: body.justificativa,
+        resumo_servicos: body.resumoServicos,
+        aumento: body.aumento, // Array
+        necessidades: body.necessidades, // Array
+        servicos_necessarios: body.servicosNecessarios, // Array
+        servicos_especificos: body.servicosEspecificos, // Array
+        area_intervencao: body.areaIntervencao,
+        data_utilizacao: sanitizeDate(body.dataUtilizacao),
+        possui_projeto: body.possuiProjeto,
+        possui_laudo: body.possuiLaudo,
+        tem_autorizacao: body.temAutorizacao,
+        realizou_consulta: body.realizouConsulta,
+        houve_notificacao: body.houveNotificacao,
+        referencia: body.referencia,
+        area_responsavel: body.areaResponsavel,
+        areas_envolvidas: body.areasEnvolvidas,
+        programa_necessidades: body.programaNecessidades,
+        instalacoes_sesi_senai: body.instalacoesSesiSenai,
+        local_obra: body.localObra,
+        atividade: body.atividade,
+        local_nome: body.local || body.localNome,
+        problemas_nao_atendida: body.problemasNaoAtendida,
+        prazo_acao: body.prazoAcao,
+        probabilidade_evolucao: body.probabilidadeEvolucao
+    };
+}
+
+// Map DB row (snake_case) to Frontend (camelCase)
+function mapFromDb(row: any) {
+    if (!row) return null;
+    return {
+        id: row.id,
+        criticality: row.criticality,
+        unit: row.unit,
+        description: row.description,
+        status: row.status,
+        currentLocation: row.current_location,
+        gestorLocal: row.gestor_local,
+        expectedStartDate: row.expected_start_date,
+        hasInfo: row.has_info,
+        expectedValue: row.expected_value,
+        executingUnit: row.executing_unit,
+        prazo: row.prazo,
+        categoriaInvestimento: row.categoria_investimento,
+        entidade: row.entidade,
+        ordem: row.ordem,
+        situacaoProjeto: row.situacao_projeto,
+        situacaoObra: row.situacao_obra,
+        inicioObra: row.inicio_obra,
+        saldoObraPrazo: row.saldo_obra_prazo,
+        saldoObraValor: row.saldo_obra_valor,
+        tipologia: row.tipologia,
+        // New Fields
+        solicitante: row.solicitante,
+        gerencia: row.gerencia,
+        titulo: row.description, // Map back description to titulo for editing if needed
+        objetivo: row.objetivo,
+        expectativaResultados: row.expectativa_resultados,
+        justificativa: row.justificativa,
+        resumoServicos: row.resumo_servicos,
+        aumento: row.aumento,
+        necessidades: row.necessidades,
+        servicosNecessarios: row.servicos_necessarios,
+        servicosEspecificos: row.servicos_especificos,
+        areaIntervencao: row.area_intervencao,
+        dataUtilizacao: row.data_utilizacao,
+        possuiProjeto: row.possui_projeto,
+        possuiLaudo: row.possui_laudo,
+        temAutorizacao: row.tem_autorizacao,
+        realizouConsulta: row.realizou_consulta,
+        houveNotificacao: row.houve_notificacao,
+        referencia: row.referencia,
+        areaResponsavel: row.area_responsavel,
+        areasEnvolvidas: row.areas_envolvidas,
+        programaNecessidades: row.programa_necessidades,
+        instalacoesSesiSenai: row.instalacoes_sesi_senai,
+        localObra: row.local_obra,
+        atividade: row.atividade,
+        local: row.local_nome,
+        problemasNaoAtendida: row.problemas_nao_atendida,
+        prazoAcao: row.prazo_acao,
+        probabilidadeEvolucao: row.probabilidade_evolucao
+    };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -43,75 +161,71 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 if (result.rows.length === 0) {
                     return res.status(404).json({ error: 'Request not found' });
                 }
-                return res.status(200).json(result.rows[0]);
+                return res.status(200).json(mapFromDb(result.rows[0]));
             } else {
-                const result = await query('SELECT * FROM requests ORDER BY id ASC');
-                return res.status(200).json(result.rows);
+                const result = await query('SELECT * FROM requests ORDER BY id DESC');
+                return res.status(200).json(result.rows.map(mapFromDb));
             }
         }
 
         if (req.method === 'POST') {
-            const body = req.body;
-            // Basic validation
-            if (!body.description) { // Simplified validation
-                return res.status(400).json({ error: 'Description is required' });
-            }
+            const data = mapToDb(req.body);
+            
+            // Build dynamic Insert
+            const fields = Object.keys(data);
+            const values = Object.values(data);
+            const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
+            const columns = fields.join(', ');
 
             const result = await query(
-                `INSERT INTO requests (
-                    criticality, unit, description, status, current_location, 
-                    gestor_local, expected_start_date, has_info, expected_value, 
-                    executing_unit, prazo, categoria_investimento, entidade, 
-                    ordem, situacao_projeto, situacao_obra, inicio_obra, 
-                    saldo_obra_prazo, saldo_obra_valor, tipologia
-                )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
-                RETURNING *`,
-                [
-                    body.criticality, body.unit, body.description, body.status, body.currentLocation,
-                    body.gestorLocal, sanitizeDate(body.expectedStartDate), body.hasInfo, body.expectedValue,
-                    body.executingUnit, body.prazo, body.categoriaInvestimento, body.entidade,
-                    body.ordem, body.situacaoProjeto, body.situacaoObra, sanitizeDate(body.inicioObra),
-                    body.saldoObraPrazo, body.saldoObraValor, body.tipologia
-                ]
+                `INSERT INTO requests (${columns}) VALUES (${placeholders}) RETURNING *`,
+                values
             );
-            return res.status(201).json(result.rows[0]);
+            
+            // Should also create initial movement?
+            // "Solicitação criada"
+            const newReq = result.rows[0];
+            await query(
+                `INSERT INTO movements (request_id, status, user_name, user_department, created_at)
+                 VALUES ($1, $2, $3, $4, NOW())`,
+                [newReq.id, 'Solicitação criada', 'Sistema', 'Sistema']
+            );
+
+            return res.status(201).json(mapFromDb(newReq));
         }
 
         if (req.method === 'PUT') {
             const { id } = req.body;
             if (!id) return res.status(400).json({ error: 'Missing ID' });
             
-            const body = req.body;
+            const data = mapToDb(req.body);
+            delete (data as any).id; // Make sure we don't update ID
 
-             const result = await query(
-                `UPDATE requests SET
-                    criticality = $1, unit = $2, description = $3, status = $4, current_location = $5, 
-                    gestor_local = $6, expected_start_date = $7, has_info = $8, expected_value = $9, 
-                    executing_unit = $10, prazo = $11, categoria_investimento = $12, entidade = $13, 
-                    ordem = $14, situacao_projeto = $15, situacao_obra = $16, inicio_obra = $17, 
-                    saldo_obra_prazo = $18, saldo_obra_valor = $19, tipologia = $20
-                WHERE id = $21
-                RETURNING *`,
-                [
-                    body.criticality, body.unit, body.description, body.status, body.currentLocation,
-                    body.gestorLocal, sanitizeDate(body.expectedStartDate), body.hasInfo, body.expectedValue,
-                    body.executingUnit, body.prazo, body.categoriaInvestimento, body.entidade,
-                    body.ordem, body.situacaoProjeto, body.situacaoObra, sanitizeDate(body.inicioObra),
-                    body.saldoObraPrazo, body.saldoObraValor, body.tipologia,
-                    id
-                ]
+            const fields = Object.keys(data);
+            const values = Object.values(data);
+            // set col = val
+            const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(', ');
+            
+            values.push(id); // Add ID as last param for WHERE
+
+            const result = await query(
+                `UPDATE requests SET ${setClause} WHERE id = $${values.length} RETURNING *`,
+                values
             );
             
             if (result.rows.length === 0) {
                  return res.status(404).json({ error: 'Request not found' });
             }
-            return res.status(200).json(result.rows[0]);
+            return res.status(200).json(mapFromDb(result.rows[0]));
         }
         
         if (req.method === 'DELETE') {
              const { id } = req.query;
              if (!id) return res.status(400).json({ error: 'Missing ID' });
+             
+             // Check foreign keys? movements.
+             // Delete movements first
+             await query('DELETE FROM movements WHERE request_id = $1', [id as string]);
              
              const result = await query('DELETE FROM requests WHERE id = $1 RETURNING id', [id as string]);
              if (result.rows.length === 0) {

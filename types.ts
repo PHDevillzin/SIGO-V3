@@ -32,6 +32,35 @@ export interface Request {
   saldoObraValor?: string;
   // New field for Approval view
   gestorLocal?: string;
+  // New creation fields
+  solicitante?: string;
+  gerencia?: string;
+  objetivo?: string;
+  expectativaResultados?: string;
+  justificativa?: string;
+  resumoServicos?: string;
+  aumento?: string[];
+  necessidades?: string[];
+  servicosNecessarios?: string[];
+  servicosEspecificos?: string[];
+  areaIntervencao?: number;
+  dataUtilizacao?: string;
+  possuiProjeto?: string;
+  possuiLaudo?: string;
+  temAutorizacao?: string;
+  realizouConsulta?: string;
+  houveNotificacao?: string;
+  referencia?: string;
+  areaResponsavel?: string;
+  areasEnvolvidas?: string;
+  programaNecessidades?: string;
+  instalacoesSesiSenai?: string;
+  localObra?: string;
+  atividade?: string;
+  local?: string;
+  problemasNaoAtendida?: string;
+  prazoAcao?: string;
+  probabilidadeEvolucao?: string;
 }
 
 export interface User {

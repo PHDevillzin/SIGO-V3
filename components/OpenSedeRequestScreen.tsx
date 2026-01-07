@@ -67,7 +67,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (formData.inicioExecucao && formData.dataUtilizacao) {
@@ -78,40 +78,60 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
         }
     }
 
-    if (onSave) {
-        // Format date from YYYY-MM-DD to DD/MM/YYYY
-        const formatDate = (dateStr: string) => {
-            if (!dateStr) return 'N/A';
-            const [year, month, day] = dateStr.split('-');
-            return `${day}/${month}/${year}`;
-        };
-
-        const newRequest: Request = {
-            id: Math.floor(Math.random() * 100000) + 100, // Simple random ID
-            criticality: Criticality.MEDIA, // Default
+    try {
+        // Format date helpers if needed, but API handles ISO string or YYYY-MM-DD usually if PG.
+        // Screen uses YYYY-MM-DD from input type="date". PG accepts this.
+        
+        const payload = {
+            ...formData,
+            // Defaults for Sede Request
+            criticality: Criticality.MEDIA, 
             unit: 'Sede',
-            description: formData.titulo,
-            status: 'Análise da Sol...',
-            currentLocation: 'Sede',
-            expectedStartDate: formatDate(formData.inicioExecucao),
+            description: formData.titulo, // Map titulo to description for core field
+            status: 'Solicitação criada', // Initial status
+            currentLocation: 'Administração do Sistema', // Initial location
+            gestorLocal: 'Administrador', // Or current user?
+            expectedStartDate: formData.inicioExecucao,
             hasInfo: true,
-            expectedValue: formData.valorExecucao || 'R$ 0,00',
+            expectedValue: formData.valorExecucao,
             executingUnit: 'Sede',
             prazo: parseInt(formData.prazoExecucao) || 0,
-            categoriaInvestimento: 'Baixa Complexidade', // Default for now
-            entidade: formData.solicitante || 'Corporativo',
-            ordem: `SS-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)}`,
+            categoriaInvestimento: 'Baixa Complexidade', // Default
+            entidade: formData.solicitante || 'Corporativo', // Map solicitante to entidade
+            ordem: `SS-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)}`, // Generate or let DB handle? DB doesn't generate yet. Keep random for now.
             tipologia: '',
             situacaoProjeto: 'A Iniciar',
             situacaoObra: 'Não Iniciada',
-            inicioObra: 'N/A',
+            inicioObra: null,
             saldoObraPrazo: 0,
             saldoObraValor: 'R$ 0,00'
         };
-        onSave(newRequest);
+
+        const response = await fetch('/api/requests', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error('Falha ao criar solicitação');
+        }
+
+        const savedRequest = await response.json();
+
+        if (onSave) {
+            onSave(savedRequest);
+        }
+        
+        onClose(); // Close on success
+
+    } catch (error) {
+        console.error("Error creating request:", error);
+        setAlertMessage("Erro ao criar solicitação. Tente novamente.");
+        setIsAlertOpen(true);
     }
-    // Logic to save would go here
-    onClose();
   };
 
   // Helper for rendering radio group

@@ -78,7 +78,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (formData.inicioExecucao && formData.dataUtilizacao) {
@@ -89,39 +89,48 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
         }
     }
 
-    if (onSave) {
-        // Format date from YYYY-MM-DD to DD/MM/YYYY
-        const formatDate = (dateStr: string) => {
-            if (!dateStr) return 'N/A';
-            const [year, month, day] = dateStr.split('-');
-            return `${day}/${month}/${year}`;
-        };
-
-        const newRequest: Request = {
-            id: Math.floor(Math.random() * 100000) + 100,
+    try {
+        const payload = {
+            ...formData,
             criticality: Criticality.MEDIA,
-            unit: 'Nova Unidade',
+            unit: 'Nova Unidade', // As per previous default
             description: formData.titulo || 'Solicitação Estratégica',
-            status: 'Análise da Sol...',
+            status: 'Solicitação criada',
             currentLocation: 'GSO',
-            expectedStartDate: formatDate(formData.inicioExecucao),
+            gestorLocal: 'GSO',
+            expectedStartDate: formData.inicioExecucao,
             hasInfo: true,
-            expectedValue: formData.valorExecucao ? `R$ ${formData.valorExecucao}` : 'R$ 0,00',
+            expectedValue: formData.valorExecucao,
             executingUnit: 'GSO',
             prazo: parseInt(formData.prazoExecucao) || 0,
             categoriaInvestimento: 'Intervenção Estratégica',
-            entidade: 'SENAI',
+            entidade: 'SENAI', // Default
             ordem: `SS-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)}`,
             tipologia: '',
             situacaoProjeto: 'A Iniciar',
             situacaoObra: 'Não Iniciada',
-            inicioObra: 'N/A',
+            inicioObra: null,
             saldoObraPrazo: 0,
             saldoObraValor: 'R$ 0,00'
         };
-        onSave(newRequest);
+
+        const response = await fetch('/api/requests', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error('Falha ao criar solicitação');
+        
+        const savedRequest = await response.json();
+        if (onSave) onSave(savedRequest);
+        onClose();
+
+    } catch (error) {
+        console.error("Error creating request:", error);
+        setAlertMessage("Erro ao criar solicitação. Tente novamente.");
+        setIsAlertOpen(true);
     }
-    onClose();
   };
 
   const renderRadioGroup = (label: string, name: string, options: {label: string, value: string}[], required: boolean = true) => (
