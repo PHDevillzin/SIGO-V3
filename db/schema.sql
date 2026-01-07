@@ -12,7 +12,17 @@ CREATE TABLE IF NOT EXISTS users (
     last_edited_by VARCHAR(255),
     sigo_profiles TEXT[], -- Array of strings
     linked_units TEXT[], -- Array of strings
-    registration_date TIMESTAMP
+    registration_date TIMESTAMP,
+    password VARCHAR(255) -- Hash in production, plain for prototype if verified
+);
+
+-- User Access table (Links User, Unit, Profile)
+CREATE TABLE IF NOT EXISTS user_access (
+    id SERIAL PRIMARY KEY,
+    user_nif VARCHAR(20) REFERENCES users(nif),
+    unit_id INTEGER REFERENCES units(id),
+    profile_id VARCHAR(50) REFERENCES profiles(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Access Profiles table

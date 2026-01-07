@@ -16,10 +16,15 @@ import OpenSedeRequestScreen from './components/OpenSedeRequestScreen';
 import OpenStrategicRequestScreen from './components/OpenStrategicRequestScreen';
 import OpenUnitRequestScreen from './components/OpenUnitRequestScreen';
 import InvestmentPolicyScreen from './components/InvestmentPolicyScreen';
+import LoginScreen from './components/LoginScreen';
 import { ListIcon, CalculatorIcon } from './components/Icons';
 import type { SummaryData, Request, Unit, AccessProfile, User, Tipologia, TipoLocal } from './types';
 
 const App: React.FC = () => {
+    // Auth State
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [currentUser, setCurrentUser] = useState<any>(null);
+
     const [selectedProfile, setSelectedProfile] = useState('Gestor GSO');
     const [currentView, setCurrentView] = useState('home');
     const [requests, setRequests] = useState<Request[]>([]);
@@ -30,6 +35,8 @@ const App: React.FC = () => {
     const [tipoLocais, setTipoLocais] = useState<TipoLocal[]>([]);
     
     useEffect(() => {
+        if (!isAuthenticated) return;
+
         const fetchData = async () => {
             try {
                 const [unitsRes, requestsRes, profilesRes, usersRes, tipologiasRes, tipoLocaisRes] = await Promise.all([
@@ -149,15 +156,25 @@ const App: React.FC = () => {
     };
 
 
-  return (
-    <div className="flex h-screen bg-[#F0F2F5] font-sans">
-      <Sidebar 
-        selectedProfile={selectedProfile} 
-        setSelectedProfile={setSelectedProfile}
-        currentView={currentView}
-        setCurrentView={setCurrentView}
-      />
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+
+    if (!isAuthenticated) {
+        return <LoginScreen onLogin={(data) => {
+            setIsAuthenticated(true);
+            setCurrentUser(data.user);
+            // Optionally set profile based on data.profile if needed
+            // setProfile(data.profile);
+        }} />;
+    }
+
+    return (
+        <div className="flex h-screen bg-[#F0F2F5] font-sans">
+            <Sidebar 
+                selectedProfile={selectedProfile} 
+                setSelectedProfile={setSelectedProfile}
+                currentView={currentView}
+                setCurrentView={setCurrentView}
+            />
+            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
         {currentView === 'home' && <HomeScreen setCurrentView={setCurrentView} />}
         {isSolicitacoesView && (
           <>
