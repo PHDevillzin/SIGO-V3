@@ -110,10 +110,10 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                     </button>
                 </div>
 
-                <div className="overflow-y-auto flex-1 p-8">
-                    {isSelectionStep ? (
-                        /* Step 1: Select User from Grid */
-                        <div className="space-y-6">
+                <div className="overflow-y-auto flex-1 p-8 space-y-8">
+                    {/* Grid Section - Visible if NOT editing (Create Mode) */}
+                    {!isEditing && (
+                         <div className="space-y-6">
                             <div className="relative max-w-md">
                                 <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                                     <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
@@ -123,39 +123,34 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                                     placeholder="Buscar por Nome ou NIF..." 
                                     value={filterText}
                                     onChange={(e) => setFilterText(e.target.value)}
-                                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all font-sans"
-                                    autoFocus
+                                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all font-sans text-sm"
+                                    autoFocus // Focus here first
                                 />
                             </div>
 
-                            <div className="border rounded-lg overflow-hidden shadow-sm">
+                            <div className="border rounded-lg overflow-hidden shadow-sm max-h-[250px] overflow-y-auto">
                                 <table className="w-full text-sm text-left text-gray-500">
-                                    <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
+                                    <thead className="text-xs text-white uppercase bg-[#0B1A4E] sticky top-0 z-10">
                                         <tr>
                                             <th className="px-6 py-4 font-semibold">NIF</th>
                                             <th className="px-6 py-4 font-semibold">Nome</th>
                                             <th className="px-6 py-4 font-semibold">E-mail</th>
-                                            <th className="px-6 py-4 font-semibold text-center">Ação</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
                                         {filteredSourceUsers.length > 0 ? filteredSourceUsers.map(u => (
-                                            <tr key={u.id} className="bg-white hover:bg-sky-50 transition-colors">
+                                            <tr 
+                                                key={u.id} 
+                                                onClick={() => setSelectedUser(u)}
+                                                className={`cursor-pointer transition-colors border-l-4 ${selectedUser?.nif === u.nif ? 'bg-sky-50 border-sky-500' : 'bg-white hover:bg-gray-50 border-transparent'}`}
+                                            >
                                                 <td className="px-6 py-3 font-medium text-gray-900">{u.nif}</td>
                                                 <td className="px-6 py-3 text-gray-700 font-semibold">{u.name}</td>
                                                 <td className="px-6 py-3">{u.email}</td>
-                                                <td className="px-6 py-3 text-center">
-                                                    <button 
-                                                        onClick={() => setSelectedUser(u)}
-                                                        className="bg-[#0EA5E9] text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-sky-600 transition-colors flex items-center gap-1 mx-auto shadow-sm"
-                                                    >
-                                                        <PlusIcon className="w-3 h-3" /> SELECIONAR
-                                                    </button>
-                                                </td>
                                             </tr>
                                         )) : (
                                             <tr>
-                                                <td colSpan={4} className="px-6 py-8 text-center text-gray-400 italic">
+                                                <td colSpan={3} className="px-6 py-8 text-center text-gray-400 italic">
                                                     Nenhum usuário encontrado.
                                                 </td>
                                             </tr>
@@ -164,36 +159,32 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                                 </table>
                             </div>
                         </div>
-                    ) : (
-                        /* Step 2: Fill Form */
-                        <form id="access-form" onSubmit={handleConfirm} className="space-y-6">
-                            {selectedUser && (
-                                <div className="grid grid-cols-2 gap-4 p-4 bg-sky-50 rounded-lg border border-sky-100">
-                                    {!isEditing && (
-                                        <div className="col-span-2 flex justify-end">
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setSelectedUser(null)} 
-                                                className="text-xs text-sky-600 underline hover:text-sky-800"
-                                            >
-                                                Trocar Usuário
-                                            </button>
-                                        </div>
-                                    )}
-                                    <div>
-                                        <label className="text-[10px] font-bold text-sky-600 uppercase tracking-wider">Nome</label>
-                                        <p className="text-sm font-semibold text-gray-800">{selectedUser.name}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-bold text-sky-600 uppercase tracking-wider">NIF</label>
-                                        <p className="text-sm font-semibold text-gray-800">{selectedUser.nif}</p>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="text-[10px] font-bold text-sky-600 uppercase tracking-wider">E-mail</label>
-                                        <p className="text-sm text-gray-700">{selectedUser.email}</p>
-                                    </div>
+                    )}
+
+                    {/* Form Section - Visible if User Selected */}
+                    {selectedUser && (
+                        <form id="access-form" onSubmit={handleConfirm} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                            <div className="flex items-center space-x-2 text-sky-800 border-b border-sky-100 pb-2">
+                                <InformationCircleIcon className="w-5 h-5" />
+                                <h3 className="font-bold text-sm uppercase tracking-wide">
+                                    {isEditing ? 'Dados do Usuário' : 'Vincular Acesso para:'}
+                                </h3>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 p-4 bg-sky-50 rounded-lg border border-sky-100">
+                                <div>
+                                    <label className="text-[10px] font-bold text-sky-600 uppercase tracking-wider">Nome</label>
+                                    <p className="text-sm font-semibold text-gray-800">{selectedUser.name}</p>
                                 </div>
-                            )}
+                                <div>
+                                    <label className="text-[10px] font-bold text-sky-600 uppercase tracking-wider">NIF</label>
+                                    <p className="text-sm font-semibold text-gray-800">{selectedUser.nif}</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="text-[10px] font-bold text-sky-600 uppercase tracking-wider">E-mail</label>
+                                    <p className="text-sm text-gray-700">{selectedUser.email}</p>
+                                </div>
+                            </div>
 
                             <div className="space-y-4">
                                 <div>
@@ -237,36 +228,24 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                 </div>
 
                 {/* Footer Buttons */}
-                {!isSelectionStep && (
-                    <div className="p-6 border-t bg-gray-50 flex justify-end items-center space-x-3 rounded-b-lg shrink-0">
-                        <button 
-                            onClick={onClose}
-                            type="button"
-                            className="px-6 py-2 text-gray-600 hover:text-gray-800 font-bold text-sm transition-colors uppercase"
-                        >
-                            Cancelar
-                        </button>
-                        <button 
-                            form="access-form" // Link to form since button is outside
-                            type="submit"
-                            className="bg-[#0EA5E9] text-white px-8 py-2 rounded-md font-bold hover:bg-sky-600 transition-all flex items-center space-x-2 shadow-lg shadow-sky-100 uppercase"
-                        >
-                            <PaperAirplaneIcon className="w-4 h-4 -rotate-45" />
-                            <span>{isEditing ? 'Atualizar' : 'Confirmar Cadastro'}</span>
-                        </button>
-                    </div>
-                )}
-                 {isSelectionStep && (
-                    <div className="p-6 border-t bg-gray-50 flex justify-end items-center space-x-3 rounded-b-lg shrink-0">
-                         <button 
-                            onClick={onClose}
-                            type="button"
-                            className="px-6 py-2 text-gray-600 hover:text-gray-800 font-bold text-sm transition-colors uppercase"
-                        >
-                            Cancelar
-                        </button>
-                    </div>
-                )}
+                <div className="p-6 border-t bg-gray-50 flex justify-end items-center space-x-3 rounded-b-lg shrink-0">
+                    <button 
+                        onClick={onClose}
+                        type="button"
+                        className="px-6 py-2 text-gray-600 hover:text-gray-800 font-bold text-sm transition-colors uppercase"
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        form="access-form" // Link to form
+                        type="submit"
+                        disabled={!selectedUser}
+                        className={`px-8 py-2 rounded-md font-bold transition-all flex items-center space-x-2 shadow-lg uppercase ${selectedUser ? 'bg-[#0EA5E9] text-white hover:bg-sky-600 shadow-sky-100' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                    >
+                        <PaperAirplaneIcon className="w-4 h-4 -rotate-45" />
+                        <span>{isEditing ? 'Atualizar' : 'Salvar Cadastro'}</span>
+                    </button>
+                </div>
             </div>
         </div>
     );

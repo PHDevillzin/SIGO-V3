@@ -173,6 +173,10 @@ const App: React.FC = () => {
                 setSelectedProfile={setSelectedProfile}
                 currentView={currentView}
                 setCurrentView={setCurrentView}
+                onLogout={() => {
+                    setIsAuthenticated(false);
+                    setCurrentUser(null);
+                }}
             />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
         {currentView === 'home' && <HomeScreen setCurrentView={setCurrentView} />}
