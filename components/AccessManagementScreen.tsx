@@ -35,11 +35,17 @@ interface AccessManagementScreenProps {
     setRegisteredUsers: React.Dispatch<React.SetStateAction<User[]>>;
 }
 
+
 const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, profiles, registeredUsers, setRegisteredUsers }) => {
-    const [allUsers] = useState<User[]>(csvDataRaw as User[]);
-    const [filterText, setFilterText] = useState('');
+    // We keep allUsers as "Source of Truth" for available NIFs (e.g., from CSV/HR System)
+    const [sourceUsers] = useState<User[]>(csvDataRaw as User[]); 
+    
+    // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    // If null, we are in "Create" mode. If set, we are in "Edit" mode.
     const [selectedUserForRegistration, setSelectedUserForRegistration] = useState<User | null>(null);
+    
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error', visible: boolean } | null>(null);
@@ -49,22 +55,18 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
         setTimeout(() => setToast(prev => prev ? { ...prev, visible: false } : null), 3000);
     };
 
-    const filteredSourceUsers = useMemo(() => {
-        return allUsers.filter(user => {
-            const matchesFilter = user.name.toLowerCase().includes(filterText.toLowerCase()) || 
-                                user.nif.toLowerCase().includes(filterText.toLowerCase());
-            const isAlreadyRegistered = registeredUsers.some(reg => reg.nif === user.nif);
-            return matchesFilter && !isAlreadyRegistered;
-        });
-    }, [allUsers, registeredUsers, filterText]);
+    // Filter out already registered users from the source list passed to the modal
+    const availableSourceUsers = useMemo(() => {
+        return sourceUsers.filter(u => !registeredUsers.some(r => r.nif === u.nif));
+    }, [sourceUsers, registeredUsers]);
 
-    const handleRegisterClick = (user: User) => {
-        setSelectedUserForRegistration(user);
+    const handleNewUserClick = () => {
+        setSelectedUserForRegistration(null); // Create Mode
         setIsModalOpen(true);
     };
 
     const handleEditClick = (user: User) => {
-        setSelectedUserForRegistration(user);
+        setSelectedUserForRegistration(user); // Edit Mode
         setIsModalOpen(true);
     };
 
@@ -82,16 +84,20 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
         setUserToDelete(null);
     };
 
-    const handleConfirmRegistration = (data: { profiles: string[], units: string[] }) => {
-        if (!selectedUserForRegistration) return;
+    const handleConfirmRegistration = (data: { profiles: string[], units: string[], selectedUser?: User }) => {
+        // If editing, we use the selectedUserForRegistration.
+        // If creating, we MUST have a selectedUser returned from the modal.
+        const targetUser = selectedUserForRegistration || data.selectedUser;
         
-        const isEditing = !!selectedUserForRegistration.registrationDate;
+        if (!targetUser) return;
+        
+        const isEditing = !!targetUser.registrationDate;
         
         const updatedUser: User = {
-            ...selectedUserForRegistration,
+            ...targetUser,
             sigoProfiles: data.profiles,
             linkedUnits: data.units,
-            registrationDate: selectedUserForRegistration.registrationDate || new Date().toLocaleDateString('pt-BR')
+            registrationDate: targetUser.registrationDate || new Date().toLocaleDateString('pt-BR')
         };
         
         if (isEditing) {
@@ -115,67 +121,15 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
             )}
 
             {/* Header */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-6 flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-800">Gestão de acessos</h1>
-            </div>
-
-            {/* Source Users Section */}
-            <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                    <InformationCircleIcon className="w-5 h-5 text-sky-500" />
-                    Usuários Disponíveis para Cadastro (Fonte CSV)
-                </h2>
-                
-                {/* Filter */}
-                <div className="relative max-w-md mb-6">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                        <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
-                    </span>
-                    <input 
-                        type="text" 
-                        placeholder="Filtrar por Nome ou NIF..." 
-                        value={filterText}
-                        onChange={(e) => setFilterText(e.target.value)}
-                        className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"
-                    />
-                </div>
-
-                <div className="overflow-x-auto border rounded-lg">
-                    <table className="w-full text-sm text-left text-gray-500">
-                        <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
-                            <tr>
-                                <th className="px-6 py-4 font-semibold">NIF</th>
-                                <th className="px-6 py-4 font-semibold">Nome</th>
-                                <th className="px-6 py-4 font-semibold">E-mail</th>
-                                <th className="px-6 py-4 font-semibold text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {filteredSourceUsers.length > 0 ? filteredSourceUsers.map(user => (
-                                <tr key={user.id} className="bg-white hover:bg-gray-50">
-                                    <td className="px-6 py-4 font-medium text-gray-900">{user.nif}</td>
-                                    <td className="px-6 py-4 text-gray-700">{user.name}</td>
-                                    <td className="px-6 py-4">{user.email}</td>
-                                    <td className="px-6 py-4 text-center">
-                                        <button 
-                                            onClick={() => handleRegisterClick(user)}
-                                            className="bg-[#0EA5E9] text-white px-3 py-1.5 rounded-md hover:bg-sky-600 transition-colors flex items-center gap-1 mx-auto text-xs font-bold shadow-sm"
-                                        >
-                                            <PlusIcon className="w-4 h-4" />
-                                            CADASTRAR
-                                        </button>
-                                    </td>
-                                </tr>
-                            )) : (
-                                <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-gray-400 italic">
-                                        Nenhum usuário disponível com os filtros aplicados.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <button 
+                    onClick={handleNewUserClick}
+                    className="bg-[#0B1A4E] text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 text-sm uppercase tracking-wide"
+                >
+                    <PlusIcon className="w-5 h-5" />
+                    Novo Usuário
+                </button>
             </div>
 
             {/* Registered Users Section */}
@@ -214,7 +168,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                                     </td>
                                     <td className="px-6 py-4 max-w-xs">
                                         <div className="flex flex-wrap gap-1">
-                                            {user.linkedUnits?.map(unit => (
+                                            {user.linkedUnits?.map((unit: string) => (
                                                 <span key={unit} className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[10px] border border-gray-200">
                                                     {unit}
                                                 </span>
@@ -256,6 +210,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 user={selectedUserForRegistration}
+                sourceUsers={availableSourceUsers}
                 onConfirm={handleConfirmRegistration}
                 units={units}
                 profiles={profiles}
