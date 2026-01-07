@@ -57,7 +57,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             
             // Check for Admin access
             // ID for admin is 'admin_sys'. We also allow name fallback 'Administração do sistema' just in case.
-            const hasAdminAccess = userProfiles.includes('admin_sys') || userProfiles.includes('Administração do sistema');
+            // ALSO CHECK LEGACY 'profile' column for the migration admin user
+            const hasAdminAccess = 
+                userProfiles.includes('admin_sys') || 
+                userProfiles.includes('Administração do sistema') ||
+                user.profile === 'Administração do sistema';
             
             if (!hasAdminAccess) {
                  return res.status(403).json({ error: 'Access denied: User does not have Administrator profile.' });
@@ -72,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     name: user.name,
                     email: user.email
                 },
-                profile: adminAccess // Return the specific access rule that granted entry
+                profile: { id: 'admin_sys', name: 'Administração do sistema' } // Return static profile for now since we validated access
             });
         }
 
