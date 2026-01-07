@@ -111,11 +111,11 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                     {/* Grid Section - Visible if NOT editing (Create Mode) */}
                     {!isEditing && (
                          <div className="space-y-6">
-                            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                                <MagnifyingGlassIcon className="w-4 h-4 text-sky-500" />
+                            <h3 className="text-sm font-bold text-[#0B1A4E] uppercase tracking-wide flex items-center gap-2">
+                                <MagnifyingGlassIcon className="w-5 h-5 text-sky-500" />
                                 1. Selecione o Usuário
                             </h3>
-                            <div className="relative max-w-md">
+                            <div className="relative w-full">
                                 <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                                     <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
                                 </span>
@@ -124,21 +124,21 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                                     placeholder="Buscar por Nome ou NIF..." 
                                     value={filterText}
                                     onChange={(e) => setFilterText(e.target.value)}
-                                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all font-sans text-sm"
-                                    autoFocus={!selectedUser} // Focus here if no user selected
+                                    className="pl-10 pr-4 py-2.5 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all font-sans text-sm shadow-sm"
+                                    autoFocus={!selectedUser} 
                                 />
                             </div>
 
-                            <div className="border rounded-lg overflow-hidden shadow-sm max-h-[250px] overflow-y-auto ring-1 ring-gray-200">
+                            <div className="border rounded-lg overflow-hidden shadow-sm max-h-[250px] overflow-y-auto ring-1 ring-gray-200 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                                 <table className="w-full text-sm text-left text-gray-500">
                                     <thead className="text-xs text-white uppercase bg-[#0B1A4E] sticky top-0 z-10">
                                         <tr>
-                                            <th className="px-6 py-3 font-semibold">NIF</th>
-                                            <th className="px-6 py-3 font-semibold">Nome</th>
-                                            <th className="px-6 py-3 font-semibold">E-mail</th>
+                                            <th className="px-6 py-3 font-semibold tracking-wider">NIF</th>
+                                            <th className="px-6 py-3 font-semibold tracking-wider">Nome</th>
+                                            <th className="px-6 py-3 font-semibold tracking-wider">E-mail</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200">
+                                    <tbody className="divide-y divide-gray-200 bg-white">
                                         {filteredSourceUsers.length > 0 ? filteredSourceUsers.map(u => (
                                             <tr 
                                                 key={u.id} 
@@ -147,7 +147,7 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                                             >
                                                 <td className="px-6 py-3 font-medium text-gray-900">{u.nif}</td>
                                                 <td className="px-6 py-3 text-gray-700 font-semibold">{u.name}</td>
-                                                <td className="px-6 py-3">{u.email}</td>
+                                                <td className="px-6 py-3 text-gray-600">{u.email}</td>
                                             </tr>
                                         )) : (
                                             <tr>
@@ -165,24 +165,25 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                     {/* Form Section - Visible if User Selected */}
                     {selectedUser && (
                         <form id="access-form" onSubmit={handleConfirm} className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex items-center space-x-2 text-sky-800 border-b border-sky-100 pb-2 mt-8">
+                            <div className="flex items-center space-x-2 text-[#0B1A4E] border-b border-gray-200 pb-2 mt-8">
                                 <InformationCircleIcon className="w-5 h-5" />
                                 <h3 className="font-bold text-sm uppercase tracking-wide">
                                     {isEditing ? 'Dados do Usuário' : '2. Configurar Acesso'}
                                 </h3>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <div className="grid grid-cols-2 gap-6 p-6 bg-gray-50 rounded-lg border border-gray-100">
                                 <div>
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Nome</label>
-                                    <p className="text-sm font-semibold text-gray-800">{selectedUser.name}</p>
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Nome</label>
+                                    <p className="text-sm font-bold text-gray-800">{selectedUser.name}</p>
                                 </div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">NIF</label>
-                                    <p className="text-sm font-semibold text-gray-800">{selectedUser.nif}</p>
+                                <div className="text-right sm:text-left"> 
+                                    {/* Adjusted for alignment */}
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">NIF</label>
+                                    <p className="text-sm font-bold text-gray-800">{selectedUser.nif}</p>
                                 </div>
                                 <div className="col-span-2">
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">E-mail</label>
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">E-mail</label>
                                     <p className="text-sm text-gray-700">{selectedUser.email}</p>
                                 </div>
                             </div>
@@ -229,11 +230,11 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="p-6 border-t bg-gray-50 flex justify-end items-center space-x-3 rounded-b-lg shrink-0">
+                <div className="p-6 border-t bg-gray-50 flex justify-end items-center space-x-4 rounded-b-lg shrink-0">
                     <button 
                         onClick={onClose}
                         type="button"
-                        className="px-6 py-2 text-gray-600 hover:text-gray-800 font-bold text-sm transition-colors uppercase"
+                        className="px-6 py-2.5 text-gray-600 hover:text-gray-800 font-bold text-sm transition-colors uppercase tracking-wide"
                     >
                         Cancelar
                     </button>
@@ -241,10 +242,10 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                         form="access-form" // Link to form
                         type="submit"
                         disabled={!selectedUser}
-                        className={`px-8 py-2 rounded-md font-bold transition-all flex items-center space-x-2 shadow-lg uppercase ${selectedUser ? 'bg-[#0EA5E9] text-white hover:bg-sky-600 shadow-sky-100' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                        className={`px-6 py-2.5 rounded-md font-bold transition-all flex items-center space-x-2 shadow-lg uppercase tracking-wide text-sm ${selectedUser ? 'bg-[#0EA5E9] text-white hover:bg-sky-600 shadow-sky-100' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
                     >
                         <PaperAirplaneIcon className="w-4 h-4 -rotate-45" />
-                        <span>{isEditing ? 'Atualizar' : 'Salvar Cadastro'}</span>
+                        <span>{isEditing ? 'Atualizar Dados' : 'Salvar Cadastro'}</span>
                     </button>
                 </div>
             </div>
