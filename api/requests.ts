@@ -216,7 +216,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (result.rows.length === 0) {
                  return res.status(404).json({ error: 'Request not found' });
             }
-            return res.status(200).json(mapFromDb(result.rows[0]));
+
+            const updatedReq = result.rows[0];
+            
+            // Check if status changed or just provided? 
+            // If body had status, we assume it's a significant move or we just track it.
+            // Simplified: If 'status' was in the update payload, record it.
+            if ('status' in data && data.status) {
+                // Try to get user info from body or default
+                 const userName = req.body.userName || 'Sistema';
+                 const userDept = req.body.userDepartment || 'Automático';
+                 
+                 await query(
+                    `INSERT INTO movements (request_id, status, user_name, user_department, created_at)
+                     VALUES ($1, $2, $3, $4, NOW())`,
+                    [updatedReq.id, updatedReq.status, userName, userDept]
+                );
+            }
+
+            return res.status(200).json(mapFromDb(updatedReq));
         }
         
         if (req.method === 'DELETE') {

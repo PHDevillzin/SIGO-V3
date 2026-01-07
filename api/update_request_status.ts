@@ -28,11 +28,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       [status, requestId]
     );
 
-    // 2. Insert Movement Record
     await client.query(
       `INSERT INTO movements (request_id, status, user_name, user_department, created_at)
        VALUES ($1, $2, $3, $4, NOW())`,
-      [requestId, `Solicitação alterada para: ${status}`, user || 'Sistema', department || 'N/A']
+      [requestId, status, user || 'Sistema', department || 'N/A']
     );
 
     await client.query('COMMIT');
