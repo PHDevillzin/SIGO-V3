@@ -123,7 +123,7 @@ const App: React.FC = () => {
         };
 
         fetchData();
-    }, []);
+    }, [isAuthenticated]);
     
     const summaryData: SummaryData[] = [
         { title: 'Nova Unidade', count: 3, value: 'R$ 130.500.000,00', color: 'border-green-500', icon: ListIcon },
