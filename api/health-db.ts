@@ -1,7 +1,14 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from './db';
+import pg from 'pg';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+    // Create a new pool for this request only (inefficient but safe for debugging)
+    // using the standard import pattern.
+    const pool = new pg.Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+
     try {
         if (!process.env.DATABASE_URL) {
             return res.status(500).json({ 
@@ -11,15 +18,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         const start = Date.now();
-        const result = await query('SELECT NOW() as now');
+        const client = await pool.connect();
+        const result = await client.query('SELECT NOW() as now');
+        client.release(); // Important: release the client
         const duration = Date.now() - start;
+
+        await pool.end(); // Close pool to prevent dangling connections in this test
 
         res.status(200).json({ 
             status: 'ok', 
-            message: 'Database connection successful',
+            message: 'Database connection successful (Inlined)',
             timestamp: result.rows[0].now,
             latency: `${duration}ms`,
-            env_var_length: process.env.DATABASE_URL.length // Safe way to verify value exists
         });
     } catch (error: any) {
         console.error('DB Health Check Failed:', error);
