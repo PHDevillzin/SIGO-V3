@@ -187,6 +187,10 @@ const App: React.FC = () => {
             const perms = data.user.permissions || [];
             setUserPermissions(perms);
             
+            // Set User's Profile
+            if (data.profile?.name) {
+                setSelectedProfile(data.profile.name);
+            }
             // Optional: Redirect to first available view if current 'home' is not allowed?
             // For now, assuming 'home' is always allowed or handled in Sidebar
         }} />;
@@ -200,6 +204,7 @@ const App: React.FC = () => {
                 currentView={currentView}
                 setCurrentView={setCurrentView}
                 userPermissions={userPermissions} // Pass permissions
+                userName={currentUser?.name || 'Usuário'} // Pass User Name
                 onLogout={() => {
                     setIsAuthenticated(false);
                     setCurrentUser(null);
