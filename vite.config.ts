@@ -23,26 +23,33 @@ export default defineConfig(({ mode }) => {
                 const url = new URL(req.url || '', `http://${req.headers.host}`);
                 const endpoint = url.pathname.replace(/^\//, ''); // Remove leading slash
                 
-                // Map endpoints to files
                 const endpointFileMap: Record<string, string> = {
-                  'users': './api/users.ts',
-                  'units': './api/units.ts',
-                  'requests': './api/requests.ts',
-                  'tipologias': './api/tipologias.ts',
-                  'tipo-locais': './api/tipo-locais.ts',
-                  'profiles': './api/profiles.ts'
+                  'users': 'api/users.ts',
+                  'units': 'api/units.ts',
+                  'requests': 'api/requests.ts',
+                  'tipologias': 'api/tipologias.ts',
+                  'tipo-locais': 'api/tipo-locais.ts',
+                  'profiles': 'api/profiles.ts'
                 };
 
-                const filePath = endpointFileMap[endpoint];
+                const relativePath = endpointFileMap[endpoint];
 
-                if (!filePath) {
+                if (!relativePath) {
                   return next();
                 }
 
                 console.log(`[API] Processing ${req.method} /api/${endpoint}`);
 
-                // Import the handler dynamically
-                const { default: handler } = await import(filePath);
+                // Force absolute path resolution from the project root
+                const projectRoot = process.cwd();
+                const absolutePath = path.resolve(projectRoot, relativePath);
+
+                console.log(`[API] Loading handler from: ${absolutePath}`);
+
+                // Use Vite's ssrLoadModule to load the TypeScript file
+                // This handles transpilation automatically
+                const module = await server.ssrLoadModule(absolutePath);
+                const handler = module.default;
 
                 // Shim Request props
                 const query = Object.fromEntries(url.searchParams);
@@ -65,6 +72,7 @@ export default defineConfig(({ mode }) => {
 
                 // Shim Response methods
                 const originalEnd = res.end.bind(res);
+                const originalSetHeader = res.setHeader.bind(res);
                 
                 Object.assign(res, {
                   status: (code: number) => {
@@ -78,8 +86,8 @@ export default defineConfig(({ mode }) => {
                   },
                   setHeader: (name: string, value: string | number | readonly string[]) => {
                      // Vite/Connect response already has setHeader, but Vercel might use it differently
-                     // pass through
-                     res.setHeader(name, value);
+                     // pass through using the original method, not the one we just overwrote!
+                     originalSetHeader(name, value);
                      return res;
                   }
                 });
