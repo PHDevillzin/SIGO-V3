@@ -38,7 +38,7 @@ const App: React.FC = () => {
     const [tipologias, setTipologias] = useState<Tipologia[]>([]);
     const [tipoLocais, setTipoLocais] = useState<TipoLocal[]>([]);
     
-    const isSolicitacoesView = ['solicitacoes', 'nova_sede', 'nova_estrategica', 'nova_unidade', 'solicitacoes_reclassificacao', 'manutencao'].includes(currentView);
+    const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao'].includes(currentView);
     
     let solicitacoesTitle = 'Solicitações';
     if (currentView === 'nova_sede' || currentView === 'nova_estrategica' || currentView === 'nova_unidade') {
