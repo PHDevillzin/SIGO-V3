@@ -740,13 +740,6 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                     >
                                                         <PencilIcon className="w-5 h-5" />
                                                     </button>
-                                                    <button 
-                                                        onClick={() => handleDeleteRequest(request)}
-                                                        className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors"
-                                                        aria-label="Excluir"
-                                                    >
-                                                        <TrashIcon className="w-5 h-5" />
-                                                    </button>
                                                 </>
                                             )}
                                         </div>
