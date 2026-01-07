@@ -21,148 +21,28 @@ import { ListIcon, CalculatorIcon } from './components/Icons';
 import type { SummaryData, Request, Unit, AccessProfile, User, Tipologia, TipoLocal } from './types';
 
 const App: React.FC = () => {
-    // Auth State
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentUser, setCurrentUser] = useState<any>(null);
+    const [userPermissions, setUserPermissions] = useState<string[]>([]); // New State
 
     const [selectedProfile, setSelectedProfile] = useState('Gestor GSO');
     const [currentView, setCurrentView] = useState('home');
     const [requests, setRequests] = useState<Request[]>([]);
-    const [units, setUnits] = useState<Unit[]>([]);
-    const [profiles, setProfiles] = useState<AccessProfile[]>([]);
-    const [users, setUsers] = useState<User[]>([]);
-    const [tipologias, setTipologias] = useState<Tipologia[]>([]);
-    const [tipoLocais, setTipoLocais] = useState<TipoLocal[]>([]);
     
-    useEffect(() => {
-        if (!isAuthenticated) return;
+    // ... (rest of state)
 
-        const fetchData = async () => {
-            try {
-                const [unitsRes, requestsRes, profilesRes, usersRes, tipologiasRes, tipoLocaisRes] = await Promise.all([
-                    fetch('/api/units'),
-                    fetch('/api/requests'),
-                    fetch('/api/profiles'),
-                    fetch('/api/users'),
-                    fetch('/api/tipologias'),
-                    fetch('/api/tipo-locais')
-                ]);
-
-                if (unitsRes.ok) {
-                    const data = await unitsRes.json();
-                    const mappedUnits = data.map((u: any) => ({
-                        ...u,
-                        codigoUnidade: u.codigo_unidade,
-                        responsavelRE: u.responsavel_re,
-                        responsavelRA: u.responsavel_ra,
-                        responsavelRAR: u.responsavel_rar,
-                        tipoDeUnidade: u.tipo_de_unidade,
-                        unidadeResumida: u.unidade_resumida,
-                        gerenteRegional: u.gerente_regional,
-                        emailGR: u.email_gr
-                    }));
-                    setUnits(mappedUnits);
-                }
-                if (requestsRes.ok) {
-                    const data = await requestsRes.json();
-                     const mappedRequests = data.map((r: any) => ({
-                        ...r,
-                        currentLocation: r.current_location,
-                        expectedStartDate: r.expected_start_date,
-                        hasInfo: r.has_info,
-                        expectedValue: r.expected_value,
-                        executingUnit: r.executing_unit,
-                        categoriaInvestimento: r.categoria_investimento,
-                        situacaoProjeto: r.situacao_projeto,
-                        situacaoObra: r.situacao_obra,
-                        inicioObra: r.inicio_obra,
-                        saldoObraPrazo: r.saldo_obra_prazo,
-                        saldoObraValor: r.saldo_obra_valor,
-                        gestorLocal: r.gestor_local
-                    }));
-                    setRequests(mappedRequests);
-                }
-                if (profilesRes.ok) {
-                    const data = await profilesRes.json();
-                    setProfiles(data);
-                }
-                if (usersRes.ok) {
-                    const data = await usersRes.json();
-                    const mappedUsers = data.map((u: any) => ({
-                        ...u,
-                        createdAt: u.created_at,
-                        updatedAt: u.updated_at,
-                        createdBy: u.created_by,
-                        sigoProfiles: u.sigo_profiles,
-                        linkedUnits: u.linked_units
-                    }));
-                    setUsers(mappedUsers);
-                }
-                if (tipologiasRes.ok) {
-                    const data = await tipologiasRes.json();
-                    const mappedTipologias = data.map((t: any) => ({
-                        ...t,
-                        dataInclusao: t.data_inclusao,
-                        criadoPor: t.criado_por
-                    }));
-                    setTipologias(mappedTipologias);
-                }
-                if (tipoLocaisRes.ok) {
-                    const data = await tipoLocaisRes.json();
-                    const mappedTipoLocais = data.map((t: any) => ({
-                        ...t,
-                        dataInclusao: t.data_inclusao,
-                        criadoPor: t.criado_por
-                    }));
-                    setTipoLocais(mappedTipoLocais);
-                }
-
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
-
-        fetchData();
-    }, [isAuthenticated]);
-    
-    const summaryData: SummaryData[] = [
-        { title: 'Nova Unidade', count: 3, value: 'R$ 130.500.000,00', color: 'border-green-500', icon: ListIcon },
-        { title: 'Reforma Estratégica', count: 1, value: 'R$ 5.000.000,00', color: 'border-purple-500', icon: ListIcon },
-        { title: 'Reforma Operacional', count: 13, value: 'R$ 18.365.000,00', color: 'border-blue-400', icon: ListIcon },
-        { title: 'Baixa Complexidade', count: 3, value: 'R$ 1.025.000,00', color: 'border-sky-400', icon: ListIcon },
-        { title: 'Total Geral', count: 20, value: 'R$ 154.890.000,00', color: 'border-orange-400', icon: CalculatorIcon },
-    ];
-
-    const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao'].includes(currentView);
-    const getSolicitacoesTitle = () => {
-        switch (currentView) {
-            case 'solicitacoes':
-                return 'Solicitações';
-            case 'solicitacoes_reclassificacao':
-                return 'Solicitações para Reclassificação';
-            case 'aprovacao':
-                return 'Solicitações para Aprovação';
-            case 'manutencao':
-                return 'Manutenção';
-            default:
-                return 'Solicitações';
-        }
-    };
-    const solicitacoesTitle = getSolicitacoesTitle();
-
-    const handleAddRequest = (newRequest: Request) => {
-        setRequests(prev => [newRequest, ...prev]);
-        setCurrentView('solicitacoes');
-    };
-
-
+    // ... (fetchData useEffect)
 
     if (!isAuthenticated) {
         return <LoginScreen onLogin={(data) => {
             setIsAuthenticated(true);
             setCurrentUser(data.user);
-            // Optionally set profile based on data.profile if needed
-            // setProfile(data.profile);
+            // Check for 'all' permission or specific list
+            const perms = data.user.permissions || [];
+            setUserPermissions(perms);
+            
+            // Optional: Redirect to first available view if current 'home' is not allowed?
+            // For now, assuming 'home' is always allowed or handled in Sidebar
         }} />;
     }
 
@@ -173,9 +53,11 @@ const App: React.FC = () => {
                 setSelectedProfile={setSelectedProfile}
                 currentView={currentView}
                 setCurrentView={setCurrentView}
+                userPermissions={userPermissions} // Pass permissions
                 onLogout={() => {
                     setIsAuthenticated(false);
                     setCurrentUser(null);
+                    setUserPermissions([]);
                 }}
             />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">

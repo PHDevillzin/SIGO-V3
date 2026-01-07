@@ -49,11 +49,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const user = userRes.rows[0];
 
             // 2. Check Permissions in `user_access` table
-            // Fetch all profile_ids and unit_ids associated with this user
+            // Fetch all profile_ids, unit_ids, AND permissions associated with this user
             const permissionQuery = `
                 SELECT 
                     ua.profile_id, 
                     p.name as profile_name,
+                    p.permissions,
                     ua.unit_id,
                     u.unidade as unit_name
                 FROM user_access ua
@@ -69,14 +70,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (accessRows.length === 0) {
                 // FALLBACK for Legacy Admin during migration phase (if not yet in user_access)
                 if (user.sigo_profiles?.includes('admin_sys') || user.profile === 'Administração do sistema') {
-                     // Pass through as Legacy Admin
                      return res.status(200).json({
                         user: { 
                             ...user, 
                             sigoProfiles: ['admin_sys'], 
-                            linkedUnits: [] 
+                            linkedUnits: [],
+                            permissions: ['all'] // Admin gets all
                         },
-                        profile: { id: 'admin_sys', name: 'Administração do sistema' }, // Legacy format
+                        profile: { id: 'admin_sys', name: 'Administração do sistema' },
                         redirect: '/dashboard'
                     });
                 }
@@ -84,15 +85,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
 
             // Step 3 Requirement: Check unit association
-            // "Para perfil que não tem unidade, pular essa etapa" -> implicitly means Admin
-            // "Verificar se o usuário possui uma unidade cadastrada"
-            
-            // We check if there is ANY valid access row. 
-            // A valid access row is either:
-            // - Has a Profile AND a Unit
-            // - Has a Profile that is "Global" (doesn't need unit). 
-            // Assuming 'admin_sys' is the only global one for now based on context.
-            
             const validAccess = accessRows.filter(row => {
                 const isAdmin = row.profile_id === 'admin_sys' || row.profile_name === 'Administração do sistema';
                 const hasUnit = !!row.unit_id;
@@ -104,10 +96,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
 
             // 4. Success - Return Data
-            // Aggregate Profiles and Units for Frontend
+            // Aggregate Profiles and Units
             const uniqueProfileIds = [...new Set(validAccess.map(r => r.profile_id))];
-             // We return unit NAMES for frontend display logic, or IDs if preferred. keeping names to match current logic.
             const uniqueUnitNames = [...new Set(validAccess.map(r => r.unit_name).filter(Boolean))]; 
+
+            // Aggregate Permissions (Screens)
+            // Flatten all permission arrays from all valid profiles
+            let aggregatedPermissions: string[] = [];
+            validAccess.forEach(row => {
+                if (row.permissions && Array.isArray(row.permissions)) {
+                    aggregatedPermissions.push(...row.permissions);
+                }
+            });
+            aggregatedPermissions = [...new Set(aggregatedPermissions)]; // Unique
+
+            // If ANY profile has 'all', the user has 'all'
+            if (aggregatedPermissions.includes('all')) {
+                aggregatedPermissions = ['all'];
+            }
 
             return res.status(200).json({
                 user: {
@@ -116,7 +122,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     name: user.name,
                     email: user.email,
                     sigoProfiles: uniqueProfileIds,
-                    linkedUnits: uniqueUnitNames
+                    linkedUnits: uniqueUnitNames,
+                    permissions: aggregatedPermissions // Used for Menu Filtering
                 },
                 // Legacy compat: send first profile as "main" if needed
                 profile: { 

@@ -8,6 +8,7 @@ interface SidebarProps {
   currentView: string;
   setCurrentView: (view: string) => void;
   onLogout: () => void;
+  userPermissions: string[];
 }
 
 const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boolean, onClick?: () => void }> = ({ icon: Icon, label, active = false, onClick }) => (
@@ -17,12 +18,17 @@ const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boole
   </a>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout, userPermissions }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isManagementMenuOpen, setIsManagementMenuOpen] = useState(false);
   const [isSolicitacoesMenuOpen, setIsSolicitacoesMenuOpen] = useState(false);
   const [isAbrirSolicitacoesMenuOpen, setIsAbrirSolicitacoesMenuOpen] = useState(false);
   const [isConfiguracoesMenuOpen, setIsConfiguracoesMenuOpen] = useState(false);
+
+  // Helper to check permission
+  const hasPermission = (permission: string) => {
+    return userPermissions.includes('all') || userPermissions.includes(permission);
+  };
 
   const profiles = [
     "Administração do Sistema",
@@ -95,204 +101,226 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
         </button>
       </div>
       <nav className="flex-1 p-4 space-y-2">
-        <NavItem icon={HomeIcon} label="Home" active={currentView === 'home'} onClick={() => setCurrentView('home')} />
+        {hasPermission('home') && <NavItem icon={HomeIcon} label="Home" active={currentView === 'home'} onClick={() => setCurrentView('home')} />}
         
         {/* Menu Solicitações Collapsible */}
-        <div>
-          <button
-            onClick={() => setIsSolicitacoesMenuOpen(prev => !prev)}
-            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
-          >
-            <div className="flex items-center space-x-3">
-              <ListIcon className="w-5 h-5 flex-shrink-0" />
-              <span className="font-medium text-sm">Menu Solicitações</span>
+        {(hasPermission('solicitacoes') || hasPermission('aprovacao')) && (
+            <div>
+            <button
+                onClick={() => setIsSolicitacoesMenuOpen(prev => !prev)}
+                className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
+            >
+                <div className="flex items-center space-x-3">
+                <ListIcon className="w-5 h-5 flex-shrink-0" />
+                <span className="font-medium text-sm">Menu Solicitações</span>
+                </div>
+                <ChevronDownIcon className={`w-4 h-4 transition-transform ${isSolicitacoesMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isSolicitacoesMenuOpen && (
+                <div className="pt-2 pl-6 space-y-2">
+                {hasPermission('solicitacoes') && (
+                    <NavItem 
+                        icon={ListIcon}
+                        label="Solicitações gerais"
+                        active={currentView === 'solicitacoes'}
+                        onClick={() => setCurrentView('solicitacoes')}
+                    />
+                )}
+                 {hasPermission('solicitacoes') && (
+                     <NavItem 
+                        icon={DocumentDuplicateIcon}
+                        label="Solicitações para reclassificação"
+                        active={currentView === 'solicitacoes_reclassificacao'}
+                        onClick={() => setCurrentView('solicitacoes_reclassificacao')}
+                    />
+                 )}
+                {hasPermission('aprovacao') && (
+                    <NavItem 
+                        icon={CheckCircleIcon}
+                        label="Solicitações para aprovação"
+                        active={currentView === 'aprovacao'}
+                        onClick={() => setCurrentView('aprovacao')}
+                    />
+                )}
+                 {hasPermission('solicitacoes') && (
+                     <NavItem 
+                        icon={WrenchScrewdriverIcon}
+                        label="Manutenção"
+                        active={currentView === 'manutencao'}
+                        onClick={() => setCurrentView('manutencao')}
+                    />
+                 )}
+                </div>
+            )}
             </div>
-            <ChevronDownIcon className={`w-4 h-4 transition-transform ${isSolicitacoesMenuOpen ? 'rotate-180' : ''}`} />
-          </button>
-          {isSolicitacoesMenuOpen && (
-            <div className="pt-2 pl-6 space-y-2">
-              <NavItem 
-                icon={ListIcon}
-                label="Solicitações gerais"
-                active={currentView === 'solicitacoes'}
-                onClick={() => setCurrentView('solicitacoes')}
-              />
-               <NavItem 
-                icon={DocumentDuplicateIcon}
-                label="Solicitações para reclassificação"
-                active={currentView === 'solicitacoes_reclassificacao'}
-                onClick={() => setCurrentView('solicitacoes_reclassificacao')}
-              />
-              <NavItem 
-                icon={CheckCircleIcon}
-                label="Solicitações para aprovação"
-                active={currentView === 'aprovacao'}
-                onClick={() => setCurrentView('aprovacao')}
-              />
-               <NavItem 
-                icon={WrenchScrewdriverIcon}
-                label="Manutenção"
-                active={currentView === 'manutencao'}
-                onClick={() => setCurrentView('manutencao')}
-              />
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Abrir Solicitações Collapsible Menu */}
-        <div>
-          <button
-            onClick={() => setIsAbrirSolicitacoesMenuOpen(prev => !prev)}
-            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
-          >
-            <div className="flex items-center space-x-3">
-              <FolderPlusIcon className="w-5 h-5 flex-shrink-0" />
-              <span className="font-medium text-sm">Abrir Solicitações</span>
+        {(hasPermission('nova_estrategica') || hasPermission('nova_sede') || hasPermission('nova_unidade')) && (
+            <div>
+            <button
+                onClick={() => setIsAbrirSolicitacoesMenuOpen(prev => !prev)}
+                className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
+            >
+                <div className="flex items-center space-x-3">
+                <FolderPlusIcon className="w-5 h-5 flex-shrink-0" />
+                <span className="font-medium text-sm">Abrir Solicitações</span>
+                </div>
+                <ChevronDownIcon className={`w-4 h-4 transition-transform ${isAbrirSolicitacoesMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isAbrirSolicitacoesMenuOpen && (
+                <div className="pt-2 pl-6 space-y-2">
+                {hasPermission('nova_estrategica') && (
+                    <NavItem 
+                        icon={Squares2x2Icon}
+                        label="Abrir Estratégica"
+                        active={currentView === 'nova_estrategica'}
+                        onClick={() => setCurrentView('nova_estrategica')}
+                    />
+                )}
+                {hasPermission('nova_sede') && (
+                    <NavItem 
+                        icon={ClipboardIcon}
+                        label="Abrir Sede"
+                        active={currentView === 'nova_sede'}
+                        onClick={() => setCurrentView('nova_sede')}
+                    />
+                )}
+                {hasPermission('nova_unidade') && (
+                    <NavItem 
+                        icon={BuildingStorefrontIcon}
+                        label="Abrir Unidade"
+                        active={currentView === 'nova_unidade'}
+                        onClick={() => setCurrentView('nova_unidade')}
+                    />
+                )}
+                </div>
+            )}
             </div>
-            <ChevronDownIcon className={`w-4 h-4 transition-transform ${isAbrirSolicitacoesMenuOpen ? 'rotate-180' : ''}`} />
-          </button>
-          {isAbrirSolicitacoesMenuOpen && (
-            <div className="pt-2 pl-6 space-y-2">
-              <NavItem 
-                icon={Squares2x2Icon}
-                label="Abrir Estratégica"
-                active={currentView === 'nova_estrategica'}
-                onClick={() => setCurrentView('nova_estrategica')}
-              />
-               <NavItem 
-                icon={ClipboardIcon}
-                label="Abrir Sede"
-                active={currentView === 'nova_sede'}
-                onClick={() => setCurrentView('nova_sede')}
-              />
-              <NavItem 
-                icon={BuildingStorefrontIcon}
-                label="Abrir Unidade"
-                active={currentView === 'nova_unidade'}
-                onClick={() => setCurrentView('nova_unidade')}
-              />
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Gerenciamento Collapsible Menu */}
-        <div>
-          <button
-            onClick={() => setIsManagementMenuOpen(prev => !prev)}
-            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${(currentView === 'planejamento' || currentView === 'plurianual') ? 'bg-white/10 text-white' : ''}`}
-          >
-            <div className="flex items-center space-x-3">
-              <ClipboardDocumentListIcon className="w-5 h-5 flex-shrink-0" />
-              <span className="font-medium text-sm">Gerenciamento</span>
-            </div>
-            <ChevronDownIcon className={`w-4 h-4 transition-transform ${isManagementMenuOpen ? 'rotate-180' : ''}`} />
-          </button>
-          {isManagementMenuOpen && (
-            <div className="pt-2 pl-6 space-y-2">
-              <NavItem 
-                icon={BuildingOfficeIcon}
-                label="Planejamento"
-                active={currentView === 'planejamento'}
-                onClick={() => setCurrentView('planejamento')}
-              />
-               <NavItem 
-                icon={DocumentDuplicateIcon}
-                label="Plurianual"
-                active={currentView === 'plurianual'}
-                onClick={() => setCurrentView('plurianual')}
-              />
-            </div>
-          )}
-        </div>
+        {hasPermission('gerenciamento') && (
+             <div>
+             <button
+                 onClick={() => setIsManagementMenuOpen(prev => !prev)}
+                 className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${(currentView === 'planejamento' || currentView === 'plurianual') ? 'bg-white/10 text-white' : ''}`}
+             >
+                 <div className="flex items-center space-x-3">
+                 <ClipboardDocumentListIcon className="w-5 h-5 flex-shrink-0" />
+                 <span className="font-medium text-sm">Gerenciamento</span>
+                 </div>
+                 <ChevronDownIcon className={`w-4 h-4 transition-transform ${isManagementMenuOpen ? 'rotate-180' : ''}`} />
+             </button>
+             {isManagementMenuOpen && (
+                 <div className="pt-2 pl-6 space-y-2">
+                 <NavItem 
+                     icon={BuildingOfficeIcon}
+                     label="Planejamento"
+                     active={currentView === 'planejamento'}
+                     onClick={() => setCurrentView('planejamento')}
+                 />
+                 <NavItem 
+                     icon={DocumentDuplicateIcon}
+                     label="Plurianual"
+                     active={currentView === 'plurianual'}
+                     onClick={() => setCurrentView('plurianual')}
+                 />
+                 </div>
+             )}
+             </div>
+        )}
 
         {/* Configurações Collapsible Menu */}
-        <div>
-          <button
-            onClick={() => setIsConfiguracoesMenuOpen(prev => !prev)}
-            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${[
-                'tipologias',
-                'gestao_acesso',
-                'perfil_acesso',
-                'cadastro_unidades',
-                'cadastro_periodos',
-                'cadastro_tipo_local',
-                'gerenciador_arquivos',
-                'avisos_globais',
-                'notificacoes_requisitos',
-                'painel_criticidade'
-            ].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
-          >
-            <div className="flex items-center space-x-3">
-              <Cog8ToothIcon className="w-5 h-5 flex-shrink-0" />
-              <span className="font-medium text-sm">Configurações</span>
+        {hasPermission('configuracoes') && (
+            <div>
+            <button
+                onClick={() => setIsConfiguracoesMenuOpen(prev => !prev)}
+                className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${[
+                    'tipologias',
+                    'gestao_acesso',
+                    'perfil_acesso',
+                    'cadastro_unidades',
+                    'cadastro_periodos',
+                    'cadastro_tipo_local',
+                    'gerenciador_arquivos',
+                    'avisos_globais',
+                    'notificacoes_requisitos',
+                    'painel_criticidade'
+                ].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
+            >
+                <div className="flex items-center space-x-3">
+                <Cog8ToothIcon className="w-5 h-5 flex-shrink-0" />
+                <span className="font-medium text-sm">Configurações</span>
+                </div>
+                <ChevronDownIcon className={`w-4 h-4 transition-transform ${isConfiguracoesMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isConfiguracoesMenuOpen && (
+                <div className="pt-2 pl-6 space-y-2">
+                    <NavItem 
+                        icon={UserIcon}
+                        label="Gestão acesso"
+                        active={currentView === 'gestao_acesso'}
+                        onClick={() => setCurrentView('gestao_acesso')}
+                    />
+                    <NavItem 
+                        icon={UserIcon}
+                        label="Perfil acesso"
+                        active={currentView === 'perfil_acesso'}
+                        onClick={() => setCurrentView('perfil_acesso')}
+                    />
+                    <NavItem 
+                        icon={CloudArrowUpIcon}
+                        label="Arquivos"
+                        active={currentView === 'gerenciador_arquivos'}
+                        onClick={() => setCurrentView('gerenciador_arquivos')}
+                    />
+                    <NavItem 
+                        icon={SparklesIcon}
+                        label="Criticidade"
+                        active={currentView === 'painel_criticidade'}
+                        onClick={() => setCurrentView('painel_criticidade')}
+                    />
+                    <NavItem 
+                        icon={InformationCircleIcon}
+                        label="Gerenciamento de avisos"
+                        active={currentView === 'avisos_globais'}
+                        onClick={() => setCurrentView('avisos_globais')}
+                    />
+                    <NavItem 
+                        icon={ExclamationTriangleIcon}
+                        label="Notificações e requisitos"
+                        active={currentView === 'notificacoes_requisitos'}
+                        onClick={() => setCurrentView('notificacoes_requisitos')}
+                    />
+                    <NavItem 
+                        icon={CalendarDaysIcon}
+                        label="Período Solicitação"
+                        active={currentView === 'cadastro_periodos'}
+                        onClick={() => setCurrentView('cadastro_periodos')}
+                    />
+                    <NavItem 
+                        icon={TagIcon}
+                        label="Tipo local"
+                        active={currentView === 'cadastro_tipo_local'}
+                        onClick={() => setCurrentView('cadastro_tipo_local')}
+                    />
+                    <NavItem 
+                        icon={TagIcon} 
+                        label="Tipologia" 
+                        active={currentView === 'tipologias'} 
+                        onClick={() => setCurrentView('tipologias')} 
+                    />
+                    <NavItem 
+                        icon={BuildingOfficeIcon}
+                        label="Unidades"
+                        active={currentView === 'cadastro_unidades'}
+                        onClick={() => setCurrentView('cadastro_unidades')}
+                    />
+                </div>
+            )}
             </div>
-            <ChevronDownIcon className={`w-4 h-4 transition-transform ${isConfiguracoesMenuOpen ? 'rotate-180' : ''}`} />
-          </button>
-          {isConfiguracoesMenuOpen && (
-            <div className="pt-2 pl-6 space-y-2">
-                <NavItem 
-                    icon={UserIcon}
-                    label="Gestão acesso"
-                    active={currentView === 'gestao_acesso'}
-                    onClick={() => setCurrentView('gestao_acesso')}
-                />
-                <NavItem 
-                    icon={UserIcon}
-                    label="Perfil acesso"
-                    active={currentView === 'perfil_acesso'}
-                    onClick={() => setCurrentView('perfil_acesso')}
-                />
-                <NavItem 
-                    icon={CloudArrowUpIcon}
-                    label="Arquivos"
-                    active={currentView === 'gerenciador_arquivos'}
-                    onClick={() => setCurrentView('gerenciador_arquivos')}
-                />
-                <NavItem 
-                    icon={SparklesIcon}
-                    label="Criticidade"
-                    active={currentView === 'painel_criticidade'}
-                    onClick={() => setCurrentView('painel_criticidade')}
-                />
-                <NavItem 
-                    icon={InformationCircleIcon}
-                    label="Gerenciamento de avisos"
-                    active={currentView === 'avisos_globais'}
-                    onClick={() => setCurrentView('avisos_globais')}
-                />
-                <NavItem 
-                    icon={ExclamationTriangleIcon}
-                    label="Notificações e requisitos"
-                    active={currentView === 'notificacoes_requisitos'}
-                    onClick={() => setCurrentView('notificacoes_requisitos')}
-                />
-                <NavItem 
-                    icon={CalendarDaysIcon}
-                    label="Período Solicitação"
-                    active={currentView === 'cadastro_periodos'}
-                    onClick={() => setCurrentView('cadastro_periodos')}
-                />
-                <NavItem 
-                    icon={TagIcon}
-                    label="Tipo local"
-                    active={currentView === 'cadastro_tipo_local'}
-                    onClick={() => setCurrentView('cadastro_tipo_local')}
-                />
-                <NavItem 
-                    icon={TagIcon} 
-                    label="Tipologia" 
-                    active={currentView === 'tipologias'} 
-                    onClick={() => setCurrentView('tipologias')} 
-                />
-                <NavItem 
-                    icon={BuildingOfficeIcon}
-                    label="Unidades"
-                    active={currentView === 'cadastro_unidades'}
-                    onClick={() => setCurrentView('cadastro_unidades')}
-                />
-            </div>
-          )}
-        </div>
+        )}
       </nav>
       <div className="p-4 border-t border-white/10 shrink-0">
         <div className="flex items-center space-x-3 mb-4">
