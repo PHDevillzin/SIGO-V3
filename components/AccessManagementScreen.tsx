@@ -55,8 +55,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
         setTimeout(() => setToast(prev => prev ? { ...prev, visible: false } : null), 3000);
     };
 
-    // Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false);
+
 
     // Filter out already registered users from the source list passed to the modal
     // Any user present in the registeredUsers list (DB) is considered "unavailable" for new registration
