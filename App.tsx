@@ -28,10 +28,156 @@ const App: React.FC = () => {
     const [selectedProfile, setSelectedProfile] = useState('Gestor GSO');
     const [currentView, setCurrentView] = useState('home');
     const [requests, setRequests] = useState<Request[]>([]);
+    const [summaryData, setSummaryData] = useState<SummaryData[]>([]);
+    const [units, setUnits] = useState<Unit[]>([]);
+    const [profiles, setProfiles] = useState<AccessProfile[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
+    const [tipologias, setTipologias] = useState<Tipologia[]>([]);
+    const [tipoLocais, setTipoLocais] = useState<TipoLocal[]>([]);
     
-    // ... (rest of state)
+    const isSolicitacoesView = ['solicitacoes', 'nova_sede', 'nova_estrategica', 'nova_unidade'].includes(currentView);
+    const solicitacoesTitle = currentView === 'solicitacoes' ? 'Solicitações' : 'Nova Solicitação';
 
-    // ... (fetchData useEffect)
+    const handleAddRequest = (newRequest: Request) => {
+        setRequests(prevRequests => [...prevRequests, newRequest]);
+    };
+
+    useEffect(() => {
+        if (!isAuthenticated) return;
+
+        const fetchData = async () => {
+            try {
+                const [unitsRes, requestsRes, profilesRes, usersRes, tipologiasRes, tipoLocaisRes] = await Promise.all([
+                    fetch('/api/units'),
+                    fetch('/api/requests'),
+                    fetch('/api/profiles'),
+                    fetch('/api/users'),
+                    fetch('/api/tipologias'),
+                    fetch('/api/tipo-locais')
+                ]);
+
+                // Determine if user is Admin
+                // If 'all' permission or 'admin_sys' profile exists
+                const isAdmin = userPermissions.includes('all');
+                const userLinkedUnits = currentUser?.linkedUnits || [];
+
+                if (unitsRes.ok) {
+                    const data = await unitsRes.json();
+                    let mappedUnits = data.map((u: any) => ({
+                        ...u,
+                        codigoUnidade: u.codigo_unidade,
+                        responsavelRE: u.responsavel_re,
+                        responsavelRA: u.responsavel_ra,
+                        responsavelRAR: u.responsavel_rar,
+                        tipoDeUnidade: u.tipo_de_unidade,
+                        unidadeResumida: u.unidade_resumida,
+                        gerenteRegional: u.gerente_regional,
+                        emailGR: u.email_gr
+                    }));
+
+                    // FILTER UNITS: Show only linked units (unless Admin)
+                    if (!isAdmin && userLinkedUnits.length > 0) {
+                        mappedUnits = mappedUnits.filter((u: Unit) => 
+                            userLinkedUnits.includes(u.unidadeResumida) || 
+                            userLinkedUnits.includes(u.unidade) // Handle varying field names if any
+                        );
+                    } else if (!isAdmin && userLinkedUnits.length === 0) {
+                        // Non-admin with no units? Should technically be blocked by login, but safe fallback:
+                        mappedUnits = [];
+                    }
+
+                    setUnits(mappedUnits);
+                }
+                if (requestsRes.ok) {
+                    const data = await requestsRes.json();
+                     let mappedRequests = data.map((r: any) => ({
+                        ...r,
+                        currentLocation: r.current_location,
+                        expectedStartDate: r.expected_start_date,
+                        hasInfo: r.has_info,
+                        expectedValue: r.expected_value,
+                        executingUnit: r.executing_unit,
+                        categoriaInvestimento: r.categoria_investimento,
+                        situacaoProjeto: r.situacao_projeto,
+                        situacaoObra: r.situacao_obra,
+                        inicioObra: r.inicio_obra,
+                        saldoObraPrazo: r.saldo_obra_prazo,
+                        saldoObraValor: r.saldo_obra_valor,
+                        gestorLocal: r.gestor_local
+                    }));
+
+                    // FILTER REQUESTS: Show only requests from linked units (unless Admin)
+                    // Request field: executingUnit (executing_unit)
+                    if (!isAdmin && userLinkedUnits.length > 0) {
+                        mappedRequests = mappedRequests.filter((r: Request) => 
+                            userLinkedUnits.includes(r.executingUnit)
+                        );
+                    } else if (!isAdmin && userLinkedUnits.length === 0) {
+                        mappedRequests = [];
+                    }
+
+                    setRequests(mappedRequests);
+                }
+                if (profilesRes.ok) {
+                    const data = await profilesRes.json();
+                    setProfiles(data);
+                }
+                if (usersRes.ok) {
+                    const data = await usersRes.json();
+                    const mappedUsers = data.map((u: any) => ({
+                        ...u,
+                        createdAt: u.created_at,
+                        updatedAt: u.updated_at,
+                        createdBy: u.created_by,
+                        sigoProfiles: u.sigo_profiles,
+                        linkedUnits: u.linked_units
+                    }));
+                    setUsers(mappedUsers);
+                }
+                if (tipologiasRes.ok) {
+                    const data = await tipologiasRes.json();
+                    const mappedTipologias = data.map((t: any) => ({
+                        ...t,
+                        dataInclusao: t.data_inclusao,
+                        criadoPor: t.criado_por
+                    }));
+                    setTipologias(mappedTipologias);
+                }
+                if (tipoLocaisRes.ok) {
+                    const data = await tipoLocaisRes.json();
+                    const mappedTipoLocais = data.map((t: any) => ({
+                        ...t,
+                        dataInclusao: t.data_inclusao,
+                        criadoPor: t.criado_por
+                    }));
+                    setTipoLocais(mappedTipoLocais);
+                }
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        fetchData();
+    }, [isAuthenticated, currentUser, userPermissions]);
+
+    useEffect(() => {
+        // This effect runs when requests or units change
+        // Recalculate summary data based on filtered requests
+        const totalRequests = requests.length;
+        const pendingRequests = requests.filter(req => req.status === 'Pendente').length;
+        const approvedRequests = requests.filter(req => req.status === 'Aprovado').length;
+        const rejectedRequests = requests.filter(req => req.status === 'Rejeitado').length;
+        const inProgressRequests = requests.filter(req => req.status === 'Em Andamento').length;
+
+        setSummaryData([
+            { title: 'Total de Solicitações', count: totalRequests, value: totalRequests.toString(), icon: ListIcon, color: 'text-blue-500' },
+            { title: 'Solicitações Pendentes', count: pendingRequests, value: pendingRequests.toString(), icon: ListIcon, color: 'text-yellow-500' },
+            { title: 'Solicitações Aprovadas', count: approvedRequests, value: approvedRequests.toString(), icon: ListIcon, color: 'text-green-500' },
+            { title: 'Solicitações Rejeitadas', count: rejectedRequests, value: rejectedRequests.toString(), icon: ListIcon, color: 'text-red-500' },
+            { title: 'Solicitações Em Andamento', count: inProgressRequests, value: inProgressRequests.toString(), icon: ListIcon, color: 'text-purple-500' },
+        ]);
+    }, [requests, units]); // Depend on requests and units
 
     if (!isAuthenticated) {
         return <LoginScreen onLogin={(data) => {
