@@ -17,13 +17,15 @@ interface ApprovalRequestsScreenProps {
     requests: Request[];
     setRequests: React.Dispatch<React.SetStateAction<Request[]>>;
     selectedProfile: string;
+    userName?: string;
 }
 
 const ApprovalRequestsScreen: React.FC<ApprovalRequestsScreenProps> = ({ 
     setCurrentView, 
     requests, 
     setRequests,
-    selectedProfile 
+    selectedProfile,
+    userName
 }) => {
     const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
 
@@ -139,6 +141,7 @@ const ApprovalRequestsScreen: React.FC<ApprovalRequestsScreenProps> = ({
                 currentView="aprovacao" 
                 requests={filteredRequests}
                 setRequests={setRequests}
+                userName={userName}
             />
         </div>
     );

@@ -38,8 +38,16 @@ const App: React.FC = () => {
     const [tipologias, setTipologias] = useState<Tipologia[]>([]);
     const [tipoLocais, setTipoLocais] = useState<TipoLocal[]>([]);
     
-    const isSolicitacoesView = ['solicitacoes', 'nova_sede', 'nova_estrategica', 'nova_unidade'].includes(currentView);
-    const solicitacoesTitle = currentView === 'solicitacoes' ? 'Solicitações' : 'Nova Solicitação';
+    const isSolicitacoesView = ['solicitacoes', 'nova_sede', 'nova_estrategica', 'nova_unidade', 'solicitacoes_reclassificacao', 'manutencao'].includes(currentView);
+    
+    let solicitacoesTitle = 'Solicitações';
+    if (currentView === 'nova_sede' || currentView === 'nova_estrategica' || currentView === 'nova_unidade') {
+        solicitacoesTitle = 'Nova Solicitação';
+    } else if (currentView === 'solicitacoes_reclassificacao') {
+        solicitacoesTitle = 'Solicitações para Reclassificação';
+    } else if (currentView === 'manutencao') {
+        solicitacoesTitle = 'Manutenção';
+    }
 
     const handleAddRequest = (newRequest: Request) => {
         setRequests(prevRequests => [...prevRequests, newRequest]);
@@ -233,6 +241,7 @@ const App: React.FC = () => {
                 currentView={currentView}
                 requests={requests}
                 setRequests={setRequests}
+                userName={currentUser?.name || 'Usuário'}
             />
           </>
         )}
@@ -242,6 +251,7 @@ const App: React.FC = () => {
                 requests={requests}
                 setRequests={setRequests}
                 selectedProfile={selectedProfile}
+                userName={currentUser?.name || 'Usuário'}
             />
         )}
         {currentView === 'planejamento' && <PlanningScreen />}

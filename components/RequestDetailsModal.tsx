@@ -44,9 +44,27 @@ const AttachmentItem: React.FC<{ name: string; type: 'pdf' | 'image' }> = ({ nam
 const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClose, request }) => {
   const [activeTab, setActiveTab] = React.useState<'detalhes' | 'movimentos'>('detalhes');
 
+  const [movements, setMovements] = React.useState<any[]>([]);
+  const [loadingMovements, setLoadingMovements] = React.useState(false);
+
+  React.useEffect(() => {
+    if (activeTab === 'movimentos' && request?.id) {
+        setLoadingMovements(true);
+        fetch(`/api/movements?requestId=${request.id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    setMovements(data);
+                }
+            })
+            .catch(err => console.error('Failed to fetch movements:', err))
+            .finally(() => setLoadingMovements(false));
+    }
+  }, [activeTab, request?.id]);
+
   if (!isOpen || !request) return null;
 
-  // Mock data for contents
+  // Mock data for contents (Keep existing mock for form fields until those APIs are ready)
   const mockData = {
     planoDiretor: 'Não',
     cat: '-',
@@ -56,13 +74,6 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
     resumo: 'reforma das 6 piscinas, reforma das 2 casas de máquinas e troca de todo o piso da esplanada',
     inicioUso: '02/01/2028'
   };
-
-  // Mock data for movements (audit trail)
-  const mockMovements = [
-      { date: '12/11/2025 14:36', status: 'Aguardando validação GSO', user: 'Paulo Henrique', department: 'GSO' },
-      { date: '10/11/2025 09:15', status: 'Em elaboração', user: 'Maria Silva', department: 'Unidade' },
-      { date: '08/11/2025 16:20', status: 'Solicitação criada', user: 'Maria Silva', department: 'Unidade' },
-  ];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[70] flex justify-center items-center p-4">
@@ -154,30 +165,40 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
                 </div>
             ) : (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data/Hora</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuário</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {mockMovements.map((move, idx) => (
-                                <tr key={idx}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{move.date}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                            {move.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{move.user}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{move.department}</td>
+                    {loadingMovements ? (
+                        <div className="p-10 text-center text-gray-500">Carregando movimentos...</div>
+                    ) : (
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data/Hora</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuário</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {movements.length > 0 ? movements.map((move, idx) => (
+                                    <tr key={idx}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {new Date(move.created_at).toLocaleString('pt-BR')}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                {move.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{move.user_name || '-'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{move.user_department || '-'}</td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan={4} className="px-6 py-4 text-center text-gray-500">Nenhum movimento registrado.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             )}
         </div>
