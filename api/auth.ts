@@ -49,22 +49,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             const user = userRes.rows[0];
 
-            // 2. Check Permissions in user_access
-            // We need to know if they have access.
-            const accessRes = await query(`
-                SELECT ua.*, p.name as profile_name 
-                FROM user_access ua
-                JOIN profiles p ON ua.profile_id = p.id
-                WHERE ua.user_nif = $1
-            `, [nif]);
+            // 2. Check Permissions in users table (sigo_profiles array)
+            // Requirement matches stored profile_ids in the users table
             
-            // Should usually have at least one access rule? Or is being in 'users' enough?
-            // Requirement says: "permitir o acesso... usuários com o perfil 'Administração do sistema'"
+            // Note: users table stores sigo_profiles as text[]. In PG, this comes back as string[]
+            const userProfiles = user.sigo_profiles || [];
             
-            const adminAccess = accessRes.rows.find((a: any) => a.profile_id === 'admin_sys' || a.profile_name === 'Administração do sistema');
+            // Check for Admin access
+            // ID for admin is 'admin_sys'. We also allow name fallback 'Administração do sistema' just in case.
+            const hasAdminAccess = userProfiles.includes('admin_sys') || userProfiles.includes('Administração do sistema');
             
-            if (!adminAccess) {
-                 // For now, STRICTLY blocking non-admins as requested
+            if (!hasAdminAccess) {
                  return res.status(403).json({ error: 'Access denied: User does not have Administrator profile.' });
             }
 

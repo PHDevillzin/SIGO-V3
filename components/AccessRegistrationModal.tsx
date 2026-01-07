@@ -39,7 +39,12 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
             setFilterText('');
             if (initialUser) {
                 // Pre-fill for Edit Mode
-                setSelectedProfiles(initialUser.sigoProfiles || []);
+                // initialUser.sigoProfiles stores IDs. We need to map to Names for the Dropdown.
+                const profileNames = initialUser.sigoProfiles 
+                    ? initialUser.sigoProfiles.map(id => profiles.find(p => p.id === id)?.name || id) // Fallback to ID if name not found
+                    : [];
+                
+                setSelectedProfiles(profileNames);
                 setSelectedUnits(initialUser.linkedUnits || []);
             } else {
                 // Reset for Create Mode
@@ -48,14 +53,14 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
             }
             setError(null);
         }
-    }, [isOpen, initialUser]);
+    }, [isOpen, initialUser, profiles]); // profiles dependency added
 
     // Dynamic unit options
     const unitOptions = useMemo(() => {
         return Array.from(new Set(units.map(u => u.unidade))).sort();
     }, [units]);
 
-    // Dynamic profile options
+    // Dynamic profile options (Names)
     const profileOptions = useMemo(() => {
         return profiles.map(p => p.name).sort();
     }, [profiles]);
@@ -74,21 +79,28 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
 
     const handleConfirm = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Validation
         if (selectedProfiles.length === 0) {
             setError('Por favor, selecione ao menos um perfil de acesso.');
             return;
         }
 
-        // Unit validation (relaxed for Admin)
         const isAdmin = selectedProfiles.includes('Administração do sistema');
-        
         if (selectedUnits.length === 0 && !isAdmin) {
              setError('Por favor, selecione ao menos uma unidade (ou Perfil Administrador).');
              return;
         }
 
+        // Map Names back to IDs
+        // selectedProfiles contains Names. We need IDs.
+        const profileIds = selectedProfiles.map(name => {
+             const profile = profiles.find(p => p.name === name);
+             return profile ? profile.id : name; // Should always find, but fallback safely
+        });
+
         onConfirm({ 
-            profiles: selectedProfiles, 
+            profiles: profileIds, // Send IDs
             units: selectedUnits,
             selectedUser: selectedUser || undefined
         });

@@ -90,37 +90,80 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
         setUserToDelete(null);
     };
 
-    const handleConfirmRegistration = (data: { profiles: string[], units: string[], selectedUser?: User }) => {
+    const handleConfirmRegistration = async (data: { profiles: string[], units: string[], selectedUser?: User }) => {
         // If editing, we use the selectedUserForRegistration.
         // If creating, we MUST have a selectedUser returned from the modal.
         const targetUser = selectedUserForRegistration || data.selectedUser;
         
         if (!targetUser) return;
-        
+
         const isEditing = !!targetUser.registrationDate;
-        
-        const updatedUser: User = {
+
+        // Prepare updated user object
+        const updatedUserPayload = {
             ...targetUser,
-            sigoProfiles: data.profiles,
-            linkedUnits: data.units,
-            registrationDate: targetUser.registrationDate || new Date().toLocaleDateString('pt-BR')
+            sigo_profiles: data.profiles, // Sending IDs as requested
+            linked_units: data.units,
+            registrationDate: targetUser.registrationDate || new Date().toISOString() // Use ISO for DB consistency if possible, or date string
         };
-        
-        if (isEditing) {
-            setRegisteredUsers(prev => prev.map(u => u.nif === updatedUser.nif ? updatedUser : u));
-            showToast('Acesso atualizado com sucesso!', 'success');
-        } else {
-            setRegisteredUsers(prev => [updatedUser, ...prev]);
-            showToast('Usuário cadastrado com sucesso!', 'success');
+
+        try {
+            // Call API to persist
+            const method = 'PUT'; // Using PUT for upsert/update
+            const response = await fetch('/api/users', {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nif: updatedUserPayload.nif,
+                    // If creating, we need name/email. If editing, they are optional but good to send.
+                    name: updatedUserPayload.name, 
+                    email: updatedUserPayload.email,
+                    sigo_profiles: data.profiles,
+                    linked_units: data.units,
+                    // Pass ID if available to be safe, though NIF lookup is supported
+                    id: targetUser.id 
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to save user');
+            }
+            
+            const savedUser = await response.json();
+            
+            // Map the API Response (snake_case) back to Frontend Model (camelCase)
+            // Or just update local state with what we sent + response mix.
+            // Simplified: Update local state to reflect change immediately.
+            
+            const newUserState: User = {
+                ...targetUser,
+                sigoProfiles: data.profiles,
+                linkedUnits: data.units,
+                registrationDate: savedUser.registration_date || updatedUserPayload.registrationDate
+            };
+
+            if (isEditing) {
+                setRegisteredUsers(prev => prev.map(u => u.nif === newUserState.nif ? newUserState : u));
+                showToast('Acesso atualizado com sucesso!', 'success');
+            } else {
+                setRegisteredUsers(prev => [newUserState, ...prev]);
+                showToast('Usuário cadastrado com sucesso!', 'success');
+            }
+            
+            setIsModalOpen(false);
+            setSelectedUserForRegistration(null);
+
+        } catch (err: any) {
+            console.error(err);
+            showToast(`Erro ao salvar: ${err.message}`, 'error');
         }
-        setIsModalOpen(false);
-        setSelectedUserForRegistration(null);
     };
 
     return (
         <div className="space-y-8">
             {toast?.visible && (
-                <div className={`fixed top-6 left-6 flex items-center space-x-3 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-all duration-500 ease-in-out bg-green-600`}>
+                <div className={`fixed top-6 left-6 flex items-center space-x-3 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-all duration-500 ease-in-out ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
                     <CheckCircleIcon className="w-6 h-6" />
                     <p className="font-semibold">{toast.message}</p>
                 </div>
@@ -165,11 +208,15 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                                     <td className="px-6 py-4">{user.email}</td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-wrap gap-1">
-                                            {user.sigoProfiles?.map(profile => (
-                                                <span key={profile} className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded text-[10px] border border-sky-100 font-bold uppercase">
-                                                    {profile}
-                                                </span>
-                                            ))}
+                                            {user.sigoProfiles?.map(profileId => {
+                                                // Map ID to Name using profiles prop
+                                                const profile = profiles.find(p => p.id === profileId);
+                                                return (
+                                                    <span key={profileId} className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded text-[10px] border border-sky-100 font-bold uppercase">
+                                                        {profile ? profile.name : profileId}
+                                                    </span>
+                                                );
+                                            })}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 max-w-xs">
