@@ -175,70 +175,68 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                         </div>
                     )}
 
-                    {/* Form Section: Visible when User Selected */}
-                    {selectedUser && (
-                        <form id="access-form" onSubmit={handleConfirm} className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex items-center space-x-2 text-[#0B1A4E] border-b border-gray-200 pb-2 mt-8">
-                                <InformationCircleIcon className="w-5 h-5" />
-                                <h3 className="font-bold text-sm uppercase tracking-wide">
-                                    {isEditing ? 'Dados do Usuário' : '2. Configurar Acesso'}
-                                </h3>
+                    {/* Form Section: Always Visible */}
+                    <form id="access-form" onSubmit={handleConfirm} className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="flex items-center space-x-2 text-[#0B1A4E] border-b border-gray-200 pb-2 mt-8">
+                            <InformationCircleIcon className="w-5 h-5" />
+                            <h3 className="font-bold text-sm uppercase tracking-wide">
+                                {isEditing ? 'Dados do Usuário' : '2. Configurar Acesso'}
+                            </h3>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6 p-6 bg-gray-50 rounded-lg border border-gray-100">
+                            <div>
+                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Nome</label>
+                                <p className="text-sm font-bold text-gray-800">{selectedUser?.name || '-'}</p>
+                            </div>
+                            <div className="text-right sm:text-left"> 
+                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">NIF</label>
+                                <p className="text-sm font-bold text-gray-800">{selectedUser?.nif || '-'}</p>
+                            </div>
+                            <div className="col-span-2">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">E-mail</label>
+                                <p className="text-sm text-gray-700">{selectedUser?.email || '-'}</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <MultiSelectDropdown 
+                                    label="Perfis de Acesso:"
+                                    options={profileOptions}
+                                    selectedValues={selectedProfiles}
+                                    onChange={(vals) => {
+                                        setSelectedProfiles(vals);
+                                        setError(null);
+                                    }}
+                                    placeholder="Selecione os perfis..."
+                                />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-6 p-6 bg-gray-50 rounded-lg border border-gray-100">
-                                <div>
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Nome</label>
-                                    <p className="text-sm font-bold text-gray-800">{selectedUser.name}</p>
-                                </div>
-                                <div className="text-right sm:text-left"> 
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">NIF</label>
-                                    <p className="text-sm font-bold text-gray-800">{selectedUser.nif}</p>
-                                </div>
-                                <div className="col-span-2">
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">E-mail</label>
-                                    <p className="text-sm text-gray-700">{selectedUser.email}</p>
-                                </div>
+                            <div>
+                                <MultiSelectDropdown 
+                                    label="Unidades com Acesso:"
+                                    options={unitOptions}
+                                    selectedValues={selectedUnits}
+                                    onChange={(vals) => {
+                                        setSelectedUnits(vals);
+                                        setError(null);
+                                    }}
+                                    placeholder="Selecione as unidades..."
+                                />
+                                <p className="text-[10px] text-gray-400 mt-1 italic">
+                                    * Obrigatório, exceto para Administradores.
+                                </p>
                             </div>
+                        </div>
 
-                            <div className="space-y-4">
-                                <div>
-                                    <MultiSelectDropdown 
-                                        label="Perfis de Acesso:"
-                                        options={profileOptions}
-                                        selectedValues={selectedProfiles}
-                                        onChange={(vals) => {
-                                            setSelectedProfiles(vals);
-                                            setError(null);
-                                        }}
-                                        placeholder="Selecione os perfis..."
-                                    />
-                                </div>
-
-                                <div>
-                                    <MultiSelectDropdown 
-                                        label="Unidades com Acesso:"
-                                        options={unitOptions}
-                                        selectedValues={selectedUnits}
-                                        onChange={(vals) => {
-                                            setSelectedUnits(vals);
-                                            setError(null);
-                                        }}
-                                        placeholder="Selecione as unidades..."
-                                    />
-                                    <p className="text-[10px] text-gray-400 mt-1 italic">
-                                        * Obrigatório, exceto para Administradores.
-                                    </p>
-                                </div>
+                        {error && (
+                            <div className="p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-semibold rounded flex items-center gap-2">
+                                <InformationCircleIcon className="w-4 h-4" />
+                                {error}
                             </div>
-
-                            {error && (
-                                <div className="p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-semibold rounded flex items-center gap-2">
-                                    <InformationCircleIcon className="w-4 h-4" />
-                                    {error}
-                                </div>
-                            )}
-                        </form>
-                    )}
+                        )}
+                    </form>
                 </div>
 
                 {/* Footer */}
