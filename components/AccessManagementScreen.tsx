@@ -55,16 +55,11 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
         setTimeout(() => setToast(prev => prev ? { ...prev, visible: false } : null), 3000);
     };
 
-    // Filter to only show users who actually have access profiles in the Main Grid
-    const activeUsers = useMemo(() => {
-        return registeredUsers.filter(u => u.sigoProfiles && u.sigoProfiles.length > 0);
-    }, [registeredUsers]);
-
-    // Filter out active users from the source list passed to the modal
-    // This explicitly ensures that anyone NOT in the active list is available for selection
+    // Filter out already registered users from the source list passed to the modal
+    // Any user present in the registeredUsers list (DB) is considered "unavailable" for new registration
     const availableSourceUsers = useMemo(() => {
-        return sourceUsers.filter(u => !activeUsers.some(r => r.nif === u.nif));
-    }, [sourceUsers, activeUsers]);
+        return sourceUsers.filter(u => !registeredUsers.some(r => r.nif === u.nif));
+    }, [sourceUsers, registeredUsers]);
 
     const handleNewUserClick = () => {
         setSelectedUserForRegistration(null); // Create Mode
@@ -201,7 +196,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                             </tr>
                         </thead>
                         <tbody className="divide-y">
-                            {activeUsers.length > 0 ? activeUsers.map(user => (
+                            {registeredUsers.length > 0 ? registeredUsers.map(user => (
                                 <tr key={user.nif} className="bg-white hover:bg-gray-50 animate-in fade-in slide-in-from-top-1 duration-300">
                                     <td className="px-6 py-4 font-medium text-gray-900">{user.nif}</td>
                                     <td className="px-6 py-4 text-gray-700">{user.name}</td>
