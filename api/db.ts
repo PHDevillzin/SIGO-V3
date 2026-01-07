@@ -1,7 +1,7 @@
-import pkg from 'pg';
-const { Pool } = pkg;
+import pg from 'pg';
+const { Pool } = pg;
 
-let pool: pkg.Pool | null = null;
+let pool: pg.Pool | null = null;
 
 const getPool = () => {
   if (!pool) {
