@@ -12,13 +12,16 @@ import UnitsScreen from './components/UnitsScreen';
 import TipoLocalScreen from './components/TipoLocalScreen';
 import AccessManagementScreen from './components/AccessManagementScreen';
 import AccessProfileScreen from './components/AccessProfileScreen';
+import ApprovalRequestsScreen from './components/ApprovalRequestsScreen';
 import OpenSedeRequestScreen from './components/OpenSedeRequestScreen';
 import OpenStrategicRequestScreen from './components/OpenStrategicRequestScreen';
 import OpenUnitRequestScreen from './components/OpenUnitRequestScreen';
 import InvestmentPolicyScreen from './components/InvestmentPolicyScreen';
 import LoginScreen from './components/LoginScreen';
-import { ListIcon, CalculatorIcon } from './components/Icons';
+import { ListIcon } from './components/Icons';
 import type { SummaryData, Request, Unit, AccessProfile, User, Tipologia, TipoLocal } from './types';
+
+
 
 const App: React.FC = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -232,6 +235,14 @@ const App: React.FC = () => {
                 setRequests={setRequests}
             />
           </>
+        )}
+        {currentView === 'aprovacao' && (
+            <ApprovalRequestsScreen 
+                setCurrentView={setCurrentView}
+                requests={requests}
+                setRequests={setRequests}
+                selectedProfile={selectedProfile}
+            />
         )}
         {currentView === 'planejamento' && <PlanningScreen />}
         {currentView === 'plurianual' && <PlurianualScreen />}
