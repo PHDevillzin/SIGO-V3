@@ -32,19 +32,17 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
   };
 
   const profiles = [
-    "Administração do Sistema",
-    "Alta Administração Senai",
-    "Solicitação Unidade",
-    "Gestor GSO",
-    "Diretoria Corporativa",
-    "Gerência de Infraestrutura e Suprimento",
+    "Administração do sistema",
+    "Administrador GSO",
+    "Unidade Solicitante",
     "Gestor Local",
-    "Gerência de Infraestrutura e Suprimento - Aprovador",
-    "Gerência Sênior de Tecnologia da Informação",
-    "Gerência Sênior de Tecnologia da Informação - Aprovador",
-    "Gerência de Saúde e Segurança",
-    "Gerência de Educação",
-    "Gerência de Educação - Aprovador"
+    "Área Fim (Solicitante Estratégico)",
+    "Área Fim (Aprovador)",
+    "Alta Administração",
+    "Sede Solicitante",
+    "Diretoria Corporativa",
+    "Gestor (GSO)",
+    "Planejamento (GSO)"
   ];
   const dropdownRef = useRef<HTMLDivElement>(null);
 
