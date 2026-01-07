@@ -43,12 +43,37 @@ const App: React.FC = () => {
 
                 if (unitsRes.ok) {
                     const data = await unitsRes.json();
-                     // Filter out empty lines/invalid if any, though API should be clean
-                    setUnits(data);
+                    const mappedUnits = data.map((u: any) => ({
+                        ...u,
+                        codigoUnidade: u.codigo_unidade,
+                        responsavelRE: u.responsavel_re,
+                        responsavelRA: u.responsavel_ra,
+                        responsavelRAR: u.responsavel_rar,
+                        tipoDeUnidade: u.tipo_de_unidade,
+                        unidadeResumida: u.unidade_resumida,
+                        gerenteRegional: u.gerente_regional,
+                        emailGR: u.email_gr
+                    }));
+                    setUnits(mappedUnits);
                 }
                 if (requestsRes.ok) {
                     const data = await requestsRes.json();
-                    setRequests(data);
+                     const mappedRequests = data.map((r: any) => ({
+                        ...r,
+                        currentLocation: r.current_location,
+                        expectedStartDate: r.expected_start_date,
+                        hasInfo: r.has_info,
+                        expectedValue: r.expected_value,
+                        executingUnit: r.executing_unit,
+                        categoriaInvestimento: r.categoria_investimento,
+                        situacaoProjeto: r.situacao_projeto,
+                        situacaoObra: r.situacao_obra,
+                        inicioObra: r.inicio_obra,
+                        saldoObraPrazo: r.saldo_obra_prazo,
+                        saldoObraValor: r.saldo_obra_valor,
+                        gestorLocal: r.gestor_local
+                    }));
+                    setRequests(mappedRequests);
                 }
                 if (profilesRes.ok) {
                     const data = await profilesRes.json();
@@ -56,16 +81,35 @@ const App: React.FC = () => {
                 }
                 if (usersRes.ok) {
                     const data = await usersRes.json();
-                    setUsers(data);
+                    const mappedUsers = data.map((u: any) => ({
+                        ...u,
+                        createdAt: u.created_at,
+                        updatedAt: u.updated_at,
+                        createdBy: u.created_by,
+                        sigoProfiles: u.sigo_profiles,
+                        linkedUnits: u.linked_units
+                    }));
+                    setUsers(mappedUsers);
                 }
                 if (tipologiasRes.ok) {
                     const data = await tipologiasRes.json();
-                    setTipologias(data);
+                    const mappedTipologias = data.map((t: any) => ({
+                        ...t,
+                        dataInclusao: t.data_inclusao,
+                        criadoPor: t.criado_por
+                    }));
+                    setTipologias(mappedTipologias);
                 }
                 if (tipoLocaisRes.ok) {
                     const data = await tipoLocaisRes.json();
-                    setTipoLocais(data);
+                    const mappedTipoLocais = data.map((t: any) => ({
+                        ...t,
+                        dataInclusao: t.data_inclusao,
+                        criadoPor: t.criado_por
+                    }));
+                    setTipoLocais(mappedTipoLocais);
                 }
+
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
