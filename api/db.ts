@@ -1,11 +1,13 @@
-import pkg from 'pg';
-const { Pool } = pkg;
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const { Pool } = require('pg');
 
 // Log to confirm file is loading (helps debug Vercel logs)
-console.log('[DB] Initializing db.ts...');
+console.log('[DB] Initializing db.ts with createRequire...');
 
 // Safe global for the pool
-let pool: import('pg').Pool | null = null;
+let pool: any = null;
 
 const getPool = () => {
   if (!pool) {
