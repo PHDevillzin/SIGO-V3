@@ -163,6 +163,33 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
                                 <ReadOnlyField label="Local da Obra" value={request.localObra || '-'} />
                             </div>
                         </div>
+
+                        {/* Risk Assessment Section */}
+                        {(request.problemasNaoAtendida || request.prazoAcao || request.probabilidadeEvolucao) && (
+                            <div className="mt-4 border-t pt-4">
+                                <h4 className="font-bold text-gray-800 mb-2">Avaliação de Risco</h4>
+                                <div className="grid grid-cols-1 gap-y-2">
+                                    <ReadOnlyField label="Problemas se não atendida" value={request.problemasNaoAtendida || '-'} fullWidth />
+                                    <div className="grid grid-cols-2 gap-x-4">
+                                         <ReadOnlyField label="Prazo de Ação" value={request.prazoAcao || '-'} />
+                                         <ReadOnlyField label="Probabilidade de Evolução" value={request.probabilidadeEvolucao || '-'} />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Checkbox Arrays Section */}
+                        {(request.aumento?.length > 0 || request.necessidades?.length > 0 || request.servicosNecessarios?.length > 0 || request.servicosEspecificos?.length > 0) && (
+                             <div className="mt-4 border-t pt-4">
+                                <h4 className="font-bold text-gray-800 mb-2">Detalhamento Técnico</h4>
+                                <div className="space-y-4">
+                                    {request.aumento?.length > 0 && <TextAreaField label="Aumento Previsto" value={request.aumento.join(', ')} />}
+                                    {request.necessidades?.length > 0 && <TextAreaField label="Necessidades Pós-Execução" value={request.necessidades.join(', ')} />}
+                                    {request.servicosNecessarios?.length > 0 && <TextAreaField label="Serviços Necessários" value={request.servicosNecessarios.join(', ')} />}
+                                    {request.servicosEspecificos?.length > 0 && <TextAreaField label="Serviços Específicos" value={request.servicosEspecificos.join(', ')} />}
+                                </div>
+                             </div>
+                        )}
                     </div>
 
                     {/* Right Column: Attachments */}
