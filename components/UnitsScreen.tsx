@@ -320,13 +320,7 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                                             >
                                                 <PencilIcon className="w-4 h-4" />
                                             </button>
-                                            <button
-                                                onClick={() => handleDelete(unit.id)}
-                                                className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors shadow-sm focus:ring-2 focus:ring-red-200"
-                                                title="Excluir"
-                                            >
-                                                <TrashIcon className="w-4 h-4" />
-                                            </button>
+
                                         </div>
                                     </td>
                                 </tr>

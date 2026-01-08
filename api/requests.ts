@@ -203,8 +203,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const data = mapToDb(req.body);
             delete (data as any).id; // Make sure we don't update ID
 
-            const fields = Object.keys(data);
-            const values = Object.values(data);
+            // Filter out undefined values to allow partial updates
+            const fields: string[] = [];
+            const values: any[] = [];
+
+            Object.keys(data).forEach(key => {
+                const value = (data as any)[key];
+                if (value !== undefined) {
+                    fields.push(key);
+                    values.push(value);
+                }
+            });
+
+            if (fields.length === 0) {
+                return res.status(400).json({ error: 'No valid fields to update' });
+            }
+
             // set col = val
             const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(', ');
 
