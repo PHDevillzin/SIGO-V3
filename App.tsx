@@ -119,7 +119,7 @@ const App: React.FC = () => {
 
                     // FILTER REQUESTS: Show only requests from linked units (unless Admin or Sede/Gerencia)
                     // Request field: executingUnit (executing_unit)
-                    const isSuperView = isAdmin || currentUser?.profile === 'Sede' || currentUser?.profile === 'Gerência de Facilities';
+                    const isSuperView = isAdmin || currentUser?.sigoProfiles?.includes('sede_solicitante') || currentUser?.sigoProfiles?.includes('gerencia_de_facilities'); // Check slugs
 
                     if (!isSuperView && userLinkedUnits.length > 0) {
                         mappedRequests = mappedRequests.filter((r: Request) =>

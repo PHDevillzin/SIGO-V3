@@ -43,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         if (req.method === 'GET') {
             const { nif } = req.query;
-            
+
             // Query to fetch user data with aggregated permissions from user_access
             // We use COALESCE to fallback to empty arrays if no access found
             // We prefer data from user_access, but if completely missing, we might see legacy array columns (optional, ignoring for now as per instruction)
@@ -55,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 FROM users u
                 LEFT JOIN user_access ua ON u.nif = ua.user_nif
                 LEFT JOIN units un ON ua.unit_id = un.id
-                GROUP BY u.id, u.nif, u.name, u.email, u.unidade, u.profile, u.created_by, u.created_at, u.updated_at, u.last_edited_by, u.registration_date, u.password
+                GROUP BY u.id, u.nif, u.name, u.email, u.created_by, u.created_at, u.updated_at, u.last_edited_by, u.registration_date, u.password
                 ORDER BY u.name ASC
             `;
 
@@ -68,7 +68,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 LEFT JOIN user_access ua ON u.nif = ua.user_nif
                 LEFT JOIN units un ON ua.unit_id = un.id
                 WHERE u.nif = $1
-                GROUP BY u.id, u.nif, u.name, u.email, u.unidade, u.profile, u.created_by, u.created_at, u.updated_at, u.last_edited_by, u.registration_date, u.password
+                GROUP BY u.id, u.nif, u.name, u.email, u.created_by, u.created_at, u.updated_at, u.last_edited_by, u.registration_date, u.password
             `;
 
             if (nif) {
@@ -86,7 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (req.method === 'POST' || req.method === 'PUT') {
             const isPut = req.method === 'PUT';
             const { nif, name, email, unidade, profile, sigo_profiles, linked_units, id } = req.body as any;
-            
+
             if (!nif || !name) {
                 return res.status(400).json({ error: 'Missing required fields' });
             }
@@ -95,8 +95,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             // We focus on basic identity here. Access is handled separately.
             let userResult;
             if (isPut) {
-                 // Update existing
-                 userResult = await query(
+                // Update existing
+                userResult = await query(
                     `UPDATE users 
                      SET name = COALESCE($2, name), 
                          email = COALESCE($3, email), 
@@ -119,7 +119,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
 
             if (userResult.rows.length === 0) {
-                 return res.status(500).json({ error: 'Failed to save user identity' });
+                return res.status(500).json({ error: 'Failed to save user identity' });
             }
 
             // 2. Manage `user_access`
@@ -130,7 +130,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             // We expect sigo_profiles (array of IDs) and linked_units (array of names)
             // We need to resolve Unit Names to Unit IDs.
             if (sigo_profiles && sigo_profiles.length > 0) {
-                
+
                 // Fetch Units map if needed
                 let unitMap: Record<string, number> = {};
                 if (linked_units && linked_units.length > 0) {
@@ -152,10 +152,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 for (const pid of sigo_profiles) {
                     for (const uname of targetUnits) {
                         const uid = uname ? unitMap[uname] : null;
-                        
+
                         // Validation: If unit provided but not found, skip or error? 
-                         // We skip if unit name existed in request but not in DB.
-                        if (uname && !uid) continue; 
+                        // We skip if unit name existed in request but not in DB.
+                        if (uname && !uid) continue;
 
                         placeholders.push(`($${paramCounter++}, $${paramCounter++}, $${paramCounter++})`);
                         insertValues.push(nif, uid, pid);
@@ -171,22 +171,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 }
             }
 
-            return res.status(200).json({ 
-                ...userResult.rows[0], 
-                sigo_profiles: sigo_profiles || [], 
-                linked_units: linked_units || [] 
+            return res.status(200).json({
+                ...userResult.rows[0],
+                sigo_profiles: sigo_profiles || [],
+                linked_units: linked_units || []
             });
         }
 
         if (req.method === 'DELETE') {
             const { id, nif } = req.query;
             const targetNif = nif as string; // Ideally resolve ID to NIF if only ID provided, but NIF is primary key for logic
-            
+
             if (!targetNif) return res.status(400).json({ error: 'NIF required for deletion' });
 
             await query('DELETE FROM user_access WHERE user_nif = $1', [targetNif]); // Clean permissions first
             await query('DELETE FROM users WHERE nif = $1', [targetNif]);
-            
+
             return res.status(200).json({ message: 'User and permissions deleted' });
         }
 

@@ -9,7 +9,7 @@ interface AccessRegistrationModalProps {
     onClose: () => void;
     user: User | null; // If null, we are in "Create" mode (Select user first)
     sourceUsers?: User[]; // List of available users to select from
-    onConfirm: (data: { profiles: string[], units: string[], selectedUser?: User }) => void;
+    onConfirm: (data: { profiles: string[], units: string[], selectedUser?: User, isApprover: boolean, isRequester: boolean }) => void;
     units: Unit[];
     profiles: AccessProfile[];
 }
@@ -29,6 +29,11 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
 
     const [selectedProfiles, setSelectedProfiles] = useState<string[]>([]);
     const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
+
+    // Checkbox States - Default Unchecked
+    const [isApprover, setIsApprover] = useState(false);
+    const [isRequester, setIsRequester] = useState(false);
+
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -43,10 +48,15 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
 
                 setSelectedProfiles(profileNames);
                 setSelectedUnits(initialUser.linkedUnits || []);
+                // Future: Pre-fill checkboxes if data exists
+                setIsApprover(false);
+                setIsRequester(false);
             } else {
                 // Create Mode: Reset
                 setSelectedProfiles([]);
                 setSelectedUnits([]);
+                setIsApprover(false);
+                setIsRequester(false);
             }
             setError(null);
         }
@@ -61,6 +71,8 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
             // Implies fresh start for each user selection.
             setSelectedProfiles([]);
             setSelectedUnits([]);
+            setIsApprover(false);
+            setIsRequester(false);
             setError(null);
         }
     }, [selectedUser, initialUser]);
@@ -119,7 +131,9 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
         onConfirm({
             profiles: profileIds,
             units: selectedUnits,
-            selectedUser: selectedUser || undefined
+            selectedUser: selectedUser || undefined,
+            isApprover,
+            isRequester
         });
     };
 
@@ -267,6 +281,28 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                                 <p className="text-[10px] text-gray-400 mt-1 italic">
                                     * Obrigatório, exceto para Administradores.
                                 </p>
+                            </div>
+
+                            {/* Checkboxes */}
+                            <div className="flex gap-6 pt-2">
+                                <label className="flex items-center space-x-2 cursor-pointer group">
+                                    <input
+                                        type="checkbox"
+                                        checked={isApprover}
+                                        onChange={e => setIsApprover(e.target.checked)}
+                                        className="w-4 h-4 text-[#0EA5E9] rounded border-gray-300 focus:ring-[#0EA5E9] cursor-pointer"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700 group-hover:text-[#0B1A4E] transition-colors">Aprovador</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer group">
+                                    <input
+                                        type="checkbox"
+                                        checked={isRequester}
+                                        onChange={e => setIsRequester(e.target.checked)}
+                                        className="w-4 h-4 text-[#0EA5E9] rounded border-gray-300 focus:ring-[#0EA5E9] cursor-pointer"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700 group-hover:text-[#0B1A4E] transition-colors">Solicitante</span>
+                                </label>
                             </div>
                         </div>
 

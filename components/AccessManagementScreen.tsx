@@ -106,7 +106,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
         setUserToDelete(null);
     };
 
-    const handleConfirmRegistration = async (data: { profiles: string[], units: string[], selectedUser?: User }) => {
+    const handleConfirmRegistration = async (data: { profiles: string[], units: string[], selectedUser?: User, isApprover: boolean, isRequester: boolean }) => {
 
         // If editing, we use the selectedUserForRegistration.
         // If creating, we MUST have a selectedUser returned from the modal.

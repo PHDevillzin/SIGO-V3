@@ -41,9 +41,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             // 1. Check User Credentials AND NIF/Password
             const userRes = await query('SELECT * FROM users WHERE nif = $1 AND password = $2', [nif, password]);
-            
+
             if (userRes.rows.length === 0) {
-                 return res.status(401).json({ error: 'NIF ou senha incorretos.' });
+                return res.status(401).json({ error: 'NIF ou senha incorretos.' });
             }
 
             const user = userRes.rows[0];
@@ -62,25 +62,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 LEFT JOIN units u ON ua.unit_id = u.id
                 WHERE ua.user_nif = $1
             `;
-            
+
             const permRes = await query(permissionQuery, [user.nif]);
             const accessRows = permRes.rows;
 
             // Step 2 Requirement: Verify if user has a profile registered
             if (accessRows.length === 0) {
-                // FALLBACK for Legacy Admin during migration phase (if not yet in user_access)
-                if (user.sigo_profiles?.includes('admin_sys') || user.profile === 'Administração do sistema') {
-                     return res.status(200).json({
-                        user: { 
-                            ...user, 
-                            sigoProfiles: ['admin_sys'], 
-                            linkedUnits: [],
-                            permissions: ['all'] // Admin gets all
-                        },
-                        profile: { id: 'admin_sys', name: 'Administração do sistema' },
-                        redirect: '/dashboard'
-                    });
-                }
                 return res.status(403).json({ error: 'Acesso negado: Usuário sem perfil associado.' });
             }
 
@@ -88,17 +75,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const validAccess = accessRows.filter(row => {
                 const isAdmin = row.profile_id === 'admin_sys' || row.profile_name === 'Administração do sistema';
                 const hasUnit = !!row.unit_id;
-                return hasUnit || isAdmin; 
+                return hasUnit || isAdmin;
             });
 
             if (validAccess.length === 0) {
-                 return res.status(403).json({ error: 'Acesso negado: Usuário possui perfil mas nenhuma unidade vinculada (e não é Administrador).' });
+                return res.status(403).json({ error: 'Acesso negado: Usuário possui perfil mas nenhuma unidade vinculada (e não é Administrador).' });
             }
 
             // 4. Success - Return Data
             // Aggregate Profiles and Units
             const uniqueProfileIds = [...new Set(validAccess.map(r => r.profile_id))];
-            const uniqueUnitNames = [...new Set(validAccess.map(r => r.unit_name).filter(Boolean))]; 
+            const uniqueUnitNames = [...new Set(validAccess.map(r => r.unit_name).filter(Boolean))];
 
             // Aggregate Permissions (Screens)
             // Flatten all permission arrays from all valid profiles
@@ -126,9 +113,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     permissions: aggregatedPermissions // Used for Menu Filtering
                 },
                 // Legacy compat: send first profile as "main" if needed
-                profile: { 
-                    id: uniqueProfileIds[0], 
-                    name: validAccess.find(r => r.profile_id === uniqueProfileIds[0])?.profile_name 
+                profile: {
+                    id: uniqueProfileIds[0],
+                    name: validAccess.find(r => r.profile_id === uniqueProfileIds[0])?.profile_name
                 }
             });
         }

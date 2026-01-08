@@ -1,31 +1,22 @@
+const { Client } = require('pg');
 require('dotenv').config();
-const { Pool } = require('pg');
 
-const pool = new Pool({
+const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
-async function checkSchema() {
-    const client = await pool.connect();
+async function run() {
+    await client.connect();
     try {
-        console.log('Checking requests table columns...');
-        const res = await client.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'requests';
-    `);
-
-        const columns = res.rows.map(r => r.column_name);
-        console.log('Columns:', columns);
-        console.log('Has observacao?', columns.includes('observacao'));
-
+        const resUsers = await client.query("SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users'");
+        console.log("Users Table Schema:");
+        console.table(resUsers.rows);
     } catch (err) {
-        console.error('Error executing query', err.stack);
+        console.error(err);
     } finally {
-        client.release();
-        await pool.end();
+        await client.end();
     }
 }
 
-checkSchema();
+run();

@@ -69,8 +69,8 @@ export interface User {
   nif: string;
   name: string;
   email: string;
-  unidade: string;
-  profile: string;
+  // unidade: string; // Deprecated
+  // profile: string; // Deprecated
   createdBy: string;
   createdAt: string;
   lastEditedBy?: string;
