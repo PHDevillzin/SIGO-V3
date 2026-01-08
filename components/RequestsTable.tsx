@@ -9,7 +9,9 @@ import ConfirmationModal from './ConfirmationModal';
 import AlertModal from './AlertModal';
 import PlanningDetailsModal from './PlanningDetailsModal';
 import RequestDetailsModal from './RequestDetailsModal';
+
 import EditRequestModal from './EditRequestModal';
+import MaintenanceEditModal from './MaintenanceEditModal';
 
 export const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Cubatão (Par...', description: 'reforma do balneá...', status: 'Análise da Solicit...', currentLocation: 'Gestão Local', gestorLocal: 'MARIO SERGIO ALVES QUAR...', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P', situacaoProjeto: 'Em Andamento', situacaoObra: 'Não Iniciada', inicioObra: '05/01/2030', saldoObraPrazo: 12, saldoObraValor: 'R$ 3.500.000,00' },
@@ -76,6 +78,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const [alertModalMessage, setAlertModalMessage] = useState('');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedRequestForEdit, setSelectedRequestForEdit] = useState<Request | null>(null);
+    const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
+    const [selectedRequestForMaintenance, setSelectedRequestForMaintenance] = useState<Request | null>(null);
+
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [requestToDelete, setRequestToDelete] = useState<Request | null>(null);
 
@@ -175,9 +180,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         if (searchTerm) {
             const lowerSearch = searchTerm.toLowerCase();
             sourceRequests = sourceRequests.filter(request =>
-                request.unit.toLowerCase().includes(lowerSearch) ||
-                request.description.toLowerCase().includes(lowerSearch) ||
-                request.status.toLowerCase().includes(lowerSearch)
+                (request.unit?.toLowerCase() || '').includes(lowerSearch) ||
+                (request.description?.toLowerCase() || '').includes(lowerSearch) ||
+                (request.status?.toLowerCase() || '').includes(lowerSearch)
             );
         }
 
@@ -448,6 +453,19 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     };
 
     const handleOpenReclassificationModal = () => {
+        if (isManutencaoView) {
+            if (selectedIds.length === 1) {
+                const request = requests.find(r => r.id === selectedIds[0]);
+                if (request) {
+                    setSelectedRequestForMaintenance(request);
+                    setIsMaintenanceModalOpen(true);
+                }
+            } else {
+                showToast("Selecione apenas 1 item para editar.", "error");
+            }
+            return;
+        }
+
         if (selectedIds.length === 1) {
             const requestToReclassify = requests.find(r => r.id === selectedIds[0]);
             setSelectedRequestForReclassification(requestToReclassify || null);
@@ -865,6 +883,14 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 request={selectedRequestForReclassification}
                 isMaintenanceMode={isManutencaoView}
             />
+
+            <MaintenanceEditModal
+                isOpen={isMaintenanceModalOpen}
+                onClose={() => setIsMaintenanceModalOpen(false)}
+                request={selectedRequestForMaintenance}
+                onSave={handleSaveEditedRequest}
+            />
+
             <ConfirmationModal
                 isOpen={isConfirmSendModalOpen}
                 onClose={() => setIsConfirmSendModalOpen(false)}

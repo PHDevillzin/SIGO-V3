@@ -61,6 +61,7 @@ export interface Request {
   problemasNaoAtendida?: string;
   prazoAcao?: string;
   probabilidadeEvolucao?: string;
+  observacao?: string;
 }
 
 export interface User {
@@ -108,11 +109,11 @@ export interface Unit {
 }
 
 export interface SummaryData {
-    title: string;
-    count: number;
-    value: string;
-    color: string;
-    icon: ElementType;
+  title: string;
+  count: number;
+  value: string;
+  color: string;
+  icon: ElementType;
 }
 
 export interface PlanningData {
