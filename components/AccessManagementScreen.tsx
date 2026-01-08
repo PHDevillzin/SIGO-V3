@@ -126,7 +126,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
 
         try {
             // Call API to persist
-            const method = 'PUT'; // Using PUT for upsert/update
+            const method = isEditing ? 'PUT' : 'POST';
             const response = await fetch('/api/users', {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },

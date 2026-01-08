@@ -68,8 +68,8 @@ const App: React.FC = () => {
                 ]);
 
                 // Determine if user is Admin
-                // If 'all' permission or 'admin_sys' profile exists
-                const isAdmin = userPermissions.includes('all');
+                // If '*' permission or 'admin_sys' profile exists
+                const isAdmin = userPermissions.includes('all') || userPermissions.includes('*');
                 const userLinkedUnits = currentUser?.linkedUnits || [];
 
                 if (unitsRes.ok) {
@@ -166,6 +166,12 @@ const App: React.FC = () => {
                     setTipoLocais(mappedTipoLocais);
                 }
 
+                if (profilesRes.ok) {
+                    const data = await profilesRes.json();
+                    // Map to ensure compatibility if needed, currently API returns exact matches
+                    setProfiles(data);
+                }
+
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -218,6 +224,7 @@ const App: React.FC = () => {
                 setCurrentView={setCurrentView}
                 userPermissions={userPermissions} // Pass permissions
                 userName={currentUser?.name || 'Usuário'} // Pass User Name
+                availableProfiles={profiles.map(p => p.name)}
                 onLogout={() => {
                     setIsAuthenticated(false);
                     setCurrentUser(null);

@@ -50,11 +50,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             // 2. Check Permissions in `user_access` table
             // Fetch all profile_ids, unit_ids, AND permissions associated with this user
+            // 2. Check Permissions in `user_access` table
+            // Fetch all profile_ids, unit_ids, AND permissions associated with this user
             const permissionQuery = `
                 SELECT 
                     ua.profile_id, 
                     p.name as profile_name,
                     p.permissions,
+                    p.category,
                     ua.unit_id,
                     u.unidade as unit_name
                 FROM user_access ua
@@ -71,11 +74,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 return res.status(403).json({ error: 'Acesso negado: Usuário sem perfil associado.' });
             }
 
-            // Step 3 Requirement: Check unit association
+            // Step 3 Requirement: Check unit association OR global access profiles
             const validAccess = accessRows.filter(row => {
-                const isAdmin = row.profile_id === 'admin_sys' || row.profile_name === 'Administração do sistema';
+                // Admin check (both legacy name and new slug)
+                const isAdmin = row.profile_id === 'administrador_do_sistema' || row.profile_name === 'Administrador do sistema';
+
+                // Categories that don't STRICTLY need a unit
+                const isGlobal = row.category === 'GERAL' || row.category === 'CORPORATIVO';
+
+                // Has explicit unit link
                 const hasUnit = !!row.unit_id;
-                return hasUnit || isAdmin;
+
+                return hasUnit || isAdmin || isGlobal;
             });
 
             if (validAccess.length === 0) {

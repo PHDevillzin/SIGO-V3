@@ -116,11 +116,30 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
             return;
         }
 
-        // Admin Validation Logic
-        const isAdmin = selectedProfiles.includes('Administração do sistema');
-        if (selectedUnits.length === 0 && !isAdmin) {
-            setError('Por favor, selecione ao menos uma unidade (ou Perfil Administrador).');
-            return;
+        // Validation Logic
+        const selectedProfileObjects = selectedProfiles.map(name => profiles.find(p => p.name === name)).filter(Boolean);
+
+        const isAdmin = selectedProfileObjects.some(p => p?.name === 'Administração do sistema' || p?.name === 'Administrador do sistema');
+        const mustHaveUnit = selectedProfileObjects.some(p => p?.name === 'Gestor Local' || p?.name === 'Unidade Solicitante');
+
+        // Check for other exempt profiles (GERAL/CORPORATIVO) that are NOT the mandatory ones
+        // If they have a mandatory profile, the exemption is overridden for the purpose of ensuring a unit is selected for THAT profile.
+        // But actually, typically "at least one unit" satisfies the requirement for the whole user.
+        // So if they have specific profiles, they must have a unit.
+        const hasExemptProfile = selectedProfileObjects.some(p =>
+            (p?.category === 'GERAL' || p?.category === 'CORPORATIVO')
+        );
+
+        if (selectedUnits.length === 0) {
+            if (isAdmin) {
+                // Admin is always valid without unit
+            } else if (mustHaveUnit) {
+                setError('Os perfis Gestor Local e Unidade Solicitante exigem a seleção de pelo menos uma unidade.');
+                return;
+            } else if (!hasExemptProfile) {
+                setError('Por favor, selecione ao menos uma unidade (ou Perfil Geral/Corporativo válido).');
+                return;
+            }
         }
 
         const profileIds = selectedProfiles.map(name => {
@@ -279,7 +298,7 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                                     placeholder="Selecione as unidades..."
                                 />
                                 <p className="text-[10px] text-gray-400 mt-1 italic">
-                                    * Obrigatório, exceto para Administradores.
+                                    * Obrigatório para Gestor Local, Unidade Solicitante e perfis regionais.
                                 </p>
                             </div>
 
@@ -332,8 +351,8 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                         </div>
                     </form>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

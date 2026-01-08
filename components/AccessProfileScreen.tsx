@@ -7,46 +7,46 @@ const MENUS = [
     {
         name: 'Home',
         items: [
-            { id: 'home', label: 'Home' }
+            { id: 'home', label: 'Home', backendKeys: ['Home'] }
         ]
     },
     {
         name: 'Menu Solicitações',
         items: [
-            { id: 'solicitacoes', label: 'Solicitações gerais' },
-            { id: 'solicitacoes_reclassificacao', label: 'Solicitações para reclassificação' },
-            { id: 'aprovacao', label: 'Solicitações para aprovação' },
-            { id: 'manutencao', label: 'Manutenção' }
+            { id: 'solicitacoes', label: 'Solicitações gerais', backendKeys: ['Menu Solicitações:Gerais', 'Menu Solicitações:Gerais (PDF)', 'Menu Solicitações:Gerais (PDF + Ciência)', 'Menu Solicitações:Gerais (PDF)'] },
+            { id: 'solicitacoes_reclassificacao', label: 'Solicitações para reclassificação', backendKeys: ['Menu Solicitações:Reclassificação'] },
+            { id: 'aprovacao', label: 'Solicitações para aprovação', backendKeys: ['Menu Solicitações:Aprovação'] },
+            { id: 'manutencao', label: 'Manutenção', backendKeys: ['Menu Solicitações:Manutenção'] }
         ]
     },
     {
         name: 'Abrir Solicitações',
         items: [
-            { id: 'nova_estrategica', label: 'Abrir Estratégica' },
-            { id: 'nova_sede', label: 'Abrir Sede' },
-            { id: 'nova_unidade', label: 'Abrir Unidade' }
+            { id: 'nova_estrategica', label: 'Abrir Estratégica', backendKeys: ['Abrir Solicitações:Estratégica'] },
+            { id: 'nova_sede', label: 'Abrir Sede', backendKeys: ['Abrir Solicitações:Sede'] },
+            { id: 'nova_unidade', label: 'Abrir Unidade', backendKeys: ['Abrir Solicitações:Unidade'] }
         ]
     },
     {
         name: 'Gerenciamento',
         items: [
-            { id: 'planejamento', label: 'Planejamento' },
-            { id: 'plurianual', label: 'Plurianual' }
+            { id: 'planejamento', label: 'Planejamento', backendKeys: ['Gerenciamento:Planejamento'] },
+            { id: 'plurianual', label: 'Plurianual', backendKeys: ['Gerenciamento:Plurianual'] }
         ]
     },
     {
         name: 'Configurações',
         items: [
-            { id: 'gestao_acesso', label: 'Gestão acesso' },
-            { id: 'perfil_acesso', label: 'Perfil acesso' },
-            { id: 'gerenciador_arquivos', label: 'Arquivos' },
-            { id: 'painel_criticidade', label: 'Criticidade' },
-            { id: 'avisos_globais', label: 'Gerenciamento de avisos' },
-            { id: 'notificacoes_requisitos', label: 'Notificações e requisitos' },
-            { id: 'cadastro_periodos', label: 'Período Solicitação' },
-            { id: 'cadastro_tipo_local', label: 'Tipo local' },
-            { id: 'tipologias', label: 'Tipologia' },
-            { id: 'cadastro_unidades', label: 'Unidades' }
+            { id: 'gestao_acesso', label: 'Gestão acesso', backendKeys: ['Configurações:Gestão de acesso'] },
+            { id: 'perfil_acesso', label: 'Perfil acesso', backendKeys: ['Configurações:Perfil Acesso'] },
+            { id: 'gerenciador_arquivos', label: 'Arquivos', backendKeys: ['Configurações:Arquivos'] },
+            { id: 'painel_criticidade', label: 'Criticidade', backendKeys: ['Configurações:Criticidade'] },
+            { id: 'avisos_globais', label: 'Gerenciamento de avisos', backendKeys: ['Configurações:Gerenciamento de Avisos'] },
+            { id: 'notificacoes_requisitos', label: 'Notificações e requisitos', backendKeys: ['Configurações:Notificações'] },
+            { id: 'cadastro_periodos', label: 'Período Solicitação', backendKeys: ['Configurações:Periodo de solicitação'] },
+            { id: 'cadastro_tipo_local', label: 'Tipo local', backendKeys: ['Configurações:Tipolocal'] },
+            { id: 'tipologias', label: 'Tipologia', backendKeys: ['Configurações:Tipologia'] },
+            { id: 'cadastro_unidades', label: 'Unidades', backendKeys: ['Configurações:Unidades'] }
         ]
     }
 ];
@@ -86,8 +86,8 @@ const NewProfileModal: React.FC<NewProfileModalProps> = ({ isOpen, onClose, onSa
                 <div className="p-8 overflow-y-auto flex-1 space-y-6">
                     <div>
                         <label className="block text-sm font-bold text-gray-800 mb-2">Nome do Perfil</label>
-                        <input 
-                            type="text" 
+                        <input
+                            type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="Ex: Gestor Regional"
@@ -103,14 +103,14 @@ const NewProfileModal: React.FC<NewProfileModalProps> = ({ isOpen, onClose, onSa
                                     {menu.items.map(item => {
                                         const isChecked = permissions.includes(item.id);
                                         const isRestricted = item.id === 'perfil_acesso';
-                                        
+
                                         return (
-                                            <label 
-                                                key={item.id} 
+                                            <label
+                                                key={item.id}
                                                 className={`flex items-center group p-1 -ml-1 rounded-md transition-all ${isRestricted ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                             >
-                                                <input 
-                                                    type="checkbox" 
+                                                <input
+                                                    type="checkbox"
                                                     checked={isChecked}
                                                     onChange={() => handleToggle(item.id)}
                                                     disabled={isRestricted}
@@ -130,7 +130,7 @@ const NewProfileModal: React.FC<NewProfileModalProps> = ({ isOpen, onClose, onSa
                 </div>
                 <div className="p-6 border-t bg-gray-50 flex justify-end space-x-3 rounded-b-lg">
                     <button onClick={onClose} className="px-6 py-2 text-gray-600 hover:text-gray-800 font-bold text-sm transition-colors uppercase">Cancelar</button>
-                    <button 
+                    <button
                         onClick={handleConfirm}
                         disabled={!name.trim()}
                         className="bg-[#0EA5E9] text-white px-10 py-2 rounded-md font-bold hover:bg-sky-600 transition-all flex items-center space-x-2 shadow-lg disabled:bg-gray-400 uppercase"
@@ -153,12 +153,12 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedProfileId, setSelectedProfileId] = useState<string>(profiles[0]?.id || '');
     const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-    
+
     // States for Edit Mode
     const [isEditingExisting, setIsEditingExisting] = useState(false);
     const [editName, setEditName] = useState('');
     const [editPermissions, setEditPermissions] = useState<string[]>([]);
-    
+
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; isVisible: boolean } | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error') => {
@@ -166,9 +166,9 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
         setTimeout(() => setToast(prev => prev ? { ...prev, isVisible: false } : null), 3000);
     };
 
-    const selectedProfile = useMemo(() => 
+    const selectedProfile = useMemo(() =>
         profiles.find(p => p.id === selectedProfileId) || profiles[0]
-    , [profiles, selectedProfileId]);
+        , [profiles, selectedProfileId]);
 
     // Update edit states when changing selected profile IF not in edit mode
     useEffect(() => {
@@ -178,24 +178,41 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
         }
     }, [selectedProfileId, selectedProfile, isEditingExisting]);
 
-    const filteredProfiles = useMemo(() => 
+    const filteredProfiles = useMemo(() =>
         profiles.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    , [profiles, searchTerm]);
+        , [profiles, searchTerm]);
 
-    const handleTogglePermission = (permissionId: string) => {
+    const handleTogglePermission = (keys: string[]) => {
         if (!isEditingExisting) return;
-        
+
         // Logic for restricted screens: only Admin can have 'perfil_acesso'
-        const isAdmin = editName === 'Administração do Sistema';
-        if (permissionId === 'perfil_acesso' && !isAdmin) return;
+        const isAdmin = editName === 'Administração do Sistema' || editName === 'Administrador do sistema';
+        const isRestricted = keys.includes('Configurações:Perfil Acesso');
+
+        if (isRestricted && !isAdmin) return;
 
         setEditPermissions(prev => {
-            if (prev.includes('all')) {
-                return MENUS.flatMap(m => m.items.map(i => i.id)).filter(id => id !== permissionId);
+            if (prev.includes('*')) {
+                // If we are unchecking something while having '*', we switch to "all except this"
+                // But '*' is a wildcard. Ideally we should list all and remove the target.
+                // For simplicity, if '*' is present, we first expand it to all available keys minus the one being toggled.
+                const allKeys = MENUS.flatMap(m => m.items.flatMap(i => i.backendKeys));
+                return allKeys.filter(k => !keys.includes(k));
             }
-            return prev.includes(permissionId)
-                ? prev.filter(id => id !== permissionId)
-                : [...prev, permissionId];
+
+            const hasAllKeys = keys.every(k => prev.includes(k));
+
+            if (hasAllKeys) {
+                // Remove keys
+                return prev.filter(k => !keys.includes(k));
+            } else {
+                // Add keys (avoid duplicates)
+                const newKeys = [...prev];
+                keys.forEach(k => {
+                    if (!newKeys.includes(k)) newKeys.push(k);
+                });
+                return newKeys;
+            }
         });
     };
 
@@ -205,10 +222,10 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                 showToast('O nome do perfil não pode estar vazio.', 'error');
                 return;
             }
-            setProfiles(prev => prev.map(p => 
-                p.id === selectedProfileId 
-                ? { ...p, name: editName.trim(), permissions: editPermissions } 
-                : p
+            setProfiles(prev => prev.map(p =>
+                p.id === selectedProfileId
+                    ? { ...p, name: editName.trim(), permissions: editPermissions }
+                    : p
             ));
             setIsEditingExisting(false);
             showToast('Configurações de perfil salvas com sucesso!', 'success');
@@ -225,16 +242,32 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
         setEditPermissions(selectedProfile.permissions);
     };
 
-    const handleNewProfile = (name: string, permissions: string[]) => {
-        const newProfile: AccessProfile = {
-            id: Date.now().toString(),
-            name,
-            permissions
-        };
-        setProfiles(prev => [...prev, newProfile]);
-        setSelectedProfileId(newProfile.id);
-        setIsNewModalOpen(false);
-        showToast('Perfil cadastrado com sucesso!', 'success');
+    const handleNewProfile = async (name: string, permissions: string[]) => {
+        try {
+            const response = await fetch('/api/profiles', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, permissions, category: 'GERAL' })
+            });
+
+            if (response.ok) {
+                const resData = await response.json();
+                const newProfile: AccessProfile = {
+                    id: resData.id,
+                    name,
+                    permissions
+                };
+                setProfiles(prev => [...prev, newProfile]);
+                setSelectedProfileId(newProfile.id);
+                setIsNewModalOpen(false);
+                showToast('Perfil cadastrado com sucesso!', 'success');
+            } else {
+                showToast('Erro ao cadastrar perfil.', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Erro de conexão.', 'error');
+        }
     };
 
     const handleDeleteProfile = () => {
@@ -272,7 +305,7 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
 
     return (
         <div className="flex flex-col h-full space-y-6">
-             {toast?.isVisible && (
+            {toast?.isVisible && (
                 <div className={`fixed top-6 left-6 flex items-center space-x-3 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-all duration-500 ease-in-out ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
                     {toast.type === 'success' ? <CheckCircleIcon className="w-6 h-6" /> : <InformationCircleIcon className="w-6 h-6" />}
                     <p className="font-semibold">{toast.message}</p>
@@ -283,7 +316,7 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
             <div className="bg-white rounded-lg shadow p-6 flex justify-between items-center">
                 <h1 className="text-2xl font-semibold text-gray-800">Perfil acesso</h1>
                 <div className="flex items-center space-x-3">
-                    <button 
+                    <button
                         onClick={() => setIsNewModalOpen(true)}
                         className="bg-[#0B1A4E] text-white px-6 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors text-sm"
                     >
@@ -298,9 +331,9 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                     <div className="p-4 border-b border-gray-100">
                         <div className="relative">
                             <MagnifyingGlassIcon className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                            <input 
-                                type="text" 
-                                placeholder="Buscar" 
+                            <input
+                                type="text"
+                                placeholder="Buscar"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 disabled={isEditingExisting}
@@ -334,8 +367,8 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                             <>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-800 mb-2">Nome</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={isEditingExisting ? editName : selectedProfile.name}
                                         onChange={(e) => setEditName(e.target.value)}
                                         readOnly={!isEditingExisting}
@@ -352,20 +385,23 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                                                 <div className="space-y-1">
                                                     {menu.items.map(item => {
                                                         const currentPermissions = isEditingExisting ? editPermissions : selectedProfile.permissions;
-                                                        const isChecked = currentPermissions.includes(item.id) || currentPermissions.includes('all');
-                                                        const isPermissionRestricted = (item.id === 'perfil_acesso' && editName !== 'Administração do Sistema');
+
+                                                        // Check if ALL backend keys for this item are present, or if '*' (Admin) is present
+                                                        const isChecked = currentPermissions.includes('*') || item.backendKeys.some(k => currentPermissions.includes(k));
+
+                                                        const isPermissionRestricted = (item.id === 'perfil_acesso' && editName !== 'Administração do Sistema' && editName !== 'Administrador do sistema');
                                                         const isDisabled = !isEditingExisting || isPermissionRestricted;
-                                                        
+
                                                         return (
-                                                            <label 
-                                                                key={item.id} 
+                                                            <label
+                                                                key={item.id}
                                                                 className={`flex items-center group p-1 -ml-1 rounded-md transition-all ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                                                             >
                                                                 <div className="relative flex items-center">
-                                                                    <input 
-                                                                        type="checkbox" 
+                                                                    <input
+                                                                        type="checkbox"
                                                                         checked={isChecked}
-                                                                        onChange={() => handleTogglePermission(item.id)}
+                                                                        onChange={() => handleTogglePermission(item.backendKeys)}
                                                                         disabled={isDisabled}
                                                                         className={`h-4 w-4 rounded border-gray-300 transition-all ${isChecked ? 'text-red-600 focus:ring-red-500' : 'text-sky-600 focus:ring-sky-500'} ${isDisabled ? 'opacity-40' : ''}`}
                                                                     />
@@ -394,13 +430,13 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                     <div className="p-6 border-t border-gray-100 flex justify-end space-x-3 bg-gray-50/50">
                         {isEditingExisting && (
                             <>
-                                <button 
+                                <button
                                     onClick={handleCancelEdit}
                                     className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors uppercase"
                                 >
                                     Cancelar
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleDeleteProfile}
                                     disabled={selectedProfile?.name === 'Administração do Sistema'}
                                     className="px-6 py-2 border border-red-300 text-red-500 rounded-md text-sm font-medium hover:bg-red-50 flex items-center disabled:opacity-50 transition-colors uppercase"
@@ -410,7 +446,7 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                             </>
                         )}
                         {selectedProfile && (
-                            <button 
+                            <button
                                 onClick={handleEditToggle}
                                 className="px-10 py-2 bg-[#0EA5E9] text-white rounded-md text-sm font-bold hover:bg-sky-600 transition-all shadow-md active:transform active:scale-95 uppercase"
                             >
@@ -420,7 +456,7 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                     </div>
                 </div>
             </div>
-            <NewProfileModal 
+            <NewProfileModal
                 isOpen={isNewModalOpen}
                 onClose={() => setIsNewModalOpen(false)}
                 onSave={handleNewProfile}
