@@ -1,15 +1,15 @@
 
 import React, { useState, useMemo } from 'react';
-import { 
-    MagnifyingGlassIcon, 
-    FilterIcon, 
-    PencilIcon, 
-    ChevronLeftIcon, 
-    ChevronRightIcon, 
-    ListIcon, 
-    SparklesIcon,
-    CheckCircleIcon,
-    InformationCircleIcon
+import {
+  MagnifyingGlassIcon,
+  FilterIcon,
+  PencilIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ListIcon,
+  SparklesIcon,
+  CheckCircleIcon,
+  InformationCircleIcon
 } from './Icons';
 import TipoLocalModal from './TipoLocalModal';
 import ConfirmationModal from './ConfirmationModal';
@@ -17,8 +17,8 @@ import { MultiSelectDropdown } from './AdvancedFilters';
 import { TipoLocal } from '../types';
 
 interface TipoLocalScreenProps {
-    tipoLocais: TipoLocal[];
-    setTipoLocais: React.Dispatch<React.SetStateAction<TipoLocal[]>>;
+  tipoLocais: TipoLocal[];
+  setTipoLocais: React.Dispatch<React.SetStateAction<TipoLocal[]>>;
 }
 
 const ToggleSwitch: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked, onChange }) => (
@@ -56,48 +56,99 @@ const TipoLocalScreen: React.FC<TipoLocalScreenProps> = ({ tipoLocais, setTipoLo
     setIsConfirmOpen(true);
   };
 
-  const handleConfirmToggle = () => {
+  const handleConfirmToggle = async () => {
     if (pendingToggle) {
-      const isReactivating = !pendingToggle.status;
-      setItems(prev => prev.map(i => i.id === pendingToggle.id ? { ...i, status: !i.status } : i));
-      showToast(isReactivating ? 'Tipo Local reativado com sucesso.' : 'Tipo Local inativado com sucesso.', 'success');
+      try {
+        const response = await fetch('/api/tipo-locais', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: pendingToggle.id,
+            status: !pendingToggle.status
+          })
+        });
+
+        if (response.ok) {
+          const updated = await response.json();
+          const isReactivating = updated.status;
+          setItems(prev => prev.map(i => i.id === pendingToggle.id ? updated : i));
+          showToast(isReactivating ? 'Tipo Local reativado com sucesso.' : 'Tipo Local inativado com sucesso.', 'success');
+        } else {
+          showToast('Erro ao atualizar status no servidor.', 'error');
+        }
+      } catch (error) {
+        console.error("Failed to toggle status", error);
+        showToast('Erro de conexão ao atualizar status.', 'error');
+      }
     }
     setIsConfirmOpen(false);
     setPendingToggle(null);
   };
 
-  const handleSave = (descricao: string) => {
-    // Check uniqueness (RN5)
+  const handleSave = async (descricao: string) => {
+    // Check uniqueness locally first (optional, DB constraint better)
     const exists = items.some(i => i.descricao.toLowerCase() === descricao.toLowerCase() && (!editingItem || i.id !== editingItem.id));
     if (exists) {
       showToast('Operação não efetuada. Já existe um Tipo Local cadastrado com este nome.', 'error');
       return;
     }
 
-    if (editingItem) {
-      setItems(prev => prev.map(i => i.id === editingItem.id ? { ...i, descricao } : i));
-      showToast('Tipo Local atualizado com sucesso.', 'success');
-    } else {
-      const newItem: TipoLocal = {
-        id: Date.now(),
-        descricao,
-        dataInclusao: new Date().toLocaleString('pt-BR'),
-        criadoPor: 'PAULO RIBEIRO', // Mock user
-        status: true
-      };
-      setItems(prev => [newItem, ...prev]);
-      showToast('Tipo Local cadastrado com sucesso.', 'success');
+    try {
+      if (editingItem) {
+        // Edit
+        const response = await fetch('/api/tipo-locais', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingItem.id,
+            descricao
+          })
+        });
+
+        if (response.ok) {
+          const updated = await response.json();
+          setItems(prev => prev.map(i => i.id === editingItem.id ? updated : i));
+          showToast('Tipo Local atualizado com sucesso.', 'success');
+        } else {
+          showToast('Erro ao atualizar Tipo Local.', 'error');
+        }
+
+      } else {
+        // Create
+        const response = await fetch('/api/tipo-locais', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            descricao,
+            dataInclusao: new Date().toISOString(),
+            criadoPor: 'PAULO RIBEIRO', // Mock
+            status: true
+          })
+        });
+
+        if (response.ok) {
+          const newItem = await response.json();
+          setItems(prev => [newItem, ...prev]);
+          showToast('Tipo Local cadastrado com sucesso.', 'success');
+        } else {
+          showToast('Erro ao cadastrar Tipo Local.', 'error');
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Erro de conexão com o servidor.', 'error');
     }
+
     setIsModalOpen(false);
     setEditingItem(null);
   };
 
   const filteredItems = useMemo(() => {
     return items.filter(i => {
-      const matchesSearch = i.descricao.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            i.criadoPor.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = activeStatusFilters.length === 0 || 
-                           (i.status ? activeStatusFilters.includes('Ativo') : activeStatusFilters.includes('Inativo'));
+      const matchesSearch = i.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        i.criadoPor.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = activeStatusFilters.length === 0 ||
+        (i.status ? activeStatusFilters.includes('Ativo') : activeStatusFilters.includes('Inativo'));
       return matchesSearch && matchesStatus;
     });
   }, [items, searchTerm, activeStatusFilters]);
@@ -116,7 +167,7 @@ const TipoLocalScreen: React.FC<TipoLocalScreenProps> = ({ tipoLocais, setTipoLo
 
       <div className="bg-white rounded-lg shadow p-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Tipo Local</h1>
-        <button 
+        <button
           onClick={() => { setEditingItem(null); setIsModalOpen(true); }}
           className="bg-[#0B1A4E] text-white px-4 py-2 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
         >
@@ -130,15 +181,15 @@ const TipoLocalScreen: React.FC<TipoLocalScreenProps> = ({ tipoLocais, setTipoLo
             <span className="absolute inset-y-0 left-0 flex items-center pl-3">
               <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
             </span>
-            <input 
-              type="text" 
-              placeholder="Procurar..." 
+            <input
+              type="text"
+              placeholder="Procurar..."
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <button 
+          <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
             className={`flex items-center space-x-2 font-semibold py-2 px-4 rounded-md transition-colors ${showAdvancedFilters ? 'bg-sky-600 text-white' : 'bg-sky-500 text-white hover:bg-sky-600'}`}
           >
@@ -154,7 +205,7 @@ const TipoLocalScreen: React.FC<TipoLocalScreenProps> = ({ tipoLocais, setTipoLo
               <h3 className="text-lg font-semibold text-gray-800">Filtros avançados</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <MultiSelectDropdown 
+              <MultiSelectDropdown
                 label="Status:"
                 options={['Ativo', 'Inativo']}
                 selectedValues={selectedStatus}
@@ -163,14 +214,14 @@ const TipoLocalScreen: React.FC<TipoLocalScreenProps> = ({ tipoLocais, setTipoLo
               />
             </div>
             <div className="flex justify-end items-center mt-6 space-x-4">
-              <button 
+              <button
                 onClick={() => { setSelectedStatus([]); setActiveStatusFilters([]); }}
                 className="flex items-center space-x-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors"
               >
                 <SparklesIcon className="w-4 h-4" />
                 <span>Limpar Filtros</span>
               </button>
-              <button 
+              <button
                 onClick={() => { setActiveStatusFilters(selectedStatus); setCurrentPage(1); }}
                 className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-6 rounded-md hover:bg-sky-600 transition-colors"
               >
@@ -202,7 +253,7 @@ const TipoLocalScreen: React.FC<TipoLocalScreenProps> = ({ tipoLocais, setTipoLo
                     <ToggleSwitch checked={item.status} onChange={() => handleToggleRequest(item)} />
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button 
+                    <button
                       onClick={() => { setEditingItem(item); setIsModalOpen(true); }}
                       className="bg-[#0EA5E9] text-white p-2 rounded-md hover:bg-sky-600 transition-colors shadow-md"
                     >
@@ -222,7 +273,7 @@ const TipoLocalScreen: React.FC<TipoLocalScreenProps> = ({ tipoLocais, setTipoLo
 
         <div className="flex items-center justify-end p-4 space-x-4 border-t mt-4">
           <div className="flex items-center space-x-2">
-            <button 
+            <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(p => p - 1)}
               className="p-1 text-gray-400 disabled:opacity-30"
@@ -232,7 +283,7 @@ const TipoLocalScreen: React.FC<TipoLocalScreenProps> = ({ tipoLocais, setTipoLo
             <button className="w-8 h-8 flex items-center justify-center bg-sky-500 text-white font-bold rounded-md text-sm">
               {currentPage}
             </button>
-            <button 
+            <button
               disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => setCurrentPage(p => p + 1)}
               className="p-1 text-gray-400 disabled:opacity-30"
@@ -258,7 +309,7 @@ const TipoLocalScreen: React.FC<TipoLocalScreenProps> = ({ tipoLocais, setTipoLo
         </div>
       </div>
 
-      <TipoLocalModal 
+      <TipoLocalModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
@@ -266,14 +317,14 @@ const TipoLocalScreen: React.FC<TipoLocalScreenProps> = ({ tipoLocais, setTipoLo
         isEditing={!!editingItem}
       />
 
-      <ConfirmationModal 
+      <ConfirmationModal
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleConfirmToggle}
         title="Confirmação"
-        message={pendingToggle?.status 
-            ? `Deseja realmente inativar esse Tipo Local?` 
-            : `Deseja realmente reativar esse Tipo Local?`
+        message={pendingToggle?.status
+          ? `Deseja realmente inativar esse Tipo Local?`
+          : `Deseja realmente reativar esse Tipo Local?`
         }
         confirmLabel="Sim"
         cancelLabel="Não"

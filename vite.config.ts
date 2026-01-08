@@ -3,114 +3,148 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, '.', '');
-    
-    // Polyfill process.env for the API files which rely on it
-    process.env.DATABASE_URL = env.DATABASE_URL;
+  const env = loadEnv(mode, '.', '');
 
-    return {
-      server: {
-        port: 3000,
-        host: '0.0.0.0',
-      },
-      plugins: [
-        react(),
-        {
-          name: 'vercel-api-middleware',
-          configureServer(server) {
-            server.middlewares.use('/api', async (req, res, next) => {
-              try {
-                const url = new URL(req.url || '', `http://${req.headers.host}`);
-                const endpoint = url.pathname.replace(/^\//, ''); // Remove leading slash
-                
-                const endpointFileMap: Record<string, string> = {
-                  'users': 'api/users.ts',
-                  'units': 'api/units.ts',
-                  'requests': 'api/requests.ts',
-                  'tipologias': 'api/tipologias.ts',
-                  'tipo-locais': 'api/tipo-locais.ts',
-                  'profiles': 'api/profiles.ts'
-                };
+  // Polyfill process.env for the API files which rely on it
+  process.env.DATABASE_URL = env.DATABASE_URL;
 
-                const relativePath = endpointFileMap[endpoint];
+  return {
+    server: {
+      port: 3000,
+      host: '0.0.0.0',
+    },
+    plugins: [
+      react(),
+      {
+        name: 'vercel-api-middleware',
+        configureServer(server) {
+          server.middlewares.use('/api', async (req, res, next) => {
+            const url = new URL(req.url || '', `http://${req.headers.host}`);
+            const endpoint = url.pathname.replace(/^\//, ''); // Remove leading slash
 
-                if (!relativePath) {
-                  return next();
-                }
+            console.log(`[API Middleware] Incoming request: ${req.method} /api/${endpoint}`);
 
-                console.log(`[API] Processing ${req.method} /api/${endpoint}`);
+            const endpointFileMap: Record<string, string> = {
+              'users': 'api/users.ts',
+              'units': 'api/units.ts',
+              'requests': 'api/requests.ts',
+              'tipologias': 'api/tipologias.ts',
+              'tipo-locais': 'api/tipo-locais.ts',
+              'profiles': 'api/profiles.ts',
+              'auth': 'api/auth.ts',
+              'health': 'api/health.ts',
+              'health-db': 'api/health-db.ts',
+              'movements': 'api/movements.ts',
+              'update-request-status': 'api/update_request_status.ts'
+            };
 
-                // Force absolute path resolution from the project root
-                const projectRoot = process.cwd();
-                const absolutePath = path.resolve(projectRoot, relativePath);
+            const relativePath = endpointFileMap[endpoint];
 
-                console.log(`[API] Loading handler from: ${absolutePath}`);
+            if (!relativePath) {
+              console.log(`[API Middleware] No handler found for endpoint: ${endpoint}`);
+              return next();
+            }
 
-                // Use Vite's ssrLoadModule to load the TypeScript file
-                // This handles transpilation automatically
-                const module = await server.ssrLoadModule(absolutePath);
-                const handler = module.default;
+            // Force absolute path resolution from the project root
+            const projectRoot = process.cwd();
+            const absolutePath = path.resolve(projectRoot, relativePath);
 
-                // Shim Request props
-                const query = Object.fromEntries(url.searchParams);
-                Object.assign(req, { query });
+            console.log(`[API Middleware] Resolving handler: ${relativePath} -> ${absolutePath}`);
 
-                // Shim Body for POST/PUT/PATCH
-                 if (['POST', 'PUT', 'PATCH'].includes(req.method || '')) {
-                   const buffers = [];
-                   for await (const chunk of req) {
-                     buffers.push(chunk);
-                   }
-                   const rawBody = Buffer.concat(buffers).toString();
-                   try {
-                     const body = JSON.parse(rawBody);
-                     Object.assign(req, { body });
-                   } catch {
-                     Object.assign(req, { body: rawBody });
-                   }
-                 }
+            try {
+              // Use Vite's ssrLoadModule to load the TypeScript file
+              const module = await server.ssrLoadModule(absolutePath);
 
-                // Shim Response methods
-                const originalEnd = res.end.bind(res);
-                const originalSetHeader = res.setHeader.bind(res);
-                
-                Object.assign(res, {
-                  status: (code: number) => {
-                    res.statusCode = code;
-                    return res;
-                  },
-                  json: (data: any) => {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.end(JSON.stringify(data));
-                    return res;
-                  },
-                  setHeader: (name: string, value: string | number | readonly string[]) => {
-                     // Vite/Connect response already has setHeader, but Vercel might use it differently
-                     // pass through using the original method, not the one we just overwrote!
-                     originalSetHeader(name, value);
-                     return res;
-                  }
-                });
-
-                await handler(req, res);
-
-              } catch (error) {
-                console.error('[API] Error handling request:', error);
-                res.statusCode = 500;
-                res.end(JSON.stringify({ error: 'Internal Server Error (Local)' }));
+              if (!module.default) {
+                throw new Error(`Module ${relativePath} does not export a default handler.`);
               }
-            });
-          }
-        }
-      ],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, '.'),
+
+              const handler = module.default;
+              console.log(`[API Middleware] Handler loaded successfully.`);
+
+              // Shim Request props
+              const query = Object.fromEntries(url.searchParams);
+              Object.assign(req, { query });
+
+              // Shim Body for POST/PUT/PATCH
+              if (['POST', 'PUT', 'PATCH'].includes(req.method || '')) {
+                const buffers = [];
+                for await (const chunk of req) {
+                  buffers.push(chunk);
+                }
+                const rawBody = Buffer.concat(buffers).toString();
+                if (rawBody) {
+                  try {
+                    const body = JSON.parse(rawBody);
+                    Object.assign(req, { body });
+                  } catch {
+                    Object.assign(req, { body: rawBody });
+                  }
+                } else {
+                  Object.assign(req, { body: {} });
+                }
+              }
+
+              // Shim Response methods
+              // We need to be careful not to double-bind or lose context
+              const originalEnd = res.end.bind(res);
+              const originalSetHeader = res.setHeader.bind(res);
+
+              // Track if response has been sent to avoid double-send errors
+              let sent = false;
+
+              const augmentedRes = Object.assign(res, {
+                status: (code: number) => {
+                  res.statusCode = code;
+                  return res;
+                },
+                json: (data: any) => {
+                  if (sent) return res;
+                  sent = true;
+                  res.setHeader('Content-Type', 'application/json');
+                  const jsonStr = JSON.stringify(data);
+                  console.log(`[API Middleware] Sending JSON response (${jsonStr.length} bytes)`);
+                  originalEnd(jsonStr);
+                  return res;
+                },
+                setHeader: (name: string, value: string | number | readonly string[]) => {
+                  originalSetHeader(name, value);
+                  return res;
+                },
+                end: (chunk?: any, encoding?: any, cb?: any) => {
+                  if (sent) return res;
+                  sent = true;
+                  console.log(`[API Middleware] Ending response manually`);
+                  return originalEnd(chunk, encoding, cb);
+                }
+              });
+
+              await handler(req, augmentedRes);
+
+            } catch (error: any) {
+              console.error('[API Middleware] Error handling request:', error);
+              if (!res.headersSent) {
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({
+                  error: 'Internal Server Error (Local Middleware)',
+                  details: error.message,
+                  stack: error.stack
+                }));
+              }
+            }
+          });
         }
       }
-    };
+    ],
+    define: {
+      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, '.'),
+      }
+    }
+  };
 });

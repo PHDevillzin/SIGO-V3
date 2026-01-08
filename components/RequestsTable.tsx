@@ -47,17 +47,17 @@ const getCriticalityClass = (criticality: Criticality) => {
 };
 
 interface RequestsTableProps {
-  selectedProfile: string;
-  currentView: string;
-  requests: Request[];
-  setRequests: React.Dispatch<React.SetStateAction<Request[]>>;
-  userName?: string;
+    selectedProfile: string;
+    currentView: string;
+    requests: Request[];
+    setRequests: React.Dispatch<React.SetStateAction<Request[]>>;
+    userName?: string;
 }
 
 type Toast = {
-  message: string;
-  type: 'success' | 'error';
-  isVisible: boolean;
+    message: string;
+    type: 'success' | 'error';
+    isVisible: boolean;
 };
 
 const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentView, requests, setRequests, userName }) => {
@@ -79,7 +79,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [requestToDelete, setRequestToDelete] = useState<Request | null>(null);
 
-    const showToast = (message: string, type: 'success' | 'error' = 'success') => { 
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setAlertModalMessage(message);
         setIsAlertModalOpen(true);
     };
@@ -108,10 +108,10 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 setRequests(prev => prev.filter(r => r.id !== requestToDelete.id));
                 showToast('Solicitação excluída com sucesso!', 'success');
             } else {
-                 showToast('Falha ao excluir solicitação.', 'error');
+                showToast('Falha ao excluir solicitação.', 'error');
             }
         } catch (e) {
-             showToast('Erro ao excluir solicitação.', 'error');
+            showToast('Erro ao excluir solicitação.', 'error');
         } finally {
             setIsDeleteModalOpen(false);
             setRequestToDelete(null);
@@ -128,14 +128,14 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 body: JSON.stringify({
                     requestId: request.id,
                     status: newStatus,
-                    user: userName || selectedProfile, 
-                    department: selectedProfile 
+                    user: userName || selectedProfile,
+                    department: selectedProfile
                 }),
             });
 
             if (response.ok) {
-                 showToast(`Solicitação ${newStatus.toLowerCase()} com sucesso!`, 'success');
-                 setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: newStatus } : r));
+                showToast(`Solicitação ${newStatus.toLowerCase()} com sucesso!`, 'success');
+                setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: newStatus } : r));
             } else {
                 console.error('Failed to update status');
                 showToast('Erro ao atualizar status da solicitação.', 'error');
@@ -160,7 +160,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
     const filteredRequests = useMemo(() => {
         let sourceRequests = requests;
-        
+
         // Filter by View Mode
         if (isReclassificationView) {
             sourceRequests = requests.filter(request => request.categoriaInvestimento !== 'Manutenção');
@@ -170,7 +170,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             // For approval, we might want to filter by status, but for now we'll just show all non-maintenance for the sake of the prototype or filter a subset
             sourceRequests = requests.filter(request => request.categoriaInvestimento !== 'Manutenção');
         }
-        
+
         // Filter by Search Term
         if (searchTerm) {
             const lowerSearch = searchTerm.toLowerCase();
@@ -187,7 +187,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             if (activeFilters.entidades && activeFilters.entidades.length > 0) {
                 sourceRequests = sourceRequests.filter(req => req.entidade && activeFilters.entidades!.includes(req.entidade));
             }
-            
+
             // Unidades
             if (activeFilters.unidades && activeFilters.unidades.length > 0) {
                 sourceRequests = sourceRequests.filter(req => activeFilters.unidades!.includes(req.unit));
@@ -195,24 +195,24 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
             // Situacoes (Status)
             if (activeFilters.situacoes && activeFilters.situacoes.length > 0) {
-                 sourceRequests = sourceRequests.filter(req => {
+                sourceRequests = sourceRequests.filter(req => {
                     const statusMatch = req.status && activeFilters.situacoes!.includes(req.status);
                     const projMatch = req.situacaoProjeto && activeFilters.situacoes!.includes(req.situacaoProjeto);
                     const obraMatch = req.situacaoObra && activeFilters.situacoes!.includes(req.situacaoObra);
                     return statusMatch || projMatch || obraMatch;
-                 });
+                });
             }
 
             // Categorias
             if (activeFilters.categorias && activeFilters.categorias.length > 0) {
-                 sourceRequests = sourceRequests.filter(req => req.categoriaInvestimento && activeFilters.categorias!.includes(req.categoriaInvestimento));
+                sourceRequests = sourceRequests.filter(req => req.categoriaInvestimento && activeFilters.categorias!.includes(req.categoriaInvestimento));
             }
 
             // Tipologias
             if (activeFilters.tipologias && activeFilters.tipologias.length > 0) {
-                 sourceRequests = sourceRequests.filter(req => req.tipologia && activeFilters.tipologias!.includes(req.tipologia));
+                sourceRequests = sourceRequests.filter(req => req.tipologia && activeFilters.tipologias!.includes(req.tipologia));
             }
-            
+
             // Origens (Year)
             if (activeFilters.origens && activeFilters.origens.length > 0) {
                 sourceRequests = sourceRequests.filter(req => {
@@ -249,23 +249,23 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             if (activeFilters.de) {
                 const fromTime = parseDate(activeFilters.de);
                 if (!isNaN(fromTime)) {
-                     sourceRequests = sourceRequests.filter(req => {
+                    sourceRequests = sourceRequests.filter(req => {
                         const t = parseDate(req.expectedStartDate);
                         return !isNaN(t) && t >= fromTime;
-                     });
+                    });
                 }
             }
             if (activeFilters.ate) {
                 const toTime = parseDate(activeFilters.ate);
                 if (!isNaN(toTime)) {
-                     sourceRequests = sourceRequests.filter(req => {
+                    sourceRequests = sourceRequests.filter(req => {
                         const t = parseDate(req.expectedStartDate);
                         return !isNaN(t) && t <= toTime;
-                     });
+                    });
                 }
             }
         }
-        
+
         return sourceRequests;
     }, [requests, searchTerm, isReclassificationView, isManutencaoView, isAprovacaoView, activeFilters, reclassifiedIds]);
 
@@ -279,55 +279,97 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     useEffect(() => {
         setSelectedIds([]);
     }, [paginatedRequests]);
-    
 
 
-    const handleSaveReclassification = (data: any) => {
-        console.log(`Saving reclassification for items: ${selectedIds.join(', ')}`, 'Data:', data);
 
-        setRequests(prevRequests =>
-            prevRequests.map(req => {
-                if (selectedIds.includes(req.id)) {
-                    return {
-                        ...req,
+    const handleSaveReclassification = async (data: any) => {
+        try {
+            const updates = selectedIds.map(id => {
+                const req = requests.find(r => r.id === id);
+                if (!req) return Promise.resolve();
+
+                return fetch('/api/requests', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id,
                         categoriaInvestimento: data.categoria || req.categoriaInvestimento,
-                        tipologia: data.tipologia || req.tipologia,
-                    };
-                }
-                return req;
-            })
-        );
-        
-        if (isManutencaoView) {
-            showToast('Reclassificação concluída com sucesso.', 'success');
-        } else if (data.categoria === 'Manutenção') {
-            const message = selectedIds.length > 1
-                ? "Demandas enviadas para manutenção com Sucesso."
-                : "Demanda enviada para manutenção com Sucesso.";
-            setAlertModalMessage(message);
-            setIsAlertModalOpen(true);
-        } else {
-            // Mark these IDs as reclassified to show the 'Enviar' button
-            setReclassifiedIds(prev => [...new Set([...prev, ...selectedIds])]);
-            showToast(selectedIds.length > 1 ? 'Solicitações salvas com sucesso.' : 'Solicitação salva com sucesso.', 'success');
+                        tipologia: data.tipologia || req.tipologia
+                    })
+                }).then(res => {
+                    if (!res.ok) throw new Error(`Falha ao atualizar ${id}`);
+                    return res.json();
+                });
+            });
+
+            const results = await Promise.all(updates);
+
+            // Update local state with results
+            setRequests(prevRequests =>
+                prevRequests.map(req => {
+                    const updated = results.find((r: any) => r && r.id === req.id);
+                    return updated ? { ...req, ...updated } : req; // Merge update
+                })
+            );
+
+            if (isManutencaoView) {
+                showToast('Reclassificação concluída com sucesso.', 'success');
+            } else if (data.categoria === 'Manutenção') {
+                const message = selectedIds.length > 1
+                    ? "Demandas enviadas para manutenção com Sucesso."
+                    : "Demanda enviada para manutenção com Sucesso.";
+                setAlertModalMessage(message);
+                setIsAlertModalOpen(true);
+            } else {
+                // Mark these IDs as reclassified to show the 'Enviar' button
+                setReclassifiedIds(prev => [...new Set([...prev, ...selectedIds])]);
+                showToast(selectedIds.length > 1 ? 'Solicitações salvas com sucesso.' : 'Solicitação salva com sucesso.', 'success');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Erro ao salvar reclassificação.', 'error');
         }
 
         setIsReclassificationModalOpen(false);
         setSelectedIds([]);
         setSelectedRequestForReclassification(null);
     };
-    
-    const handleSingleSend = (id: number) => {
-        showToast('Solicitação enviada com sucesso.', 'success');
-        setRequests(prevRequests => 
-            prevRequests.filter(req => req.id !== id)
-        );
-        setReclassifiedIds(prev => 
-            prev.filter(reclassifiedId => reclassifiedId !== id)
-        );
-        setSelectedIds(prev =>
-            prev.filter(selectedId => selectedId !== id)
-        );
+
+    const handleSingleSend = async (id: number) => {
+        try {
+            // Assuming "Enviar" moves to "Classificado" or next step.
+            // Using 'Planejamento' or keeping status but ensuring it's processed.
+            // If the view filters by status, we might need to change status to hide it.
+            // For now, let's update status to "Classificado".
+            const response = await fetch('/api/update_request_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    requestId: id,
+                    status: 'Classificado',
+                    user: userName || selectedProfile
+                })
+            });
+
+            if (response.ok) {
+                showToast('Solicitação enviada com sucesso.', 'success');
+                setRequests(prevRequests =>
+                    prevRequests.map(req => req.id === id ? { ...req, status: 'Classificado' } : req)
+                    // If we want to remove from view, filter: .filter(req => req.id !== id)
+                );
+                setReclassifiedIds(prev =>
+                    prev.filter(reclassifiedId => reclassifiedId !== id)
+                );
+                setSelectedIds(prev =>
+                    prev.filter(selectedId => selectedId !== id)
+                );
+            } else {
+                showToast('Erro ao enviar solicitação.', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Erro de conexão.', 'error');
+        }
     };
 
     const handleBatchSend = () => {
@@ -345,18 +387,42 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
         setIsConfirmSendModalOpen(true);
     };
-    
-    const handleConfirmBatchSend = () => {
-        const message = selectedIds.length > 1 ? 'Solicitações enviadas com sucesso.' : 'Solicitação enviada com sucesso.';
-        showToast(message, 'success');
 
-        setRequests(prevRequests => 
-            prevRequests.filter(req => !selectedIds.includes(req.id))
-        );
-        setReclassifiedIds(prev => 
-            prev.filter(id => !selectedIds.includes(id))
-        );
-        setSelectedIds([]);
+    const handleConfirmBatchSend = async () => {
+        try {
+            const updates = selectedIds.map(id => {
+                return fetch('/api/update_request_status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        requestId: id,
+                        status: 'Classificado',
+                        user: userName || selectedProfile
+                    })
+                }).then(res => {
+                    if (!res.ok) throw new Error(`Falha ao enviar ${id}`);
+                    return res.json();
+                });
+            });
+
+            await Promise.all(updates);
+
+            const message = selectedIds.length > 1 ? 'Solicitações enviadas com sucesso.' : 'Solicitação enviada com sucesso.';
+            showToast(message, 'success');
+
+            // Update local state
+            setRequests(prevRequests =>
+                prevRequests.map(req => selectedIds.includes(req.id) ? { ...req, status: 'Classificado' } : req)
+            );
+
+            setReclassifiedIds(prev =>
+                prev.filter(id => !selectedIds.includes(id))
+            );
+            setSelectedIds([]);
+        } catch (error) {
+            console.error(error);
+            showToast('Erro ao enviar solicitações em lote.', 'error');
+        }
         setIsConfirmSendModalOpen(false);
     };
 
@@ -380,7 +446,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             setSelectedIds(prev => [...new Set([...prev, ...paginatedIds])]);
         }
     };
-    
+
     const handleOpenReclassificationModal = () => {
         if (selectedIds.length === 1) {
             const requestToReclassify = requests.find(r => r.id === selectedIds[0]);
@@ -397,7 +463,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         setSelectedIds([]);
         setSelectedRequestForReclassification(null);
     }
-    
+
     const mapRequestToPlanningData = (request: Request): PlanningData => {
         return {
             id: request.id,
@@ -501,9 +567,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         <>
             {toast && (
                 <div
-                    className={`fixed top-6 left-6 flex items-center space-x-3 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-transform duration-500 ease-in-out ${toast.isVisible ? 'translate-x-0' : '-translate-x-[150%]'} ${
-                        toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-                    }`}
+                    className={`fixed top-6 left-6 flex items-center space-x-3 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-transform duration-500 ease-in-out ${toast.isVisible ? 'translate-x-0' : '-translate-x-[150%]'} ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+                        }`}
                     role="alert"
                     aria-live="assertive"
                 >
@@ -530,7 +595,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     </div>
                     <div className="flex items-center space-x-2">
                         {(isReclassificationView) && (
-                             <button
+                            <button
                                 onClick={handleBatchSend}
                                 disabled={!isAnyItemReadyToSend}
                                 className="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
@@ -549,7 +614,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                 <span>{editButtonLabel}</span>
                             </button>
                         )}
-                        <button 
+                        <button
                             onClick={() => setShowAdvancedFilters(prev => !prev)}
                             className={`flex items-center space-x-2 font-semibold py-2 px-4 rounded-md transition-colors ${showAdvancedFilters ? 'bg-sky-600 text-white' : 'bg-sky-500 text-white hover:bg-sky-600'}`}
                         >
@@ -560,21 +625,21 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 </div>
 
                 {showAdvancedFilters && (
-                    <AdvancedFilters 
-                        onFilter={setActiveFilters} 
+                    <AdvancedFilters
+                        onFilter={setActiveFilters}
                         activeFilters={activeFilters}
                         showReclassified={isReclassificationView || isManutencaoView}
                     />
                 )}
-                
+
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-gray-500">
                         <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
                             <tr>
                                 {(isReclassificationView || isManutencaoView) && (
                                     <th scope="col" className="p-4">
-                                        <input 
-                                            type="checkbox" 
+                                        <input
+                                            type="checkbox"
                                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                                             checked={paginatedRequests.length > 0 && paginatedRequests.every(item => selectedIds.includes(item.id))}
                                             onChange={handleSelectAll}
@@ -588,7 +653,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                 <th scope="col" className="px-6 py-3 font-semibold">Descrição</th>
                                 {(isReclassificationView || isManutencaoView) && <th scope="col" className="px-6 py-3 font-semibold">Tipologia</th>}
                                 <th scope="col" className="px-6 py-3 font-semibold">Status</th>
-                                
+
                                 {isReclassificationView && (
                                     <>
                                         <th scope="col" className="px-6 py-3 font-semibold text-center">Situação Projeto</th>
@@ -596,7 +661,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                         <th scope="col" className="px-6 py-3 font-semibold">Saldo P</th>
                                     </>
                                 )}
-                                
+
                                 {!isReclassificationView && !isAprovacaoView && (
                                     <>
                                         <th scope="col" className="px-6 py-3 font-semibold">Local Atual</th>
@@ -614,7 +679,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                         <th scope="col" className="px-6 py-3 font-semibold">Valor Esperado</th>
                                     </>
                                 )}
-                                
+
                                 <th scope="col" className="px-6 py-3 font-semibold text-center">Ações</th>
                             </tr>
                         </thead>
@@ -622,9 +687,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                             {paginatedRequests.length > 0 ? paginatedRequests.map(request => (
                                 <tr key={request.id} className="bg-white border-b hover:bg-gray-50 align-middle">
                                     {(isReclassificationView || isManutencaoView) && (
-                                         <td className="p-4">
-                                            <input 
-                                                type="checkbox" 
+                                        <td className="p-4">
+                                            <input
+                                                type="checkbox"
                                                 className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                                                 checked={selectedIds.includes(request.id)}
                                                 onChange={() => handleSelectRow(request.id)}
@@ -656,8 +721,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                             <td className="px-6 py-4">{request.currentLocation}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center space-x-1">
-                                                <span>{request.expectedStartDate}</span>
-                                                {request.hasInfo && <InformationCircleIcon className="w-5 h-5 text-gray-400" />}
+                                                    <span>{request.expectedStartDate}</span>
+                                                    {request.hasInfo && <InformationCircleIcon className="w-5 h-5 text-gray-400" />}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">{request.expectedValue}</td>
@@ -673,20 +738,20 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                             <td className="px-6 py-4 whitespace-nowrap">{request.expectedValue}</td>
                                         </>
                                     )}
-                                    
+
                                     <td className="px-6 py-4">
                                         <div className="flex items-center justify-center space-x-2">
                                             {isAprovacaoView && (
                                                 <>
-                                                    <button 
-                                                        className="bg-[#0EA5E9] text-white p-2 rounded-md hover:bg-sky-600 transition-colors" 
+                                                    <button
+                                                        className="bg-[#0EA5E9] text-white p-2 rounded-md hover:bg-sky-600 transition-colors"
                                                         aria-label="Aprovar"
                                                         onClick={() => handleUpdateRequestStatus(request, 'Aprovado')}
                                                     >
                                                         <CheckIcon className="w-5 h-5" />
                                                     </button>
-                                                    <button 
-                                                        className="bg-[#0EA5E9] text-white p-2 rounded-md hover:bg-sky-600 transition-colors" 
+                                                    <button
+                                                        className="bg-[#0EA5E9] text-white p-2 rounded-md hover:bg-sky-600 transition-colors"
                                                         aria-label="Reprovar"
                                                         onClick={() => handleUpdateRequestStatus(request, 'Reprovado')}
                                                     >
@@ -694,7 +759,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                     </button>
                                                 </>
                                             )}
-                                            <button 
+                                            <button
                                                 onClick={() => {
                                                     if (isReclassificationView) {
                                                         handleViewReclassificationDetails(request);
@@ -705,7 +770,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                         handleOpenRequestDetails(request);
                                                     }
                                                 }}
-                                                className={`${isAprovacaoView ? 'bg-[#0EA5E9]' : 'bg-sky-500'} text-white p-2 rounded-md hover:bg-sky-600 transition-colors`} 
+                                                className={`${isAprovacaoView ? 'bg-[#0EA5E9]' : 'bg-sky-500'} text-white p-2 rounded-md hover:bg-sky-600 transition-colors`}
                                                 aria-label="Visualizar"
                                             >
                                                 <EyeIcon className="w-5 h-5" />
@@ -733,7 +798,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
                                             {(isManutencaoView) && (
                                                 <>
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleEditRequest(request)}
                                                         className="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600 transition-colors"
                                                         aria-label="Editar"
@@ -830,7 +895,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 data={selectedRequestForDetails}
                 title="Detalhes da reclassificação"
             />
-            <RequestDetailsModal 
+            <RequestDetailsModal
                 isOpen={isRequestDetailsModalOpen}
                 onClose={() => setIsRequestDetailsModalOpen(false)}
                 request={selectedRequestForView}

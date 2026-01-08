@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Unit } from '../types';
-import { 
-    MagnifyingGlassIcon, 
-    FilterIcon, 
-    EyeIcon, 
-    PencilIcon, 
-    ChevronLeftIcon, 
-    ChevronRightIcon, 
+import {
+    MagnifyingGlassIcon,
+    FilterIcon,
+    EyeIcon,
+    PencilIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
     SparklesIcon,
     CheckCircleIcon,
     InformationCircleIcon
@@ -27,7 +27,7 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
     const [activeFilters, setActiveFilters] = useState<AdvancedFiltersState | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    
+
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
@@ -49,12 +49,12 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
 
     const filteredUnits = useMemo(() => {
         let result = units;
-        
+
         if (searchTerm) {
             const lower = searchTerm.toLowerCase();
-            result = result.filter(u => 
-                u.unidade.toLowerCase().includes(lower) || 
-                u.cidade.toLowerCase().includes(lower) || 
+            result = result.filter(u =>
+                u.unidade.toLowerCase().includes(lower) ||
+                u.cidade.toLowerCase().includes(lower) ||
                 u.codigoUnidade.toLowerCase().includes(lower) ||
                 u.centro.toLowerCase().includes(lower)
             );
@@ -68,7 +68,7 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                 result = result.filter(u => activeFilters.unidades?.includes(u.unidade));
             }
         }
-        
+
         return result;
     }, [units, searchTerm, activeFilters]);
 
@@ -81,14 +81,73 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
         setIsModalOpen(true);
     };
 
-    const handleSaveUnit = (unitData: any) => {
-        if (modalMode === 'create') {
-            const newUnit = { ...unitData, id: Date.now() };
-            setUnits(prev => [newUnit, ...prev]);
-            showToast("Unidade cadastrada com sucesso!", "success");
-        } else {
-            setUnits(prev => prev.map(u => u.id === unitData.id ? unitData : u));
-            showToast("Dados atualizados com sucesso!", "success");
+    const handleSaveUnit = async (unitData: any) => {
+        try {
+            if (modalMode === 'create') {
+                const response = await fetch('/api/units', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(unitData)
+                });
+
+                if (response.ok) {
+                    const newUnit = await response.json();
+                    // Map snake_case response to camelCase if needed, OR ensure API returns camelCase
+                    // Based on previous code, API returns DB columns which are snake_case?
+                    // Let's check api/units.ts -- it does RETURNING *, so snake_case.
+                    // But the Frontend uses camelCase. We'll need to map it in `fetchData` in App.tsx or here.
+                    // Actually, App.tsx already does mapping. UnitsScreen expects camelCase.
+                    // The API returns snake_case rows. 
+                    // We should map the response here to match what App.tsx does.
+                    const mappedUnit = {
+                        ...newUnit,
+                        codigoUnidade: newUnit.codigo_unidade,
+                        responsavelRE: newUnit.responsavel_re,
+                        responsavelRA: newUnit.responsavel_ra,
+                        responsavelRAR: newUnit.responsavel_rar,
+                        tipoDeUnidade: newUnit.tipo_de_unidade,
+                        unidadeResumida: newUnit.unidade_resumida,
+                        gerenteRegional: newUnit.gerente_regional,
+                        emailGR: newUnit.email_gr
+                    };
+
+                    setUnits(prev => [mappedUnit, ...prev]);
+                    showToast("Unidade cadastrada com sucesso!", "success");
+                } else {
+                    const err = await response.json();
+                    showToast(`Erro ao cadastrar: ${err.error || 'Erro desconhecido'}`, "error");
+                }
+            } else {
+                // Edit
+                const response = await fetch('/api/units', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(unitData)
+                });
+
+                if (response.ok) {
+                    const updated = await response.json();
+                    const mappedUnit = {
+                        ...updated,
+                        codigoUnidade: updated.codigo_unidade,
+                        responsavelRE: updated.responsavel_re,
+                        responsavelRA: updated.responsavel_ra,
+                        responsavelRAR: updated.responsavel_rar,
+                        tipoDeUnidade: updated.tipo_de_unidade,
+                        unidadeResumida: updated.unidade_resumida,
+                        gerenteRegional: updated.gerente_regional,
+                        emailGR: updated.email_gr
+                    };
+                    setUnits(prev => prev.map(u => u.id === unitData.id ? mappedUnit : u));
+                    showToast("Dados atualizados com sucesso!", "success");
+                } else {
+                    const err = await response.json();
+                    showToast(`Erro ao atualizar: ${err.error || 'Erro desconhecido'}`, "error");
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            showToast("Erro de conexão.", "error");
         }
         setIsModalOpen(false);
     };
@@ -96,9 +155,9 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
     return (
         <div className="space-y-6">
             {/* Toast Notification */}
-            <div 
-              className={`fixed top-6 left-6 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-transform duration-500 ease-in-out flex items-center space-x-3 ${toast.isVisible ? 'translate-x-0' : '-translate-x-[150%]'} ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}
-              role="alert"
+            <div
+                className={`fixed top-6 left-6 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-transform duration-500 ease-in-out flex items-center space-x-3 ${toast.isVisible ? 'translate-x-0' : '-translate-x-[150%]'} ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}
+                role="alert"
             >
                 {toast.type === 'success' ? <CheckCircleIcon className="w-5 h-5" /> : <InformationCircleIcon className="w-5 h-5" />}
                 <p className="font-semibold">{toast.message}</p>
@@ -106,7 +165,7 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
 
             <div className="bg-white rounded-lg shadow p-6 flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-800">Unidades</h1>
-                <button 
+                <button
                     onClick={() => handleOpenModal(null, 'create')}
                     className="bg-[#0B1A4E] text-white px-4 py-2 rounded-md font-semibold hover:bg-opacity-90 transition-colors shadow-md"
                 >
@@ -131,7 +190,7 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                             className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
                         />
                     </div>
-                    <button 
+                    <button
                         onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                         className={`flex items-center space-x-2 font-semibold py-2 px-4 rounded-md transition-all shadow-sm ${showAdvancedFilters ? 'bg-sky-600 text-white' : 'bg-sky-500 text-white hover:bg-sky-600'}`}
                     >
@@ -141,11 +200,11 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                 </div>
 
                 {showAdvancedFilters && (
-                    <AdvancedFilters 
+                    <AdvancedFilters
                         onFilter={(f) => {
                             setActiveFilters(f);
                             setCurrentPage(1);
-                        }} 
+                        }}
                         activeFilters={activeFilters}
                         hideSituacao
                         hideTipologia
@@ -188,14 +247,14 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                                     <td className="px-4 py-4 whitespace-nowrap">{unit.tipoDeUnidade}</td>
                                     <td className="px-4 py-4 text-center sticky right-0 bg-white/95 border-l shadow-[-4px_0_10px_rgba(0,0,0,0.05)] z-10">
                                         <div className="flex justify-center space-x-2">
-                                            <button 
+                                            <button
                                                 onClick={() => handleOpenModal(unit, 'view')}
                                                 className="p-2 bg-sky-500 text-white rounded-md hover:bg-sky-600 transition-colors shadow-sm focus:ring-2 focus:ring-sky-200"
                                                 title="Visualizar Detalhes"
                                             >
                                                 <EyeIcon className="w-4 h-4" />
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handleOpenModal(unit, 'edit')}
                                                 className="p-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors shadow-sm focus:ring-2 focus:ring-purple-200"
                                                 title="Editar Registro"
@@ -222,8 +281,8 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
 
                 <div className="p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50">
                     <div className="flex items-center space-x-4">
-                         <div className="flex items-center space-x-2">
-                            <button 
+                        <div className="flex items-center space-x-2">
+                            <button
                                 disabled={currentPage === 1}
                                 onClick={() => setCurrentPage(p => p - 1)}
                                 className="p-2 text-gray-400 hover:text-sky-600 disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
@@ -233,7 +292,7 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                             <span className="min-w-[40px] h-10 flex items-center justify-center bg-sky-500 text-white font-bold rounded-md shadow-sm text-sm">
                                 {currentPage}
                             </span>
-                            <button 
+                            <button
                                 disabled={currentPage === totalPages || totalPages === 0}
                                 onClick={() => setCurrentPage(p => p + 1)}
                                 className="p-2 text-gray-400 hover:text-sky-600 disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
@@ -245,7 +304,7 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                             Página {currentPage} de {totalPages || 1} ({filteredUnits.length} registros)
                         </span>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Itens por página:</label>
                         <select
@@ -265,7 +324,7 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                 </div>
             </div>
 
-            <UnitDetailsModal 
+            <UnitDetailsModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 unit={selectedUnit}

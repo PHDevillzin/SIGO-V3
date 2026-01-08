@@ -1,9 +1,9 @@
 
 import React, { useState, useMemo } from 'react';
-import { 
-    MagnifyingGlassIcon, 
-    PlusIcon, 
-    CheckCircleIcon, 
+import {
+    MagnifyingGlassIcon,
+    PlusIcon,
+    CheckCircleIcon,
     InformationCircleIcon,
     PencilIcon,
     TrashIcon
@@ -38,14 +38,14 @@ interface AccessManagementScreenProps {
 
 const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, profiles, registeredUsers, setRegisteredUsers }) => {
     // We keep allUsers as "Source of Truth" for available NIFs (e.g., from CSV/HR System)
-    const [sourceUsers] = useState<User[]>(csvDataRaw as User[]); 
-    
+    const [sourceUsers] = useState<User[]>(csvDataRaw as User[]);
+
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
-    
+
     // If null, we are in "Create" mode. If set, we are in "Edit" mode.
     const [selectedUserForRegistration, setSelectedUserForRegistration] = useState<User | null>(null);
-    
+
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error', visible: boolean } | null>(null);
@@ -83,21 +83,35 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
         setIsDeleteConfirmOpen(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (userToDelete) {
-            setRegisteredUsers(prev => prev.filter(u => u.nif !== userToDelete.nif));
-            showToast('Usuário removido e agora está disponível para novo cadastro.', 'success');
+            try {
+                const response = await fetch(`/api/users?nif=${userToDelete.nif}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    setRegisteredUsers(prev => prev.filter(u => u.nif !== userToDelete.nif));
+                    showToast('Usuário removido da base de dados com sucesso.', 'success');
+                } else {
+                    const err = await response.json();
+                    showToast(`Erro ao excluir: ${err.error || 'Erro desconhecido'}`, 'error');
+                }
+            } catch (error) {
+                console.error("Failed to delete user", error);
+                showToast('Erro de conexão ao excluir usuário.', 'error');
+            }
         }
         setIsDeleteConfirmOpen(false);
         setUserToDelete(null);
     };
 
     const handleConfirmRegistration = async (data: { profiles: string[], units: string[], selectedUser?: User }) => {
-        
+
         // If editing, we use the selectedUserForRegistration.
         // If creating, we MUST have a selectedUser returned from the modal.
         const targetUser = selectedUserForRegistration || data.selectedUser;
-        
+
         if (!targetUser) return;
 
         const isEditing = !!targetUser.registrationDate;
@@ -119,12 +133,12 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 body: JSON.stringify({
                     nif: updatedUserPayload.nif,
                     // If creating, we need name/email. If editing, they are optional but good to send.
-                    name: updatedUserPayload.name, 
+                    name: updatedUserPayload.name,
                     email: updatedUserPayload.email,
                     sigo_profiles: data.profiles,
                     linked_units: data.units,
                     // Pass ID if available to be safe, though NIF lookup is supported
-                    id: targetUser.id 
+                    id: targetUser.id
                 })
             });
 
@@ -132,9 +146,9 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 const err = await response.json();
                 throw new Error(err.error || 'Failed to save user');
             }
-            
+
             const savedUser = await response.json();
-            
+
             // Simplified: Update local state to reflect change immediately.
             const newUserState: User = {
                 ...targetUser,
@@ -147,17 +161,17 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 setRegisteredUsers(prev => prev.map(u => u.nif === newUserState.nif ? newUserState : u));
                 showToast('Acesso atualizado com sucesso!', 'success');
             } else {
-                 // Check if user already exists locally (e.g. had no profiles, so wasn't in "usersWithAccess" but was in "registeredUsers")
-                 // If so, update them. If not, add them.
-                 const exists = registeredUsers.some(u => u.nif === newUserState.nif);
-                 if (exists) {
+                // Check if user already exists locally (e.g. had no profiles, so wasn't in "usersWithAccess" but was in "registeredUsers")
+                // If so, update them. If not, add them.
+                const exists = registeredUsers.some(u => u.nif === newUserState.nif);
+                if (exists) {
                     setRegisteredUsers(prev => prev.map(u => u.nif === newUserState.nif ? newUserState : u));
-                 } else {
+                } else {
                     setRegisteredUsers(prev => [newUserState, ...prev]);
-                 }
+                }
                 showToast('Usuário cadastrado com sucesso!', 'success');
             }
-            
+
             setIsModalOpen(false);
             setSelectedUserForRegistration(null);
 
@@ -179,7 +193,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
             {/* Header */}
             <div className="bg-white rounded-lg shadow p-6 flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-800">Gestão de acessos</h1>
-                <button 
+                <button
                     onClick={handleNewUserClick}
                     className="bg-[#0B1A4E] text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 text-sm uppercase tracking-wide"
                 >
@@ -194,7 +208,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                     <CheckCircleIcon className="w-5 h-5 text-green-500" />
                     Usuários Cadastrados no Sistema
                 </h2>
-                
+
                 <div className="overflow-x-auto border rounded-lg">
                     <table className="w-full text-sm text-left text-gray-500">
                         <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
@@ -236,14 +250,14 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <div className="flex justify-center items-center gap-2">
-                                            <button 
+                                            <button
                                                 onClick={() => handleEditClick(user)}
                                                 className="p-1.5 bg-purple-100 text-purple-600 rounded-md hover:bg-purple-200 transition-colors"
                                                 title="Editar Acesso"
                                             >
                                                 <PencilIcon className="w-4 h-4" />
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handleDeleteClick(user)}
                                                 className="p-1.5 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors"
                                                 title="Excluir Acesso"
@@ -265,7 +279,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 </div>
             </div>
 
-            <AccessRegistrationModal 
+            <AccessRegistrationModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 user={selectedUserForRegistration}
@@ -275,7 +289,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 profiles={profiles}
             />
 
-            <ConfirmationModal 
+            <ConfirmationModal
                 isOpen={isDeleteConfirmOpen}
                 onClose={() => setIsDeleteConfirmOpen(false)}
                 onConfirm={confirmDelete}
