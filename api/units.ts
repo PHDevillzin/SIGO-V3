@@ -44,33 +44,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (req.method === 'POST') {
             const {
                 codigoUnidade, entidade, tipo, centro, cat, unidade,
-                cidade, responsavelRE, ra, responsavelRA, responsavelRAR, tipoDeUnidade,
-                emailGR, gerenteRegional, unidadeResumida
-            } = req.body;
+                cidade, bairro, endereco, cep, re, responsavelRE, ra, responsavelRA, responsavelRAR, tipoDeUnidade,
+                emailGR, gerenteRegional, unidadeResumida, site, latitude, longitude, status
+            } = req.body as Unit; // Cast req.body to Unit type
 
             // Using snake_case for DB columns based on initial load
             const result = await query(
                 `INSERT INTO units (
                     codigo_unidade, entidade, tipo, centro, cat, unidade,
-                    cidade, responsavel_re, ra, responsavel_ra, responsavel_rar, tipo_de_unidade,
-                    email_gr, gerente_regional, unidade_resumida
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                    cidade, bairro, endereco, cep, re, responsavel_re, ra, responsavel_ra, responsavel_rar, tipo_de_unidade,
+                    email_gr, gerente_regional, unidade_resumida, site, latitude, longitude, status
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
                 RETURNING *`,
                 [
                     codigoUnidade, entidade, tipo, centro, cat, unidade,
-                    cidade, responsavelRE, ra, responsavelRA, responsavelRAR, tipoDeUnidade,
-                    emailGR, gerenteRegional, unidadeResumida
+                    cidade, bairro, endereco, cep, re, responsavelRE, ra, responsavelRA, responsavelRAR, tipoDeUnidade,
+                    emailGR, gerenteRegional, unidadeResumida, site, latitude, longitude, status
                 ]
             );
-            return res.status(201).json(result.rows[0]);
+            return res.status(201).json(mapToFrontend(result.rows[0]));
         }
 
         if (req.method === 'PUT') {
-            const {
-                id, codigoUnidade, entidade, tipo, centro, cat, unidade,
-                cidade, responsavelRE, ra, responsavelRA, responsavelRAR, tipoDeUnidade,
-                emailGR, gerenteRegional, unidadeResumida
-            } = req.body;
+            const { id } = req.body;
+            const body: Unit = req.body;
 
             if (!id) return res.status(400).json({ error: 'ID missing' });
 

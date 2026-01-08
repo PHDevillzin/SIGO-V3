@@ -106,6 +106,7 @@ export interface Unit {
   site: string;
   latitude: string;
   longitude: string;
+  status: boolean;
 }
 
 export interface SummaryData {

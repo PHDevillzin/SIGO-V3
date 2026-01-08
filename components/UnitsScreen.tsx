@@ -9,7 +9,8 @@ import {
     ChevronRightIcon,
     SparklesIcon,
     CheckCircleIcon,
-    InformationCircleIcon
+    InformationCircleIcon,
+    TrashIcon
 } from './Icons';
 import UnitDetailsModal from './UnitDetailsModal';
 import AdvancedFilters, { AdvancedFiltersState } from './AdvancedFilters';
@@ -152,6 +153,53 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
         setIsModalOpen(false);
     };
 
+    const handleToggleStatus = async (id: number, currentStatus: boolean) => {
+        try {
+            // Optimistic update
+            const updatedUnits = units.map(u => u.id === id ? { ...u, status: !currentStatus } : u);
+            setUnits(updatedUnits);
+
+            const unitToUpdate = units.find(u => u.id === id);
+            if (unitToUpdate) {
+                const response = await fetch('/api/units', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...unitToUpdate, status: !currentStatus })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update status');
+                }
+                showToast(`Unidade ${!currentStatus ? 'ativada' : 'inativada'} com sucesso!`, 'success');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Erro ao atualizar status.', 'error');
+            // Revert on error
+            setUnits(units);
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Tem certeza que deseja excluir esta unidade?')) return;
+
+        try {
+            const response = await fetch(`/api/units?id=${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                setUnits(prev => prev.filter(u => u.id !== id));
+                showToast('Unidade excluída com sucesso!', 'success');
+            } else {
+                showToast('Erro ao excluir unidade.', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Erro de conexão.', 'error');
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Toast Notification */}
@@ -227,6 +275,7 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                                 <th className="px-4 py-4 whitespace-nowrap font-bold tracking-wider">Responsável RA</th>
                                 <th className="px-4 py-4 whitespace-nowrap font-bold tracking-wider">Responsável RAR</th>
                                 <th className="px-4 py-4 whitespace-nowrap font-bold tracking-wider">Tipo de Unidade</th>
+                                <th className="px-4 py-4 whitespace-nowrap font-bold tracking-wider text-center">Status</th>
                                 <th className="px-4 py-4 text-center sticky right-0 bg-[#0B1A4E] font-bold tracking-wider z-10">Ações</th>
                             </tr>
                         </thead>
@@ -245,6 +294,16 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                                     <td className="px-4 py-4 whitespace-nowrap">{unit.responsavelRA}</td>
                                     <td className="px-4 py-4 whitespace-nowrap">{unit.responsavelRAR}</td>
                                     <td className="px-4 py-4 whitespace-nowrap">{unit.tipoDeUnidade}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-center">
+                                        <button
+                                            onClick={() => handleToggleStatus(unit.id, unit.status)}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 ${unit.status ? 'bg-green-500' : 'bg-gray-200'}`}
+                                        >
+                                            <span
+                                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${unit.status ? 'translate-x-6' : 'translate-x-1'}`}
+                                            />
+                                        </button>
+                                    </td>
                                     <td className="px-4 py-4 text-center sticky right-0 bg-white/95 border-l shadow-[-4px_0_10px_rgba(0,0,0,0.05)] z-10">
                                         <div className="flex justify-center space-x-2">
                                             <button
@@ -260,6 +319,13 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                                                 title="Editar Registro"
                                             >
                                                 <PencilIcon className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(unit.id)}
+                                                className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors shadow-sm focus:ring-2 focus:ring-red-200"
+                                                title="Excluir"
+                                            >
+                                                <TrashIcon className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </td>

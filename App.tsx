@@ -37,9 +37,9 @@ const App: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [tipologias, setTipologias] = useState<Tipologia[]>([]);
     const [tipoLocais, setTipoLocais] = useState<TipoLocal[]>([]);
-    
+
     const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao'].includes(currentView);
-    
+
     let solicitacoesTitle = 'Solicitações';
     if (currentView === 'nova_sede' || currentView === 'nova_estrategica' || currentView === 'nova_unidade') {
         solicitacoesTitle = 'Nova Solicitação';
@@ -88,8 +88,8 @@ const App: React.FC = () => {
 
                     // FILTER UNITS: Show only linked units (unless Admin)
                     if (!isAdmin && userLinkedUnits.length > 0) {
-                        mappedUnits = mappedUnits.filter((u: Unit) => 
-                            userLinkedUnits.includes(u.unidadeResumida) || 
+                        mappedUnits = mappedUnits.filter((u: Unit) =>
+                            userLinkedUnits.includes(u.unidadeResumida) ||
                             userLinkedUnits.includes(u.unidade) // Handle varying field names if any
                         );
                     } else if (!isAdmin && userLinkedUnits.length === 0) {
@@ -101,7 +101,7 @@ const App: React.FC = () => {
                 }
                 if (requestsRes.ok) {
                     const data = await requestsRes.json();
-                     let mappedRequests = data.map((r: any) => ({
+                    let mappedRequests = data.map((r: any) => ({
                         ...r,
                         currentLocation: r.current_location,
                         expectedStartDate: r.expected_start_date,
@@ -117,13 +117,15 @@ const App: React.FC = () => {
                         gestorLocal: r.gestor_local
                     }));
 
-                    // FILTER REQUESTS: Show only requests from linked units (unless Admin)
+                    // FILTER REQUESTS: Show only requests from linked units (unless Admin or Sede/Gerencia)
                     // Request field: executingUnit (executing_unit)
-                    if (!isAdmin && userLinkedUnits.length > 0) {
-                        mappedRequests = mappedRequests.filter((r: Request) => 
+                    const isSuperView = isAdmin || currentUser?.profile === 'Sede' || currentUser?.profile === 'Gerência de Facilities';
+
+                    if (!isSuperView && userLinkedUnits.length > 0) {
+                        mappedRequests = mappedRequests.filter((r: Request) =>
                             userLinkedUnits.includes(r.executingUnit)
                         );
-                    } else if (!isAdmin && userLinkedUnits.length === 0) {
+                    } else if (!isSuperView && userLinkedUnits.length === 0) {
                         mappedRequests = [];
                     }
 
@@ -197,7 +199,7 @@ const App: React.FC = () => {
             // Check for 'all' permission or specific list
             const perms = data.user.permissions || [];
             setUserPermissions(perms);
-            
+
             // Set User's Profile
             if (data.profile?.name) {
                 setSelectedProfile(data.profile.name);
@@ -209,8 +211,8 @@ const App: React.FC = () => {
 
     return (
         <div className="flex h-screen bg-[#F0F2F5] font-sans">
-            <Sidebar 
-                selectedProfile={selectedProfile} 
+            <Sidebar
+                selectedProfile={selectedProfile}
                 setSelectedProfile={setSelectedProfile}
                 currentView={currentView}
                 setCurrentView={setCurrentView}
@@ -223,51 +225,51 @@ const App: React.FC = () => {
                 }}
             />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-        {currentView === 'home' && <HomeScreen setCurrentView={setCurrentView} />}
-        {isSolicitacoesView && (
-          <>
-            <Header 
-                title={solicitacoesTitle} 
-                selectedProfile={selectedProfile} 
-                setCurrentView={setCurrentView}
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 my-6">
-              {summaryData.map((data, index) => (
-                <SummaryCard key={index} {...data} />
-              ))}
-            </div>
-            <RequestsTable 
-                selectedProfile={selectedProfile} 
-                currentView={currentView}
-                requests={requests}
-                setRequests={setRequests}
-                userName={currentUser?.name || 'Usuário'}
-            />
-          </>
-        )}
-        {currentView === 'aprovacao' && (
-            <ApprovalRequestsScreen 
-                setCurrentView={setCurrentView}
-                requests={requests}
-                setRequests={setRequests}
-                selectedProfile={selectedProfile}
-                userName={currentUser?.name || 'Usuário'}
-            />
-        )}
-        {currentView === 'planejamento' && <PlanningScreen />}
-        {currentView === 'plurianual' && <PlurianualScreen />}
-        {currentView === 'tipologias' && <TipologiaScreen tipologias={tipologias} setTipologias={setTipologias} />}
-        {currentView === 'cadastro_unidades' && <UnitsScreen units={units} setUnits={setUnits} />}
-        {currentView === 'cadastro_tipo_local' && <TipoLocalScreen tipoLocais={tipoLocais} setTipoLocais={setTipoLocais} />}
-        {currentView === 'gestao_acesso' && <AccessManagementScreen units={units} profiles={profiles} registeredUsers={users} setRegisteredUsers={setUsers} />}
-        {currentView === 'perfil_acesso' && <AccessProfileScreen profiles={profiles} setProfiles={setProfiles} />}
-        {currentView === 'politica_investimento' && <InvestmentPolicyScreen selectedProfile={selectedProfile} />}
-        {currentView === 'nova_sede' && <OpenSedeRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
-        {currentView === 'nova_estrategica' && <OpenStrategicRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
-        {currentView === 'nova_unidade' && <OpenUnitRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
-      </main>
-    </div>
-  );
+                {currentView === 'home' && <HomeScreen setCurrentView={setCurrentView} />}
+                {isSolicitacoesView && (
+                    <>
+                        <Header
+                            title={solicitacoesTitle}
+                            selectedProfile={selectedProfile}
+                            setCurrentView={setCurrentView}
+                        />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 my-6">
+                            {summaryData.map((data, index) => (
+                                <SummaryCard key={index} {...data} />
+                            ))}
+                        </div>
+                        <RequestsTable
+                            selectedProfile={selectedProfile}
+                            currentView={currentView}
+                            requests={requests}
+                            setRequests={setRequests}
+                            userName={currentUser?.name || 'Usuário'}
+                        />
+                    </>
+                )}
+                {currentView === 'aprovacao' && (
+                    <ApprovalRequestsScreen
+                        setCurrentView={setCurrentView}
+                        requests={requests}
+                        setRequests={setRequests}
+                        selectedProfile={selectedProfile}
+                        userName={currentUser?.name || 'Usuário'}
+                    />
+                )}
+                {currentView === 'planejamento' && <PlanningScreen />}
+                {currentView === 'plurianual' && <PlurianualScreen />}
+                {currentView === 'tipologias' && <TipologiaScreen tipologias={tipologias} setTipologias={setTipologias} />}
+                {currentView === 'cadastro_unidades' && <UnitsScreen units={units} setUnits={setUnits} />}
+                {currentView === 'cadastro_tipo_local' && <TipoLocalScreen tipoLocais={tipoLocais} setTipoLocais={setTipoLocais} />}
+                {currentView === 'gestao_acesso' && <AccessManagementScreen units={units} profiles={profiles} registeredUsers={users} setRegisteredUsers={setUsers} />}
+                {currentView === 'perfil_acesso' && <AccessProfileScreen profiles={profiles} setProfiles={setProfiles} />}
+                {currentView === 'politica_investimento' && <InvestmentPolicyScreen selectedProfile={selectedProfile} />}
+                {currentView === 'nova_sede' && <OpenSedeRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
+                {currentView === 'nova_estrategica' && <OpenStrategicRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
+                {currentView === 'nova_unidade' && <OpenUnitRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
+            </main>
+        </div>
+    );
 };
 
 export default App;
