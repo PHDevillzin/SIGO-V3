@@ -1,4 +1,3 @@
-```typescript
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
 import { Unit } from '../types';
@@ -70,12 +69,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (req.method === 'POST') {
             const body = req.body as Unit;
             const result = await query(
-                `INSERT INTO units(
-    codigo_unidade, entidade, tipo, centro, cat, unidade,
-    cidade, bairro, endereco, cep, re, responsavel_re, ra, responsavel_ra, responsavel_rar, tipo_de_unidade,
-    email_gr, gerente_regional, unidade_resumida, site, latitude, longitude, status
-) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
-RETURNING * `,
+                `INSERT INTO units (
+                    codigo_unidade, entidade, tipo, centro, cat, unidade,
+                    cidade, bairro, endereco, cep, re, responsavel_re, ra, responsavel_ra, responsavel_rar, tipo_de_unidade,
+                    email_gr, gerente_regional, unidade_resumida, site, latitude, longitude, status
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+                RETURNING *`,
                 [
                     body.codigoUnidade, body.entidade, body.tipo, body.centro, body.cat, body.unidade,
                     body.cidade, body.bairro, body.endereco, body.cep, body.re, body.responsavelRE, body.ra, body.responsavelRA, body.responsavelRAR, body.tipoDeUnidade,
@@ -93,31 +92,31 @@ RETURNING * `,
 
             const result = await query(
                 `UPDATE units SET
-codigo_unidade = COALESCE($1, codigo_unidade),
-    entidade = COALESCE($2, entidade),
-    tipo = COALESCE($3, tipo),
-    centro = COALESCE($4, centro),
-    cat = COALESCE($5, cat),
-    unidade = COALESCE($6, unidade),
-    cidade = COALESCE($7, cidade),
-    bairro = COALESCE($8, bairro),
-    endereco = COALESCE($9, endereco),
-    cep = COALESCE($10, cep),
-    re = COALESCE($11, re),
-    responsavel_re = COALESCE($12, responsavel_re),
-    ra = COALESCE($13, ra),
-    responsavel_ra = COALESCE($14, responsavel_ra),
-    responsavel_rar = COALESCE($15, responsavel_rar),
-    tipo_de_unidade = COALESCE($16, tipo_de_unidade),
-    email_gr = COALESCE($17, email_gr),
-    gerente_regional = COALESCE($18, gerente_regional),
-    unidade_resumida = COALESCE($19, unidade_resumida),
-    site = COALESCE($20, site),
-    latitude = COALESCE($21, latitude),
-    longitude = COALESCE($22, longitude),
-    status = COALESCE($23, status)
+                    codigo_unidade = COALESCE($1, codigo_unidade),
+                    entidade = COALESCE($2, entidade),
+                    tipo = COALESCE($3, tipo),
+                    centro = COALESCE($4, centro),
+                    cat = COALESCE($5, cat),
+                    unidade = COALESCE($6, unidade),
+                    cidade = COALESCE($7, cidade),
+                    bairro = COALESCE($8, bairro),
+                    endereco = COALESCE($9, endereco),
+                    cep = COALESCE($10, cep),
+                    re = COALESCE($11, re),
+                    responsavel_re = COALESCE($12, responsavel_re),
+                    ra = COALESCE($13, ra),
+                    responsavel_ra = COALESCE($14, responsavel_ra),
+                    responsavel_rar = COALESCE($15, responsavel_rar),
+                    tipo_de_unidade = COALESCE($16, tipo_de_unidade),
+                    email_gr = COALESCE($17, email_gr),
+                    gerente_regional = COALESCE($18, gerente_regional),
+                    unidade_resumida = COALESCE($19, unidade_resumida),
+                    site = COALESCE($20, site),
+                    latitude = COALESCE($21, latitude),
+                    longitude = COALESCE($22, longitude),
+                    status = COALESCE($23, status)
                 WHERE id = $24
-RETURNING * `,
+                RETURNING *`,
                 [
                     body.codigoUnidade, body.entidade, body.tipo, body.centro, body.cat, body.unidade,
                     body.cidade, body.bairro, body.endereco, body.cep, body.re, body.responsavelRE, body.ra, body.responsavelRA, body.responsavelRAR, body.tipoDeUnidade,
@@ -133,7 +132,7 @@ RETURNING * `,
         if (req.method === 'DELETE') {
             const { id } = req.query;
             if (!id) return res.status(400).json({ error: 'Missing ID' });
-    
+
             await query('DELETE FROM units WHERE id = $1', [id as string]);
             return res.status(200).json({ message: 'Unit deleted' });
         }
