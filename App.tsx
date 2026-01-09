@@ -291,7 +291,7 @@ const App: React.FC = () => {
                 )}
                 {currentView === 'perfil_acesso' && (
                     (userPermissions.includes('Configurações:Perfil Acesso') || userPermissions.includes('*') || userPermissions.includes('all')) ? (
-                        <AccessProfileScreen profiles={profiles} setProfiles={setProfiles} userPermissions={userPermissions} />
+                        <AccessProfileScreen profiles={profiles} setProfiles={setProfiles} userPermissions={userPermissions} currentUser={currentUser} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-red-500 font-bold text-xl">
                             Acesso Negado: Você não tem permissão para acessar esta tela.

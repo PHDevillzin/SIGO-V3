@@ -4,7 +4,7 @@ import pg from 'pg';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
     res.setHeader(
         'Access-Control-Allow-Headers',
         'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
@@ -20,76 +20,124 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ssl: { rejectUnauthorized: false }
     });
 
+    const query = async (text: string, params: any[] = []) => {
+        const client = await pool.connect();
+        try {
+            return await client.query(text, params);
+        } finally {
+            client.release();
+        }
+    };
+
     try {
+        // GET: List Profiles
         if (req.method === 'GET') {
-            const client = await pool.connect();
-            try {
-                const result = await client.query('SELECT * FROM profiles ORDER BY id ASC');
-                return res.status(200).json(result.rows);
-            } finally {
-                client.release();
-            }
+            const result = await query(`
+                SELECT 
+                    id, 
+                    name, 
+                    permissions, 
+                    category, 
+                    is_active as "isActive",
+                    created_at as "createdAt",
+                    created_by as "createdBy",
+                    updated_at as "updatedAt",
+                    updated_by as "updatedBy",
+                    last_action as "lastAction"
+                FROM profiles 
+                ORDER BY name ASC
+            `);
+            return res.status(200).json(result.rows);
         }
 
+        // POST: Create Profile
         if (req.method === 'POST') {
-            const { id, name, permissions, category } = req.body;
+            const { name, permissions, category, user } = req.body;
 
-            if (!name) return res.status(400).json({ error: 'Name is required' });
+            if (!name) return res.status(400).json({ error: 'Name required' });
 
-            // STRICT RULE: 'Configurações:Perfil Acesso' is exclusive to Admin.
-            // We strip it from any other profile payload to ensure rules are enforced at API level.
-            const isAdmin = name === 'Administração do Sistema' || name === 'Administrador do sistema';
-            const restrictedPermission = 'Configurações:Perfil Acesso';
+            const result = await query(
+                `INSERT INTO profiles (
+                    name, 
+                    permissions, 
+                    category, 
+                    is_active, 
+                    created_at, 
+                    created_by,
+                    last_action
+                ) VALUES ($1, $2, $3, true, NOW(), $4, 'Cadastro') 
+                RETURNING 
+                    id, 
+                    name, 
+                    permissions, 
+                    category, 
+                    is_active as "isActive", 
+                    created_at as "createdAt", 
+                    created_by as "createdBy", 
+                    updated_at as "updatedAt", 
+                    updated_by as "updatedBy", 
+                    last_action as "lastAction"`,
+                [name, JSON.stringify(permissions || []), category || 'GERAL', user || 'Sistema']
+            );
 
-            let finalPermissions = permissions || [];
-            if (!isAdmin) {
-                finalPermissions = finalPermissions.filter((p: string) => p !== restrictedPermission);
+            return res.status(201).json(result.rows[0]);
+        }
+
+        // PUT: Update Profile
+        if (req.method === 'PUT') {
+            const { id, name, permissions, isActive, user } = req.body;
+
+            if (!id) return res.status(400).json({ error: 'ID required' });
+
+            // Fetch current state to determine action
+            const currentRes = await query('SELECT is_active FROM profiles WHERE id = $1', [id]);
+            if (currentRes.rows.length === 0) return res.status(404).json({ error: 'Profile not found' });
+
+            const currentActive = currentRes.rows[0].is_active;
+
+            let action = 'Edição';
+            if (typeof isActive === 'boolean') {
+                if (isActive && !currentActive) action = 'Reativação';
+                else if (!isActive && currentActive) action = 'Inativação';
             }
 
-            const client = await pool.connect();
-            try {
-                // If ID is provided, it's likely an edit (or we generate a slug)
-                // The frontend generates ID as Date.now() for new, or passes existing ID.
-                // We should probably rely on slug generation here if new, or respect passed ID if existing.
+            const result = await query(
+                `UPDATE profiles SET
+                    name = COALESCE($1, name),
+                    permissions = COALESCE($2, permissions),
+                    is_active = COALESCE($3, is_active),
+                    updated_at = NOW(),
+                    updated_by = $4,
+                    last_action = $5
+                WHERE id = $6
+                RETURNING 
+                    id, 
+                    name, 
+                    permissions, 
+                    category, 
+                    is_active as "isActive", 
+                    created_at as "createdAt", 
+                    created_by as "createdBy", 
+                    updated_at as "updatedAt", 
+                    updated_by as "updatedBy", 
+                    last_action as "lastAction"`,
+                [
+                    name,
+                    permissions ? JSON.stringify(permissions) : null,
+                    isActive,
+                    user || 'Sistema',
+                    action,
+                    id
+                ]
+            );
 
-                // Let's check if exists
-                let targetId = id;
-                const check = await client.query('SELECT id FROM profiles WHERE id = $1', [targetId]);
-
-                if (check.rows.length > 0) {
-                    // Update
-                    await client.query(
-                        'UPDATE profiles SET name = $1, permissions = $2 WHERE id = $3',
-                        [name, JSON.stringify(finalPermissions), targetId]
-                    );
-                } else {
-                    // Insert
-                    // If ID looks like timestamp (numeric), maybe regenerate slug? 
-                    // Or trust frontend? The frontend uses Date.now(). Let's slugify for consistency if it looks numeric.
-                    if (!targetId || /^\d+$/.test(targetId)) {
-                        targetId = name.toString().toLowerCase()
-                            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                            .replace(/\s+/g, '_')
-                            .replace(/[^a-z0-9_]+/g, '');
-                    }
-
-                    await client.query(
-                        'INSERT INTO profiles (id, name, permissions, category) VALUES ($1, $2, $3, $4)',
-                        [targetId, name, JSON.stringify(finalPermissions), category || 'GERAL']
-                    );
-                }
-
-                return res.status(200).json({ success: true, id: targetId });
-
-            } finally {
-                client.release();
-            }
+            return res.status(200).json(result.rows[0]);
         }
 
         res.status(405).json({ error: 'Method not allowed' });
     } catch (error: any) {
         console.error('API Error:', error);
-        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+        res.status(500).json({ error: 'Internal Server Error' });
     } finally {
         await pool.end();
     }

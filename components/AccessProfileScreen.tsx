@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { MagnifyingGlassIcon, TrashIcon, CheckCircleIcon, InformationCircleIcon, XMarkIcon, PaperAirplaneIcon } from './Icons';
-import type { AccessProfile } from '../types';
+import type { User, AccessProfile } from '../types';
 
 import { MENUS } from './constants';
 
@@ -48,39 +48,6 @@ const NewProfileModal: React.FC<NewProfileModalProps> = ({ isOpen, onClose, onSa
                             className="w-full border border-gray-300 rounded-md px-4 py-2.5 text-sm focus:ring-2 focus:ring-sky-500 outline-none"
                         />
                     </div>
-                    <div>
-                        <h3 className="text-sm font-bold text-gray-800 mb-4">Selecione as Funcionalidades</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3">
-                            {MENUS.map(menu => (
-                                <div key={menu.name} className="space-y-1.5">
-                                    <h4 className="text-[10px] font-bold text-sky-600 uppercase tracking-widest border-b border-sky-50 pb-0.5">{menu.name}</h4>
-                                    {menu.items.map(item => {
-                                        const isChecked = permissions.includes(item.id);
-                                        const isRestricted = item.id === 'perfil_acesso';
-
-                                        return (
-                                            <label
-                                                key={item.id}
-                                                className={`flex items-center group p-1 -ml-1 rounded-md transition-all ${isRestricted ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isChecked}
-                                                    onChange={() => handleToggle(item.id)}
-                                                    disabled={isRestricted}
-                                                    className={`h-4 w-4 rounded border-gray-300 ${isChecked ? 'text-red-600 focus:ring-red-500' : 'text-sky-600 focus:ring-sky-500'}`}
-                                                />
-                                                <span className={`ml-3 text-sm font-medium transition-colors ${isChecked ? 'text-red-600 font-bold' : 'text-gray-700'}`}>
-                                                    {item.label}
-                                                    {isRestricted && <span className="ml-2 text-[9px] text-red-400 font-bold italic">(Restrito ao Admin)</span>}
-                                                </span>
-                                            </label>
-                                        );
-                                    })}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
                 <div className="p-6 border-t bg-gray-50 flex justify-end space-x-3 rounded-b-lg">
                     <button onClick={onClose} className="px-6 py-2 text-gray-600 hover:text-gray-800 font-bold text-sm transition-colors uppercase">Cancelar</button>
@@ -102,9 +69,10 @@ interface AccessProfileScreenProps {
     profiles: AccessProfile[];
     setProfiles: React.Dispatch<React.SetStateAction<AccessProfile[]>>;
     userPermissions: string[];
+    currentUser: User | null;
 }
 
-const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, setProfiles, userPermissions }) => {
+const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, setProfiles, userPermissions, currentUser }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedProfileId, setSelectedProfileId] = useState<string>(profiles[0]?.id || '');
     const [isNewModalOpen, setIsNewModalOpen] = useState(false);
@@ -113,6 +81,7 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
     const [isEditingExisting, setIsEditingExisting] = useState(false);
     const [editName, setEditName] = useState('');
     const [editPermissions, setEditPermissions] = useState<string[]>([]);
+    const [editIsActive, setEditIsActive] = useState(true);
 
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; isVisible: boolean } | null>(null);
 
@@ -130,6 +99,7 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
         if (!isEditingExisting && selectedProfile) {
             setEditName(selectedProfile.name);
             setEditPermissions(selectedProfile.permissions);
+            setEditIsActive(selectedProfile.isActive !== false); // Default true if undefined
         }
     }, [selectedProfileId, selectedProfile, isEditingExisting]);
 
@@ -139,54 +109,65 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
 
     const handleTogglePermission = (keys: string[]) => {
         if (!isEditingExisting) return;
-
-        // Logic for restricted screens: only Admin can have 'perfil_acesso'
+        // Same permission logic...
         const isAdmin = editName === 'Administração do Sistema' || editName === 'Administrador do sistema';
         const isRestricted = keys.includes('Configurações:Perfil Acesso');
-
         if (isRestricted && !isAdmin) return;
 
         setEditPermissions(prev => {
+            // Simplify for brevity, assuming same logic as before or simplified
+            // Keeping original logic structure recommended
             if (prev.includes('*')) {
-                // If we are unchecking something while having '*', we switch to "all except this"
-                // But '*' is a wildcard. Ideally we should list all and remove the target.
-                // For simplicity, if '*' is present, we first expand it to all available keys minus the one being toggled.
                 const allKeys = MENUS.flatMap(m => m.items.flatMap(i => i.backendKeys));
                 return allKeys.filter(k => !keys.includes(k));
             }
-
             const hasAllKeys = keys.every(k => prev.includes(k));
-
-            if (hasAllKeys) {
-                // Remove keys
-                return prev.filter(k => !keys.includes(k));
-            } else {
-                // Add keys (avoid duplicates)
-                const newKeys = [...prev];
-                keys.forEach(k => {
-                    if (!newKeys.includes(k)) newKeys.push(k);
-                });
-                return newKeys;
-            }
+            if (hasAllKeys) return prev.filter(k => !keys.includes(k));
+            return [...prev, ...keys.filter(k => !prev.includes(k))];
         });
     };
 
-    const handleEditToggle = () => {
+    const handleEditToggle = async () => {
         if (isEditingExisting) {
             if (!editName.trim()) {
                 showToast('O nome do perfil não pode estar vazio.', 'error');
                 return;
             }
-            setProfiles(prev => prev.map(p =>
-                p.id === selectedProfileId
-                    ? { ...p, name: editName.trim(), permissions: editPermissions }
-                    : p
-            ));
-            setIsEditingExisting(false);
-            showToast('Configurações de perfil salvas com sucesso!', 'success');
+
+            try {
+                // Determine action based on Active state change
+                // API handles determining 'Edição', 'Inativação', 'Reativação' based on isActive flag sent
+                const response = await fetch('/api/profiles', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: selectedProfileId,
+                        name: editName.trim(),
+                        permissions: editPermissions,
+                        isActive: editIsActive,
+                        user: currentUser?.name || 'Usuário Desconhecido'
+                    })
+                });
+
+                if (response.ok) {
+                    const updatedProfile = await response.json();
+                    setProfiles(prev => prev.map(p =>
+                        p.id === selectedProfileId ? updatedProfile : p
+                    ));
+                    setIsEditingExisting(false);
+                    showToast('Configurações de perfil salvas com sucesso!', 'success');
+                } else {
+                    showToast('Erro ao salvar alterações.', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Erro de conexão.', 'error');
+            }
+
         } else {
             setEditName(selectedProfile.name);
             setEditPermissions(selectedProfile.permissions);
+            setEditIsActive(selectedProfile.isActive !== false);
             setIsEditingExisting(true);
         }
     };
@@ -195,6 +176,7 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
         setIsEditingExisting(false);
         setEditName(selectedProfile.name);
         setEditPermissions(selectedProfile.permissions);
+        setEditIsActive(selectedProfile.isActive !== false);
     };
 
     const handleNewProfile = async (name: string, permissions: string[]) => {
@@ -202,16 +184,16 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
             const response = await fetch('/api/profiles', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, permissions, category: 'GERAL' })
+                body: JSON.stringify({
+                    name,
+                    permissions,
+                    category: 'GERAL',
+                    user: currentUser?.name || 'Usuário Desconhecido'
+                })
             });
 
             if (response.ok) {
-                const resData = await response.json();
-                const newProfile: AccessProfile = {
-                    id: resData.id,
-                    name,
-                    permissions
-                };
+                const newProfile = await response.json();
                 setProfiles(prev => [...prev, newProfile]);
                 setSelectedProfileId(newProfile.id);
                 setIsNewModalOpen(false);
@@ -222,19 +204,6 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
         } catch (error) {
             console.error(error);
             showToast('Erro de conexão.', 'error');
-        }
-    };
-
-    const handleDeleteProfile = () => {
-        if (selectedProfile.name === 'Administração do Sistema') {
-            showToast('O perfil Administração do Sistema não pode ser excluído.', 'error');
-            return;
-        }
-        if (confirm(`Deseja realmente excluir o perfil ${selectedProfile.name}?`)) {
-            const nextProfiles = profiles.filter(p => p.id !== selectedProfileId);
-            setProfiles(nextProfiles);
-            setSelectedProfileId(nextProfiles[0]?.id || '');
-            showToast('Perfil excluído com sucesso.', 'success');
         }
     };
 
@@ -254,6 +223,12 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
 
     const getProfileColor = (name: string) => {
         return profileColors[name] || `bg-slate-400`;
+    };
+
+    // Helper to format date
+    const formatDate = (dateStr?: string) => {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleString('pt-BR');
     };
 
     if (!selectedProfile && profiles.length > 0) return <div>Carregando...</div>;
@@ -307,9 +282,14 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                                 <div className={`w-10 h-10 rounded-full ${getProfileColor(profile.name)} text-white flex items-center justify-center font-bold text-xs shrink-0 mr-3 shadow-sm`}>
                                     {getInitials(profile.name)}
                                 </div>
-                                <span className={`text-xs font-bold leading-tight ${selectedProfileId === profile.id ? 'text-sky-600' : 'text-gray-700'}`}>
-                                    {profile.name}
-                                </span>
+                                <div className="flex flex-col">
+                                    <span className={`text-xs font-bold leading-tight ${selectedProfileId === profile.id ? 'text-sky-600' : 'text-gray-700'}`}>
+                                        {profile.name}
+                                    </span>
+                                    {profile.isActive === false && (
+                                        <span className="text-[10px] text-red-500 font-bold uppercase mt-0.5">Inativo</span>
+                                    )}
+                                </div>
                             </button>
                         ))}
                     </div>
@@ -322,28 +302,60 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                             <>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-800 mb-2">Nome</label>
-                                    <input
-                                        type="text"
-                                        value={isEditingExisting ? editName : selectedProfile.name}
-                                        onChange={(e) => setEditName(e.target.value)}
-                                        readOnly={!isEditingExisting}
-                                        className={`w-full border-none rounded-md px-4 py-2.5 text-sm font-medium transition-colors ${isEditingExisting ? 'bg-white ring-2 ring-sky-100 text-gray-900' : 'bg-gray-50 text-gray-700'}`}
-                                    />
+                                    <div className="flex gap-4 items-center">
+                                        <input
+                                            type="text"
+                                            value={isEditingExisting ? editName : selectedProfile.name}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            readOnly={!isEditingExisting}
+                                            className={`flex-1 border-none rounded-md px-4 py-2.5 text-sm font-medium transition-colors ${isEditingExisting ? 'bg-white ring-2 ring-sky-100 text-gray-900' : 'bg-gray-50 text-gray-700'}`}
+                                        />
+
+                                        {/* Activation Toggle */}
+                                        <div className="flex items-center space-x-3 flex-none">
+                                            <span className={`text-xs font-bold uppercase tracking-wider ${editIsActive ? 'text-gray-400' : 'text-red-500'}`}>Inativo</span>
+                                            <button
+                                                onClick={() => isEditingExisting && setEditIsActive(!editIsActive)}
+                                                disabled={!isEditingExisting}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 ${editIsActive ? 'bg-sky-500' : 'bg-gray-200'} ${!isEditingExisting ? 'cursor-default opacity-80' : 'cursor-pointer'}`}
+                                            >
+                                                <span
+                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${editIsActive ? 'translate-x-6' : 'translate-x-1'}`}
+                                                />
+                                            </button>
+                                            <span className={`text-xs font-bold uppercase tracking-wider ${editIsActive ? 'text-green-600' : 'text-gray-400'}`}>Ativo</span>
+                                        </div>
+
+                                        {/* Action Buttons */}
+                                        <div className="flex items-center space-x-2 flex-none ml-2">
+                                            {isEditingExisting && (
+                                                <button
+                                                    onClick={handleCancelEdit}
+                                                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-100 transition-colors uppercase"
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={handleEditToggle}
+                                                className="px-6 py-2 bg-[#0EA5E9] text-white rounded-md text-xs font-bold hover:bg-sky-600 transition-all shadow-md active:transform active:scale-95 uppercase"
+                                            >
+                                                {isEditingExisting ? 'Salvar' : 'Editar'}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-sm font-bold text-gray-800 mb-6">Funcionalidades</h3>
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-3">
+                                    <h3 className="text-sm font-bold text-gray-800 mb-2">Funcionalidades</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-4">
                                         {MENUS.map(menu => (
                                             <div key={menu.name} className="space-y-1.5">
                                                 <h4 className="text-[10px] font-bold text-sky-600 uppercase tracking-widest border-b border-sky-50 pb-1">{menu.name}</h4>
                                                 <div className="space-y-1">
                                                     {menu.items.map(item => {
                                                         const currentPermissions = isEditingExisting ? editPermissions : selectedProfile.permissions;
-
-                                                        // Check if ALL backend keys for this item are present, or if '*' (Admin) is present
                                                         const isChecked = currentPermissions.includes('*') || item.backendKeys.some(k => currentPermissions.includes(k));
-
                                                         const isPermissionRestricted = (item.id === 'perfil_acesso' && editName !== 'Administração do Sistema' && editName !== 'Administrador do sistema');
                                                         const isDisabled = !isEditingExisting || isPermissionRestricted;
 
@@ -382,32 +394,51 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="p-6 border-t border-gray-100 flex justify-end space-x-3 bg-gray-50/50">
-                        {isEditingExisting && (
-                            <>
-                                <button
-                                    onClick={handleCancelEdit}
-                                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors uppercase"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={handleDeleteProfile}
-                                    disabled={selectedProfile?.name === 'Administração do Sistema'}
-                                    className="px-6 py-2 border border-red-300 text-red-500 rounded-md text-sm font-medium hover:bg-red-50 flex items-center disabled:opacity-50 transition-colors uppercase"
-                                >
-                                    <TrashIcon className="w-4 h-4 mr-2" /> Excluir
-                                </button>
-                            </>
-                        )}
+                    <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex flex-col space-y-4">
+
+                        {/* Audit Trail Section */}
                         {selectedProfile && (
-                            <button
-                                onClick={handleEditToggle}
-                                className="px-10 py-2 bg-[#0EA5E9] text-white rounded-md text-sm font-bold hover:bg-sky-600 transition-all shadow-md active:transform active:scale-95 uppercase"
-                            >
-                                {isEditingExisting ? 'Salvar' : 'Editar'}
-                            </button>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-2 border-gray-200">
+                                <div className="space-y-0.5">
+                                    <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Data de Inclusão</label>
+                                    <input
+                                        type="text"
+                                        value={formatDate(selectedProfile.createdAt)}
+                                        readOnly
+                                        className="w-full bg-white border border-gray-200 text-gray-700 text-[10px] px-2 py-1.5 rounded focus:outline-none"
+                                    />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Responsável Inclusão</label>
+                                    <input
+                                        type="text"
+                                        value={selectedProfile.createdBy || '-'}
+                                        readOnly
+                                        className="w-full bg-white border border-gray-200 text-gray-700 text-[10px] px-2 py-1.5 rounded focus:outline-none"
+                                    />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Última Alteração</label>
+                                    <input
+                                        type="text"
+                                        value={formatDate(selectedProfile.updatedAt || selectedProfile.createdAt)}
+                                        readOnly
+                                        className="w-full bg-white border border-gray-200 text-gray-700 text-[10px] px-2 py-1.5 rounded focus:outline-none"
+                                    />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Responsável / Ação</label>
+                                    <input
+                                        type="text"
+                                        value={`${selectedProfile.updatedBy || selectedProfile.createdBy || '-'} ${selectedProfile.lastAction ? `(${selectedProfile.lastAction})` : ''}`}
+                                        readOnly
+                                        className="w-full bg-white border border-gray-200 text-gray-700 text-[10px] px-2 py-1.5 rounded focus:outline-none"
+                                    />
+                                </div>
+                            </div>
                         )}
+
+
                     </div>
                 </div>
             </div>

@@ -39,8 +39,8 @@ const AccessDetailsModal: React.FC<AccessDetailsModalProps> = ({ isOpen, onClose
 
                 if ((cat === 'CORPORATIVO' || cat === 'GERAL') && !isManagement) return 1;
                 if ((cat === 'CORPORATIVO' || cat === 'GERAL') && isManagement) return 2;
-                if (cat === 'SESI') return 3;
-                if (cat === 'SENAI') return 4;
+                if (cat === 'SESI' && isManagement) return 3;
+                if (cat === 'SENAI' && isManagement) return 4;
                 return 5;
             };
 

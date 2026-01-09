@@ -1,0 +1,27 @@
+ID: administrador_gso | Name: "Administrador GSO" | Category: CORPORATIVO
+ID: administrador_do_sistema | Name: "Administrador do sistema" | Category: CORPORATIVO
+ID: alta_administracao | Name: "Alta Administração" | Category: CORPORATIVO
+ID: diretoria_corporativa | Name: "Diretoria Corporativa" | Category: CORPORATIVO
+ID: gerencia_executiva_da_cultura | Name: "Gerência Executiva da Cultura" | Category: SESI
+ID: gerencia_executiva_da_educacao | Name: "Gerência Executiva da Educação" | Category: SESI
+ID: gerencia_senior_contabil_e_financeira | Name: "Gerência Sênior Contábil e Financeira" | Category: CORPORATIVO
+ID: gerencia_senior_juridica_e_editora | Name: "Gerência Sênior Jurídica e Editora" | Category: CORPORATIVO
+ID: gerencia_senior_de_obras | Name: "Gerência Sênior de Obras" | Category: CORPORATIVO
+ID: gerencia_senior_de_recursos_humanos | Name: "Gerência Sênior de Recursos Humanos" | Category: CORPORATIVO
+ID: gerencia_senior_de_tecnologia_da_informacao | Name: "Gerência Sênior de Tecnologia da Informação" | Category: CORPORATIVO
+ID: gerencia_de_compras | Name: "Gerência de Compras" | Category: CORPORATIVO
+ID: gerencia_de_comunicacao_e_marketing_institucional | Name: "Gerência de Comunicação e Marketing Institucional" | Category: CORPORATIVO
+ID: gerencia_de_educacao_ged | Name: "Gerência de Educação (GED)" | Category: SENAI
+ID: gerencia_de_esporte_e_lazer | Name: "Gerência de Esporte e Lazer" | Category: SESI
+ID: gerencia_de_facilities | Name: "Gerência de Facilities" | Category: CORPORATIVO
+ID: gerencia_de_infraestrutura_e_suprimentos_gis | Name: "Gerência de Infraestrutura e Suprimentos (GIS)" | Category: SENAI
+ID: gerencia_de_inovacao_e_tecnologia_git | Name: "Gerência de Inovação e Tecnologia (GIT)" | Category: SENAI
+ID: gerencia_de_planejamento_e_avaliacao_gpa | Name: "Gerência de Planejamento e Avaliação (GPA)" | Category: SENAI
+ID: gerencia_de_planejamento_e_controladoria | Name: "Gerência de Planejamento e Controladoria" | Category: CORPORATIVO
+ID: gerencia_de_relacoes_com_o_mercado_grm | Name: "Gerência de Relações com o Mercado (GRM)" | Category: SENAI
+ID: gerencia_de_saude_e_seguranca_na_industria | Name: "Gerência de Saúde e Segurança na Indústria" | Category: SESI
+ID: gestor_gso | Name: "Gestor (GSO)" | Category: CORPORATIVO
+ID: gestor_local | Name: "Gestor Local" | Category: CORPORATIVO
+ID: planejamento_gso | Name: "Planejamento (GSO)" | Category: CORPORATIVO
+ID: sede_solicitante | Name: "Sede Solicitante" | Category: CORPORATIVO
+ID: unidade_solicitante | Name: "Unidade Solicitante" | Category: CORPORATIVO

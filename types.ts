@@ -150,9 +150,14 @@ export interface PlanningData {
 export interface AccessProfile {
   id: string;
   name: string;
-  description?: string;
-  category?: string; // e.g. 'GERAL', 'SESI', 'SENAI', 'CORPORATIVO'
-  permissions: string[]; // List of view IDs or functionality names
+  category?: 'SESI' | 'SENAI' | 'CORPORATIVO' | 'GERAL';
+  permissions: string[];
+  isActive?: boolean;
+  createdAt?: string;
+  createdBy?: string;
+  updatedAt?: string;
+  updatedBy?: string;
+  lastAction?: 'Cadastro' | 'Edição' | 'Inativação' | 'Reativação';
 }
 
 export interface Tipologia {

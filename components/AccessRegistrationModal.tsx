@@ -99,13 +99,13 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                 // Group 2: Corporate Management
                 if ((cat === 'CORPORATIVO' || cat === 'GERAL') && isManagement) return 2;
 
-                // Group 3: SESI
-                // User said: "Sesi and Senai after the first two, separated between Sesi and Senai"
-                if (cat === 'SESI') return 3;
+                // Group 3: SESI Management
+                if (cat === 'SESI' && isManagement) return 3;
 
-                // Group 4: SENAI
-                if (cat === 'SENAI') return 4;
+                // Group 4: SENAI Management
+                if (cat === 'SENAI' && isManagement) return 4;
 
+                // Group 5: Others (including SESI/SENAI non-management)
                 return 5;
             };
 
@@ -195,10 +195,29 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
         });
     };
 
+    const EXEMPT_PROFILES = [
+        'Administrador GSO',
+        'Diretoria Corporativa',
+        'Gestor (GSO)',
+        'Planejamento (GSO)',
+        'Gerência de Comunicação e Marketing Institucional',
+        'Gerência de Facilities',
+        'Gerência de Planejamento e Controladoria',
+        'Gerência Sênior Contábil e Financeira',
+        'Gerência Sênior de Obras',
+        'Gerência Sênior de Recursos Humanos',
+        'Gerência Sênior de Tecnologia da Informação',
+        'Gerência Sênior Jurídica e Editora',
+        'Administração do sistema', // Likely implied, adding for safety logic consistency with previous exempts
+        'Administrador do sistema'   // Likely implied
+    ];
+
+    // Default Hidden. Show ONLY if there is at least one selected profile that is NOT exempt.
+    const showAdditionalFields = selectedProfiles.some(p => !EXEMPT_PROFILES.includes(p));
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[100] flex justify-center items-center p-4 backdrop-blur-sm">
             <div className={`bg-white rounded-lg shadow-2xl w-full ${!isEditing ? 'max-w-7xl' : 'max-w-2xl'} animate-in fade-in zoom-in duration-200 flex flex-col max-h-[95vh]`}>
-                {/* Header */}
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg shrink-0">
                     <h2 className="text-lg font-bold text-[#0B1A4E]">
@@ -325,43 +344,48 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
                                 />
                             </div>
 
-                            <div>
-                                <MultiSelectDropdown
-                                    label="Unidades com Acesso:"
-                                    options={unitOptions}
-                                    selectedValues={selectedUnits}
-                                    onChange={(vals) => {
-                                        setSelectedUnits(vals);
-                                        setError(null);
-                                    }}
-                                    placeholder="Selecione as unidades..."
-                                />
-                                <p className="text-[10px] text-gray-400 mt-1 italic">
-                                    * Obrigatório para Gestor Local, Unidade Solicitante e perfis regionais.
-                                </p>
-                            </div>
+                            {/* Conditionally render Units and Checkboxes */}
+                            {showAdditionalFields && (
+                                <>
+                                    <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <MultiSelectDropdown
+                                            label="Unidades com Acesso:"
+                                            options={unitOptions}
+                                            selectedValues={selectedUnits}
+                                            onChange={(vals) => {
+                                                setSelectedUnits(vals);
+                                                setError(null);
+                                            }}
+                                            placeholder="Selecione as unidades..."
+                                        />
+                                        <p className="text-[10px] text-gray-400 mt-1 italic">
+                                            * Obrigatório para Gestor Local, Unidade Solicitante e perfis regionais.
+                                        </p>
+                                    </div>
 
-                            {/* Checkboxes */}
-                            <div className="flex gap-6 pt-2">
-                                <label className="flex items-center space-x-2 cursor-pointer group">
-                                    <input
-                                        type="checkbox"
-                                        checked={isApprover}
-                                        onChange={e => setIsApprover(e.target.checked)}
-                                        className="w-4 h-4 text-[#0EA5E9] rounded border-gray-300 focus:ring-[#0EA5E9] cursor-pointer"
-                                    />
-                                    <span className="text-sm font-medium text-gray-700 group-hover:text-[#0B1A4E] transition-colors">Aprovador</span>
-                                </label>
-                                <label className="flex items-center space-x-2 cursor-pointer group">
-                                    <input
-                                        type="checkbox"
-                                        checked={isRequester}
-                                        onChange={e => setIsRequester(e.target.checked)}
-                                        className="w-4 h-4 text-[#0EA5E9] rounded border-gray-300 focus:ring-[#0EA5E9] cursor-pointer"
-                                    />
-                                    <span className="text-sm font-medium text-gray-700 group-hover:text-[#0B1A4E] transition-colors">Solicitante</span>
-                                </label>
-                            </div>
+                                    {/* Checkboxes */}
+                                    <div className="flex gap-6 pt-2 animate-in fade-in slide-in-from-top-1 duration-200" >
+                                        <label className="flex items-center space-x-2 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                checked={isApprover}
+                                                onChange={e => setIsApprover(e.target.checked)}
+                                                className="w-4 h-4 text-[#0EA5E9] rounded border-gray-300 focus:ring-[#0EA5E9] cursor-pointer"
+                                            />
+                                            <span className="text-sm font-medium text-gray-700 group-hover:text-[#0B1A4E] transition-colors">Aprovador</span>
+                                        </label>
+                                        <label className="flex items-center space-x-2 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                checked={isRequester}
+                                                onChange={e => setIsRequester(e.target.checked)}
+                                                className="w-4 h-4 text-[#0EA5E9] rounded border-gray-300 focus:ring-[#0EA5E9] cursor-pointer"
+                                            />
+                                            <span className="text-sm font-medium text-gray-700 group-hover:text-[#0B1A4E] transition-colors">Solicitante</span>
+                                        </label>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         {error && (
