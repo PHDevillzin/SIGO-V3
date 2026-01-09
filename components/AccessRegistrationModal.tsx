@@ -79,7 +79,46 @@ const AccessRegistrationModal: React.FC<AccessRegistrationModalProps> = ({
 
 
     const unitOptions = useMemo(() => Array.from(new Set(units.map(u => u.unidade))).sort(), [units]);
-    const profileOptions = useMemo(() => profiles.map(p => p.name).sort(), [profiles]);
+
+    const profileOptions = useMemo(() => {
+        // Sorting Rules:
+        // 1. Corporate Non-Management (Category 'CORPORATIVO'/'GERAL' && !Gerencia/Gestor)
+        // 2. Corporate Management (Category 'CORPORATIVO'/'GERAL' && Gerencia/Gestor)
+        // 3. SESI Profiles (Category 'SESI')
+        // 4. SENAI Profiles (Category 'SENAI')
+        // 5. Others
+        const sortedProfiles = [...profiles].sort((a, b) => {
+            const getGroup = (p: AccessProfile) => {
+                const cat = (p.category || 'CORPORATIVO').toUpperCase(); // Treat undefined/null as CORPORATIVO/GERAL base
+                const name = p.name.toUpperCase();
+                const isManagement = name.includes('GERÊNCIA') || name.includes('GESTOR') || name.includes('DIRETORIA') || name.includes('ADMINISTRAÇÃO');
+
+                // Group 1: Corporate Non-Management
+                if ((cat === 'CORPORATIVO' || cat === 'GERAL') && !isManagement) return 1;
+
+                // Group 2: Corporate Management
+                if ((cat === 'CORPORATIVO' || cat === 'GERAL') && isManagement) return 2;
+
+                // Group 3: SESI
+                // User said: "Sesi and Senai after the first two, separated between Sesi and Senai"
+                if (cat === 'SESI') return 3;
+
+                // Group 4: SENAI
+                if (cat === 'SENAI') return 4;
+
+                return 5;
+            };
+
+            const groupA = getGroup(a);
+            const groupB = getGroup(b);
+
+            if (groupA !== groupB) return groupA - groupB;
+
+            return a.name.localeCompare(b.name);
+        });
+
+        return sortedProfiles.map(p => p.name);
+    }, [profiles]);
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);

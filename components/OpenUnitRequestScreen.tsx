@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
 import AlertModal from './AlertModal';
 import OrientationModal from './OrientationModal';
-import { Request, Criticality } from '../types';
+import { Request, Criticality, AccessProfile, User } from '../types';
 
 interface OpenUnitRequestScreenProps {
     onClose: () => void;
@@ -11,9 +11,11 @@ interface OpenUnitRequestScreenProps {
     units: any[];
     userCategory: string;
     userLinkedUnits: string[];
+    currentUser: User;
+    profiles: AccessProfile[];
 }
 
-const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, onSave, units, userCategory, userLinkedUnits }) => {
+const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, onSave, units, userCategory, userLinkedUnits, currentUser, profiles }) => {
     const [showOrientation, setShowOrientation] = useState(true);
     const [alertMessage, setAlertMessage] = useState('');
     const [isAlertOpen, setIsAlertOpen] = useState(false);

@@ -304,6 +304,8 @@ const App: React.FC = () => {
                         onClose={() => setCurrentView('solicitacoes')}
                         onSave={handleAddRequest}
                         userCategory={(currentUser?.linkedUnits?.length > 0 && currentUser?.instituicao) ? currentUser.instituicao : (profiles.find(p => p.name === selectedProfile)?.category || 'GERAL')}
+                        currentUser={currentUser}
+                        profiles={profiles}
                     />
                 )}
                 {currentView === 'nova_estrategica' && (
@@ -311,6 +313,8 @@ const App: React.FC = () => {
                         onClose={() => setCurrentView('solicitacoes')}
                         onSave={handleAddRequest}
                         userCategory={(currentUser?.linkedUnits?.length > 0 && currentUser?.instituicao) ? currentUser.instituicao : (profiles.find(p => p.name === selectedProfile)?.category || 'GERAL')}
+                        currentUser={currentUser}
+                        profiles={profiles}
                     />
                 )}
                 {currentView === 'nova_unidade' && (
@@ -320,6 +324,8 @@ const App: React.FC = () => {
                         units={units}
                         userCategory={(currentUser?.linkedUnits?.length > 0 && currentUser?.instituicao) ? currentUser.instituicao : (profiles.find(p => p.name === selectedProfile)?.category || 'GERAL')}
                         userLinkedUnits={currentUser?.linkedUnits || []}
+                        currentUser={currentUser}
+                        profiles={profiles}
                     />
                 )}
             </main>

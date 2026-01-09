@@ -74,33 +74,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 return res.status(403).json({ error: 'Acesso negado: Usuário sem perfil associado.' });
             }
 
-            // Step 3 Requirement: Check unit association OR global access profiles
-            const validAccess = accessRows.filter(row => {
-                // Admin check (both legacy name and new slug)
-                const isAdmin = row.profile_id === 'administrador_do_sistema' || row.profile_name === 'Administrador do sistema';
-
-                // Categories that don't STRICTLY need a unit
-                const isGlobal = row.category === 'GERAL' || row.category === 'CORPORATIVO';
-
-                // Has explicit unit link
-                const hasUnit = !!row.unit_id;
-
-                return hasUnit || isAdmin || isGlobal;
-            });
-
-            if (validAccess.length === 0) {
-                return res.status(403).json({ error: 'Acesso negado: Usuário possui perfil mas nenhuma unidade vinculada (e não é Administrador).' });
-            }
+            // NEW LOGIC: Multi-profile additive permissions.
+            // We do NOT filter out profiles without units. If a profile is assigned, its permissions count.
 
             // 4. Success - Return Data
             // Aggregate Profiles and Units
-            const uniqueProfileIds = [...new Set(validAccess.map(r => r.profile_id))];
-            const uniqueUnitNames = [...new Set(validAccess.map(r => r.unit_name).filter(Boolean))];
+            const uniqueProfileIds = [...new Set(accessRows.map(r => r.profile_id))];
+
+            // For units, we only take those that actually have a unit assigned
+            const uniqueUnitNames = [...new Set(accessRows.filter(r => r.unit_id).map(r => r.unit_name).filter(Boolean))];
 
             // Aggregate Permissions (Screens)
-            // Flatten all permission arrays from all valid profiles
+            // Flatten all permission arrays from ALL assigned profiles (accessRows)
             let aggregatedPermissions: string[] = [];
-            validAccess.forEach(row => {
+            accessRows.forEach(row => {
                 if (row.permissions && Array.isArray(row.permissions)) {
                     aggregatedPermissions.push(...row.permissions);
                 }
@@ -125,7 +112,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 // Legacy compat: send first profile as "main" if needed
                 profile: {
                     id: uniqueProfileIds[0],
-                    name: validAccess.find(r => r.profile_id === uniqueProfileIds[0])?.profile_name
+                    name: accessRows.find(r => r.profile_id === uniqueProfileIds[0])?.profile_name
                 }
             });
         }

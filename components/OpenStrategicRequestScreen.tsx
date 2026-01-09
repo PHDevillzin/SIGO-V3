@@ -3,15 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
 import AlertModal from './AlertModal';
 import OrientationModal from './OrientationModal';
-import { Request, Criticality } from '../types';
+import { Request, Criticality, AccessProfile, User } from '../types';
 
 interface OpenStrategicRequestScreenProps {
     onClose: () => void;
     onSave?: (request: Request) => void;
     userCategory: string;
+    currentUser: User;
+    profiles: AccessProfile[];
 }
 
-const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({ onClose, onSave, userCategory }) => {
+const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({ onClose, onSave, userCategory, currentUser, profiles }) => {
     const [showOrientation, setShowOrientation] = useState(true);
     const [alertMessage, setAlertMessage] = useState('');
     const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -22,6 +24,16 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
 
     // Variable used for rendering (reactive)
     const isEntityRestricted = ['SESI', 'SENAI'].includes(userCategory);
+
+    // Determine default Area Responsavel based on user profiles (excluding Admin)
+    const getInitialAreaResponsavel = () => {
+        const userProfileIds = currentUser?.sigoProfiles || [];
+        const validProfiles = profiles
+            .filter(p => userProfileIds.includes(p.id))
+            .filter(p => p.name !== 'Administrador do sistema' && p.name !== 'Administração do sistema');
+
+        return validProfiles.length > 0 ? validProfiles[0].name : '';
+    };
 
     const [formData, setFormData] = useState({
         referencia: '',
@@ -38,7 +50,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
         resumoServicos: '',
 
         // Areas
-        areaResponsavel: 'Administração do Sistema',
+        areaResponsavel: getInitialAreaResponsavel(),
         areasEnvolvidas: '',
 
         // Checkboxes Group 2

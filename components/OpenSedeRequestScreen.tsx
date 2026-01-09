@@ -3,15 +3,17 @@ import React, { useState } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
 import OrientationModal from './OrientationModal';
 import AlertModal from './AlertModal';
-import { Request, Criticality } from '../types';
+import { Request, Criticality, AccessProfile, User } from '../types';
 
 interface OpenSedeRequestScreenProps {
     onClose: () => void;
     onSave?: (request: Request) => void;
     userCategory: string;
+    currentUser: User;
+    profiles: AccessProfile[];
 }
 
-const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, onSave, userCategory }) => {
+const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, onSave, userCategory, currentUser, profiles }) => {
     const [showOrientation, setShowOrientation] = useState(true);
     const [alertMessage, setAlertMessage] = useState('');
     const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -20,9 +22,19 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
     const isEntityRestricted = ['SESI', 'SENAI'].includes(userCategory);
     const defaultSolicitante = isEntityRestricted ? userCategory : '';
 
+    // Determine default Gerencia based on user profiles (excluding Admin)
+    const getInitialGerencia = () => {
+        const userProfileIds = currentUser?.sigoProfiles || [];
+        const validProfiles = profiles
+            .filter(p => userProfileIds.includes(p.id))
+            .filter(p => p.name !== 'Administrador do sistema' && p.name !== 'Administração do sistema');
+
+        return validProfiles.length > 0 ? validProfiles[0].name : '';
+    };
+
     const [formData, setFormData] = useState({
         solicitante: defaultSolicitante,
-        gerencia: 'Administração do Sistema',
+        gerencia: getInitialGerencia(),
         titulo: '',
         objetivo: '',
         expectativaResultados: '',

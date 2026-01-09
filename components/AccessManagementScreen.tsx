@@ -6,9 +6,11 @@ import {
     CheckCircleIcon,
     InformationCircleIcon,
     PencilIcon,
-    TrashIcon
+    TrashIcon,
+    EyeIcon
 } from './Icons';
 import AccessRegistrationModal from './AccessRegistrationModal';
+import AccessDetailsModal from './AccessDetailsModal';
 import ConfirmationModal from './ConfirmationModal';
 import type { User, Unit, AccessProfile } from '../types';
 
@@ -79,6 +81,10 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
 
     // If null, we are in "Create" mode. If set, we are in "Edit" mode.
     const [selectedUserForRegistration, setSelectedUserForRegistration] = useState<User | null>(null);
+
+    // View Modal State
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [selectedUserForView, setSelectedUserForView] = useState<User | null>(null);
 
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
@@ -277,14 +283,19 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                                     <td className="px-6 py-4">{user.email}</td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-wrap gap-1">
-                                            {user.sigoProfiles?.map(profileId => {
-                                                const profile = profiles.find(p => p.id === profileId);
-                                                return (
-                                                    <span key={profileId} className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded text-[10px] border border-sky-100 font-bold uppercase">
-                                                        {profile ? profile.name : profileId}
-                                                    </span>
-                                                );
-                                            })}
+                                            {user.sigoProfiles
+                                                ?.filter(pId => {
+                                                    const p = profiles.find(pr => pr.id === pId);
+                                                    return p && p.name !== 'Administrador do sistema' && p.name !== 'Administração do sistema';
+                                                })
+                                                .map(profileId => {
+                                                    const profile = profiles.find(p => p.id === profileId);
+                                                    return (
+                                                        <span key={profileId} className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded text-[10px] border border-sky-100 font-bold uppercase">
+                                                            {profile ? profile.name : profileId}
+                                                        </span>
+                                                    );
+                                                })}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 max-w-xs">
@@ -298,6 +309,16 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <div className="flex justify-center items-center gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedUserForView(user);
+                                                    setIsViewModalOpen(true);
+                                                }}
+                                                className="p-1.5 bg-sky-100 text-sky-600 rounded-md hover:bg-sky-200 transition-colors"
+                                                title="Visualizar Detalhes"
+                                            >
+                                                <EyeIcon className="w-4 h-4" />
+                                            </button>
                                             <button
                                                 onClick={() => handleEditClick(user)}
                                                 className="p-1.5 bg-purple-100 text-purple-600 rounded-md hover:bg-purple-200 transition-colors"
@@ -345,6 +366,13 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 message={`Deseja realmente excluir todos os acessos e perfis de ${userToDelete?.name}? O usuário voltará para a lista de disponíveis para novo cadastro.`}
                 confirmLabel="Excluir"
                 cancelLabel="Não"
+            />
+
+            <AccessDetailsModal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                user={selectedUserForView}
+                profiles={profiles}
             />
         </div>
     );
