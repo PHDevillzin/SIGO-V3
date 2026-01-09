@@ -80,6 +80,7 @@ export interface User {
   sigoProfiles?: string[];
   linkedUnits?: string[];
   registrationDate?: string;
+  instituicao?: string;
 }
 
 export interface Unit {
@@ -150,6 +151,7 @@ export interface AccessProfile {
   id: string;
   name: string;
   description?: string;
+  category?: string; // e.g. 'GERAL', 'SESI', 'SENAI', 'CORPORATIVO'
   permissions: string[]; // List of view IDs or functionality names
 }
 

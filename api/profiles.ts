@@ -36,6 +36,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             if (!name) return res.status(400).json({ error: 'Name is required' });
 
+            // STRICT RULE: 'Configurações:Perfil Acesso' is exclusive to Admin.
+            // We strip it from any other profile payload to ensure rules are enforced at API level.
+            const isAdmin = name === 'Administração do Sistema' || name === 'Administrador do sistema';
+            const restrictedPermission = 'Configurações:Perfil Acesso';
+
+            let finalPermissions = permissions || [];
+            if (!isAdmin) {
+                finalPermissions = finalPermissions.filter((p: string) => p !== restrictedPermission);
+            }
+
             const client = await pool.connect();
             try {
                 // If ID is provided, it's likely an edit (or we generate a slug)
@@ -50,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     // Update
                     await client.query(
                         'UPDATE profiles SET name = $1, permissions = $2 WHERE id = $3',
-                        [name, JSON.stringify(permissions), targetId]
+                        [name, JSON.stringify(finalPermissions), targetId]
                     );
                 } else {
                     // Insert
@@ -65,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
                     await client.query(
                         'INSERT INTO profiles (id, name, permissions, category) VALUES ($1, $2, $3, $4)',
-                        [targetId, name, JSON.stringify(permissions), category || 'GERAL']
+                        [targetId, name, JSON.stringify(finalPermissions), category || 'GERAL']
                     );
                 }
 

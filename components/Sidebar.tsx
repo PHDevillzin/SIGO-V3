@@ -175,7 +175,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                     onClick={() => setCurrentView('aprovacao')}
                   />
                 )}
-                {hasPermission('solicitacoes') && (
+                {hasPermission('manutencao') && (
                   <NavItem
                     icon={WrenchScrewdriverIcon}
                     label="Manutenção"
@@ -290,66 +290,86 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
             </button>
             {isConfiguracoesMenuOpen && (
               <div className="pt-2 pl-6 space-y-2">
-                <NavItem
-                  icon={UserIcon}
-                  label="Gestão acesso"
-                  active={currentView === 'gestao_acesso'}
-                  onClick={() => setCurrentView('gestao_acesso')}
-                />
-                <NavItem
-                  icon={UserIcon}
-                  label="Perfil acesso"
-                  active={currentView === 'perfil_acesso'}
-                  onClick={() => setCurrentView('perfil_acesso')}
-                />
-                <NavItem
-                  icon={CloudArrowUpIcon}
-                  label="Arquivos"
-                  active={currentView === 'gerenciador_arquivos'}
-                  onClick={() => setCurrentView('gerenciador_arquivos')}
-                />
-                <NavItem
-                  icon={SparklesIcon}
-                  label="Criticidade"
-                  active={currentView === 'painel_criticidade'}
-                  onClick={() => setCurrentView('painel_criticidade')}
-                />
-                <NavItem
-                  icon={InformationCircleIcon}
-                  label="Gerenciamento de avisos"
-                  active={currentView === 'avisos_globais'}
-                  onClick={() => setCurrentView('avisos_globais')}
-                />
-                <NavItem
-                  icon={ExclamationTriangleIcon}
-                  label="Notificações e requisitos"
-                  active={currentView === 'notificacoes_requisitos'}
-                  onClick={() => setCurrentView('notificacoes_requisitos')}
-                />
-                <NavItem
-                  icon={CalendarDaysIcon}
-                  label="Período Solicitação"
-                  active={currentView === 'cadastro_periodos'}
-                  onClick={() => setCurrentView('cadastro_periodos')}
-                />
-                <NavItem
-                  icon={TagIcon}
-                  label="Tipo local"
-                  active={currentView === 'cadastro_tipo_local'}
-                  onClick={() => setCurrentView('cadastro_tipo_local')}
-                />
-                <NavItem
-                  icon={TagIcon}
-                  label="Tipologia"
-                  active={currentView === 'tipologias'}
-                  onClick={() => setCurrentView('tipologias')}
-                />
-                <NavItem
-                  icon={BuildingOfficeIcon}
-                  label="Unidades"
-                  active={currentView === 'cadastro_unidades'}
-                  onClick={() => setCurrentView('cadastro_unidades')}
-                />
+                {hasPermission('gestao_acesso') && (
+                  <NavItem
+                    icon={UserIcon}
+                    label="Gestão acesso"
+                    active={currentView === 'gestao_acesso'}
+                    onClick={() => setCurrentView('gestao_acesso')}
+                  />
+                )}
+                {hasPermission('perfil_acesso') && (
+                  <NavItem
+                    icon={UserIcon}
+                    label="Perfil acesso"
+                    active={currentView === 'perfil_acesso'}
+                    onClick={() => setCurrentView('perfil_acesso')}
+                  />
+                )}
+                {hasPermission('gerenciador_arquivos') && (
+                  <NavItem
+                    icon={CloudArrowUpIcon}
+                    label="Arquivos"
+                    active={currentView === 'gerenciador_arquivos'}
+                    onClick={() => setCurrentView('gerenciador_arquivos')}
+                  />
+                )}
+                {hasPermission('painel_criticidade') && (
+                  <NavItem
+                    icon={SparklesIcon}
+                    label="Criticidade"
+                    active={currentView === 'painel_criticidade'}
+                    onClick={() => setCurrentView('painel_criticidade')}
+                  />
+                )}
+                {hasPermission('avisos_globais') && (
+                  <NavItem
+                    icon={InformationCircleIcon}
+                    label="Gerenciamento de avisos"
+                    active={currentView === 'avisos_globais'}
+                    onClick={() => setCurrentView('avisos_globais')}
+                  />
+                )}
+                {hasPermission('notificacoes_requisitos') && (
+                  <NavItem
+                    icon={ExclamationTriangleIcon}
+                    label="Notificações e requisitos"
+                    active={currentView === 'notificacoes_requisitos'}
+                    onClick={() => setCurrentView('notificacoes_requisitos')}
+                  />
+                )}
+                {hasPermission('cadastro_periodos') && (
+                  <NavItem
+                    icon={CalendarDaysIcon}
+                    label="Período Solicitação"
+                    active={currentView === 'cadastro_periodos'}
+                    onClick={() => setCurrentView('cadastro_periodos')}
+                  />
+                )}
+                {hasPermission('cadastro_tipo_local') && (
+                  <NavItem
+                    icon={TagIcon}
+                    label="Tipo local"
+                    active={currentView === 'cadastro_tipo_local'}
+                    onClick={() => setCurrentView('cadastro_tipo_local')}
+                  />
+                )}
+                {hasPermission('tipologias') && (
+                  <NavItem
+                    icon={TagIcon}
+                    label="Tipologia"
+                    active={currentView === 'tipologias'}
+                    onClick={() => setCurrentView('tipologias')}
+                  />
+                )}
+                {hasPermission('cadastro_unidades') && (
+                  <NavItem
+                    icon={BuildingOfficeIcon}
+                    label="Unidades"
+                    active={currentView === 'cadastro_unidades'}
+                    onClick={() => setCurrentView('cadastro_unidades')}
+                  />
+                )}
               </div>
             )}
           </div>

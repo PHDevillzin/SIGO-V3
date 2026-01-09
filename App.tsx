@@ -72,6 +72,15 @@ const App: React.FC = () => {
                 const isAdmin = userPermissions.includes('all') || userPermissions.includes('*');
                 const userLinkedUnits = currentUser?.linkedUnits || [];
 
+                let fetchedProfiles: AccessProfile[] = [];
+                if (profilesRes.ok) {
+                    fetchedProfiles = await profilesRes.json();
+                    setProfiles(fetchedProfiles);
+                }
+
+                const currentProfileObj = fetchedProfiles.find(p => p.name === selectedProfile);
+                const isGeneralOrCorp = ['GERAL', 'CORPORATIVO'].includes(currentProfileObj?.category || 'GERAL');
+
                 if (unitsRes.ok) {
                     const data = await unitsRes.json();
                     let mappedUnits = data.map((u: any) => ({
@@ -86,16 +95,19 @@ const App: React.FC = () => {
                         emailGR: u.email_gr
                     }));
 
-                    // FILTER UNITS: Show only linked units (unless Admin)
-                    if (!isAdmin && userLinkedUnits.length > 0) {
+                    // FILTER UNITS: 
+                    // Show all if Admin OR General/Corporate profile
+                    // Else show only linked units
+                    if (!isAdmin && !isGeneralOrCorp && userLinkedUnits.length > 0) {
                         mappedUnits = mappedUnits.filter((u: Unit) =>
                             userLinkedUnits.includes(u.unidadeResumida) ||
-                            userLinkedUnits.includes(u.unidade) // Handle varying field names if any
+                            userLinkedUnits.includes(u.unidade)
                         );
-                    } else if (!isAdmin && userLinkedUnits.length === 0) {
-                        // Non-admin with no units? Should technically be blocked by login, but safe fallback:
+                    } else if (!isAdmin && !isGeneralOrCorp && userLinkedUnits.length === 0) {
+                        // Restricted user with no units
                         mappedUnits = [];
                     }
+                    // If Admin or General/Corp, keep all units (mappedUnits)
 
                     setUnits(mappedUnits);
                 }
@@ -131,10 +143,7 @@ const App: React.FC = () => {
 
                     setRequests(mappedRequests);
                 }
-                if (profilesRes.ok) {
-                    const data = await profilesRes.json();
-                    setProfiles(data);
-                }
+
                 if (usersRes.ok) {
                     const data = await usersRes.json();
                     const mappedUsers = data.map((u: any) => ({
@@ -178,7 +187,7 @@ const App: React.FC = () => {
         };
 
         fetchData();
-    }, [isAuthenticated, currentUser, userPermissions]);
+    }, [isAuthenticated, currentUser, userPermissions, selectedProfile]);
 
     useEffect(() => {
         // This effect runs when requests or units change
@@ -229,6 +238,7 @@ const App: React.FC = () => {
                     setIsAuthenticated(false);
                     setCurrentUser(null);
                     setUserPermissions([]);
+                    setCurrentView('home');
                 }}
             />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
@@ -268,12 +278,50 @@ const App: React.FC = () => {
                 {currentView === 'tipologias' && <TipologiaScreen tipologias={tipologias} setTipologias={setTipologias} />}
                 {currentView === 'cadastro_unidades' && <UnitsScreen units={units} setUnits={setUnits} />}
                 {currentView === 'cadastro_tipo_local' && <TipoLocalScreen tipoLocais={tipoLocais} setTipoLocais={setTipoLocais} />}
-                {currentView === 'gestao_acesso' && <AccessManagementScreen units={units} profiles={profiles} registeredUsers={users} setRegisteredUsers={setUsers} />}
-                {currentView === 'perfil_acesso' && <AccessProfileScreen profiles={profiles} setProfiles={setProfiles} />}
+                {currentView === 'gestao_acesso' && (
+                    <AccessManagementScreen
+                        units={units}
+                        profiles={profiles}
+                        registeredUsers={users}
+                        setRegisteredUsers={setUsers}
+                        userPermissions={userPermissions}
+                        currentUser={currentUser}
+                        selectedProfile={selectedProfile}
+                    />
+                )}
+                {currentView === 'perfil_acesso' && (
+                    (userPermissions.includes('Configurações:Perfil Acesso') || userPermissions.includes('*') || userPermissions.includes('all')) ? (
+                        <AccessProfileScreen profiles={profiles} setProfiles={setProfiles} userPermissions={userPermissions} />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-red-500 font-bold text-xl">
+                            Acesso Negado: Você não tem permissão para acessar esta tela.
+                        </div>
+                    )
+                )}
                 {currentView === 'politica_investimento' && <InvestmentPolicyScreen selectedProfile={selectedProfile} />}
-                {currentView === 'nova_sede' && <OpenSedeRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
-                {currentView === 'nova_estrategica' && <OpenStrategicRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
-                {currentView === 'nova_unidade' && <OpenUnitRequestScreen onClose={() => setCurrentView('solicitacoes')} onSave={handleAddRequest} />}
+                {currentView === 'nova_sede' && (
+                    <OpenSedeRequestScreen
+                        onClose={() => setCurrentView('solicitacoes')}
+                        onSave={handleAddRequest}
+                        userCategory={(currentUser?.linkedUnits?.length > 0 && currentUser?.instituicao) ? currentUser.instituicao : (profiles.find(p => p.name === selectedProfile)?.category || 'GERAL')}
+                    />
+                )}
+                {currentView === 'nova_estrategica' && (
+                    <OpenStrategicRequestScreen
+                        onClose={() => setCurrentView('solicitacoes')}
+                        onSave={handleAddRequest}
+                        userCategory={(currentUser?.linkedUnits?.length > 0 && currentUser?.instituicao) ? currentUser.instituicao : (profiles.find(p => p.name === selectedProfile)?.category || 'GERAL')}
+                    />
+                )}
+                {currentView === 'nova_unidade' && (
+                    <OpenUnitRequestScreen
+                        onClose={() => setCurrentView('solicitacoes')}
+                        onSave={handleAddRequest}
+                        units={units}
+                        userCategory={(currentUser?.linkedUnits?.length > 0 && currentUser?.instituicao) ? currentUser.instituicao : (profiles.find(p => p.name === selectedProfile)?.category || 'GERAL')}
+                        userLinkedUnits={currentUser?.linkedUnits || []}
+                    />
+                )}
             </main>
         </div>
     );

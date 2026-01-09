@@ -51,7 +51,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 SELECT 
                     u.*, 
                     array_remove(array_agg(DISTINCT ua.profile_id), NULL) as sigo_profiles,
-                    array_remove(array_agg(DISTINCT un.unidade), NULL) as linked_units
+                    array_remove(array_agg(DISTINCT un.unidade), NULL) as linked_units,
+                    MAX(ua.instituicao) as instituicao
                 FROM users u
                 LEFT JOIN user_access ua ON u.nif = ua.user_nif
                 LEFT JOIN units un ON ua.unit_id = un.id
@@ -63,7 +64,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 SELECT 
                     u.*, 
                     array_remove(array_agg(DISTINCT ua.profile_id), NULL) as sigo_profiles,
-                    array_remove(array_agg(DISTINCT un.unidade), NULL) as linked_units
+                    array_remove(array_agg(DISTINCT un.unidade), NULL) as linked_units,
+                    MAX(ua.instituicao) as instituicao
                 FROM users u
                 LEFT JOIN user_access ua ON u.nif = ua.user_nif
                 LEFT JOIN units un ON ua.unit_id = un.id
@@ -149,6 +151,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 // Assuming Admin doesn't need Unit ID (NULL).
                 const targetUnits = (linked_units && linked_units.length > 0) ? linked_units : [null];
 
+                // Determine Instituicao based on NIF
+                let instituicao = null;
+                if (nif.toUpperCase().startsWith('SS')) instituicao = 'SESI';
+                else if (nif.toUpperCase().startsWith('SN')) instituicao = 'SENAI';
+
                 for (const pid of sigo_profiles) {
                     for (const uname of targetUnits) {
                         const uid = uname ? unitMap[uname] : null;
@@ -157,14 +164,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         // We skip if unit name existed in request but not in DB.
                         if (uname && !uid) continue;
 
-                        placeholders.push(`($${paramCounter++}, $${paramCounter++}, $${paramCounter++})`);
-                        insertValues.push(nif, uid, pid);
+                        placeholders.push(`($${paramCounter++}, $${paramCounter++}, $${paramCounter++}, $${paramCounter++})`);
+                        insertValues.push(nif, uid, pid, instituicao);
                     }
                 }
 
                 if (placeholders.length > 0) {
                     const insertQuery = `
-                        INSERT INTO user_access (user_nif, unit_id, profile_id)
+                        INSERT INTO user_access (user_nif, unit_id, profile_id, instituicao)
                         VALUES ${placeholders.join(', ')}
                     `;
                     await query(insertQuery, insertValues);

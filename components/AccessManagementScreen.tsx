@@ -33,12 +33,46 @@ interface AccessManagementScreenProps {
     profiles: AccessProfile[];
     registeredUsers: User[];
     setRegisteredUsers: React.Dispatch<React.SetStateAction<User[]>>;
+    userPermissions: string[];
+    currentUser: User;
+    selectedProfile: string;
 }
 
 
-const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, profiles, registeredUsers, setRegisteredUsers }) => {
+const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, profiles, registeredUsers, setRegisteredUsers, userPermissions, currentUser, selectedProfile }) => {
     // We keep allUsers as "Source of Truth" for available NIFs (e.g., from CSV/HR System)
     const [sourceUsers] = useState<User[]>(csvDataRaw as User[]);
+
+    const isAdmin = userPermissions.includes('*') || userPermissions.includes('all');
+    const isGestorLocal = selectedProfile === 'Gestor Local';
+
+    // Filter profiles based on permission rules
+    const availableProfiles = useMemo(() => {
+        // Universal Rule: "Administrador do sistema" profile CANNOT be assigned by anyone via the UI.
+        const assignableProfiles = profiles.filter(p => p.name !== 'Administrador do sistema' && p.name !== 'Administração do sistema');
+
+        // 1. Broad Access: Admin System or Admin GSO can assign ANY profile (except System Admin)
+        if (selectedProfile === 'Administrador do sistema' || selectedProfile === 'Administrador GSO') {
+            return assignableProfiles;
+        }
+
+        // 2. Restricted Access: Gestor Local can only assign "Unidade Solicitante" or "Gestor Local"
+        if (selectedProfile === 'Gestor Local') {
+            return assignableProfiles.filter(p => ['Gestor Local', 'Unidade Solicitante'].includes(p.name));
+        }
+
+        // Fallback for others
+        return assignableProfiles;
+    }, [profiles, selectedProfile]);
+
+    // Filter Units for Modal: Gestor Local only sees their own units
+    const availableUnits = useMemo(() => {
+        if (isGestorLocal) {
+            const userUnits = currentUser.linkedUnits || [];
+            return units.filter(u => userUnits.includes(u.unidadeResumida) || userUnits.includes(u.unidade));
+        }
+        return units;
+    }, [units, isGestorLocal, currentUser]);
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,9 +98,23 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
     }, [sourceUsers, registeredUsers]);
 
     // Derived list for the Grid: Only show users with profiles
+    // Restriction: Gestor Local only sees users dealing with their units
     const usersWithAccess = useMemo(() => {
-        return registeredUsers.filter(u => u.sigoProfiles && u.sigoProfiles.length > 0);
-    }, [registeredUsers]);
+        const activeUsers = registeredUsers.filter(u => u.sigoProfiles && u.sigoProfiles.length > 0);
+
+        if (isGestorLocal) {
+            const myUnits = currentUser.linkedUnits || [];
+            return activeUsers.filter(u => {
+                const theirUnits = u.linkedUnits || [];
+                // Check intersection: Does the user have ANY unit that I also have?
+                // Or check if they were created by me? (Ambiguous, let's stick to Unit intersection as per prompt "para as unidades que ele possui")
+                const hasCommonUnit = theirUnits.some(unit => myUnits.includes(unit));
+                return hasCommonUnit;
+            });
+        }
+
+        return activeUsers;
+    }, [registeredUsers, isGestorLocal, currentUser]);
 
     const handleNewUserClick = () => {
         setSelectedUserForRegistration(null); // Create Mode
@@ -285,8 +333,8 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 user={selectedUserForRegistration}
                 sourceUsers={availableSourceUsers}
                 onConfirm={handleConfirmRegistration}
-                units={units}
-                profiles={profiles}
+                units={availableUnits}
+                profiles={availableProfiles}
             />
 
             <ConfirmationModal

@@ -72,7 +72,8 @@ async function run() {
                 id SERIAL PRIMARY KEY,
                 user_nif VARCHAR(255) REFERENCES users(nif) ON DELETE CASCADE,
                 profile_id VARCHAR(255) REFERENCES profiles(id) ON DELETE CASCADE,
-                unit_id INTEGER REFERENCES units(id) ON DELETE CASCADE
+                unit_id INTEGER REFERENCES units(id) ON DELETE CASCADE,
+                instituicao VARCHAR(10) -- 'SESI' or 'SENAI'
             )
         `);
 
@@ -106,8 +107,9 @@ async function run() {
         // (Assuming restore-admin-user.cjs logic, simplified here since user should exist)
 
         // Grant Access
+        // Admin NIF 'SS0000001' starts with 'SS', so instituicao is 'SESI'
         await client.query(
-            "INSERT INTO user_access (user_nif, profile_id, unit_id) VALUES ($1, $2, NULL)",
+            "INSERT INTO user_access (user_nif, profile_id, unit_id, instituicao) VALUES ($1, $2, NULL, 'SESI')",
             [nif, adminProfileId]
         );
         console.log(`Restored access for ${nif} as 'Administrador do sistema' (ID: ${adminProfileId})`);

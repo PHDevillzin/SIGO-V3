@@ -147,9 +147,10 @@ const NewProfileModal: React.FC<NewProfileModalProps> = ({ isOpen, onClose, onSa
 interface AccessProfileScreenProps {
     profiles: AccessProfile[];
     setProfiles: React.Dispatch<React.SetStateAction<AccessProfile[]>>;
+    userPermissions: string[];
 }
 
-const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, setProfiles }) => {
+const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, setProfiles, userPermissions }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedProfileId, setSelectedProfileId] = useState<string>(profiles[0]?.id || '');
     const [isNewModalOpen, setIsNewModalOpen] = useState(false);
