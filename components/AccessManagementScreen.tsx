@@ -246,7 +246,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                     className="bg-[#0B1A4E] text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 text-sm uppercase tracking-wide"
                 >
                     <PlusIcon className="w-5 h-5" />
-                    Novo Usuário
+                    Cadastrar
                 </button>
             </div>
 

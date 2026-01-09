@@ -321,7 +321,7 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                         onClick={() => setIsNewModalOpen(true)}
                         className="bg-[#0B1A4E] text-white px-6 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors text-sm"
                     >
-                        + Novo
+                        Cadastrar
                     </button>
                 </div>
             </div>

@@ -149,7 +149,7 @@ const TipologiaScreen: React.FC<TipologiaScreenProps> = ({ tipologias, setTipolo
                         onClick={() => setIsNewModalOpen(true)}
                         className="bg-[#0B1A4E] text-white px-4 py-2 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
                     >
-                        Nova Tipologia
+                        Cadastrar
                     </button>
                 </div>
 
