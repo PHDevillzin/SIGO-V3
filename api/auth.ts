@@ -48,6 +48,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             const user = userRes.rows[0];
 
+            if (user.is_active === false) {
+                return res.status(403).json({ error: 'Acesso negado: Usuário inativo. Contate o administrador.' });
+            }
+
             // 2. Check Permissions in `user_access` table
             // Fetch all profile_ids, unit_ids, AND permissions associated with this user
             // 2. Check Permissions in `user_access` table

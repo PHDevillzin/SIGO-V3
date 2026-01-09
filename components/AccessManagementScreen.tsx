@@ -9,26 +9,21 @@ import {
     TrashIcon,
     EyeIcon
 } from './Icons';
-import AccessRegistrationModal from './AccessRegistrationModal';
+
 import AccessDetailsModal from './AccessDetailsModal';
 import ConfirmationModal from './ConfirmationModal';
 import type { User, Unit, AccessProfile } from '../types';
 
-const csvDataRaw = [
-    { id: "25", nif: "SS0000002", name: "Ana Beatriz Costa", email: "ana.costa@sesisenaisp.org.br", unidade: "SESI - Campinas", profile: "Unidade", createdBy: "Daniel", createdAt: "10/01/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "26", nif: "SN0000004", name: "Bruno Alves", email: "bruno.alves@sesisenaisp.org.br", unidade: "", profile: "Sede", createdBy: "Paulo H. R. Silva", createdAt: "12/02/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "27", nif: "SS0000003", name: "Carlos Eduardo Lima", email: "carlos.lima@sesisenaisp.org.br", unidade: "SESI - Jundiaí", profile: "Gestor de unidade", createdBy: "Rafael", createdAt: "05/03/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "28", nif: "SN0000005", name: "Daniela Ferreira", email: "daniela.ferreira@sesisenaisp.org.br", unidade: "SESI - Jundiaí", profile: "Unidade", createdBy: "Teste", createdAt: "18/04/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "29", nif: "SS0000004", name: "Fernando Almeida", email: "fernando.almeida@sesisenaisp.org.br", unidade: "", profile: "Sede", createdBy: "Paulo H. R. Silva", createdAt: "22/07/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "30", nif: "SN0000006", name: "Fernanda Gonçalves", email: "fernanda.goncalves@sesisenaisp.org.br", unidade: "SENAI - Osasco", profile: "Gestor de unidade", createdBy: "Daniel", createdAt: "14/05/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "31", nif: "SS0000005", name: "Gustavo Ribeiro", email: "gustavo.ribeiro@sesisenaisp.org.br", unidade: "SESI - Piracicaba", profile: "Unidade", createdBy: "Teste", createdAt: "30/06/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "32", nif: "SN0000007", name: "Helena Souza", email: "helena.souza@sesisenaisp.org.br", unidade: "", profile: "Sede", createdBy: "Paulo H. R. Silva", createdAt: "09/08/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "33", nif: "SS0000001", name: "Paulo H. R. Silva", email: "paulo.ribeiro.3@sesisenaisp.org.br", unidade: "", profile: "Gerência de Facilities", createdBy: "Sistema", createdAt: "01/01/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "34", nif: "SN0000001", name: "Daniel", email: "daniel@sesisenaisp.org.br", unidade: "", profile: "Sede", createdBy: "Sistema", createdAt: "01/01/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "35", nif: "SN0000002", name: "Rafael", email: "rafael@sesisenaisp.org.br", unidade: "SENAI - SP - Brás", profile: "Gestor de unidade", createdBy: "Sistema", createdAt: "01/01/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "36", nif: "SN0000003", name: "Teste", email: "teste@sesisenaisp.org.br", unidade: "SENAI - SP - Mooca", profile: "Unidade", createdBy: "Sistema", createdAt: "01/01/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "37", nif: "SN0000008", name: "Ana Silva", email: "ana.silva@sesisenaisp.org.br", unidade: "", profile: "Sede", createdBy: "Paulo H. R. Silva", createdAt: "26/12/2025", updatedAt: "2025-12-26 18:23:14.53+00" }
-];
+const ToggleSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
+    <button
+        onClick={(e) => { e.stopPropagation(); onChange(); }}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${checked ? 'bg-green-500' : 'bg-gray-200'}`}
+    >
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
+    </button>
+);
+
+
 
 interface AccessManagementScreenProps {
     units: Unit[];
@@ -38,49 +33,23 @@ interface AccessManagementScreenProps {
     userPermissions: string[];
     currentUser: User;
     selectedProfile: string;
+    onNavigateToRegistration: () => void;
+    onNavigateToEdit: (user: User) => void;
 }
 
-
-const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, profiles, registeredUsers, setRegisteredUsers, userPermissions, currentUser, selectedProfile }) => {
-    // We keep allUsers as "Source of Truth" for available NIFs (e.g., from CSV/HR System)
-    const [sourceUsers] = useState<User[]>(csvDataRaw as User[]);
-
+const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
+    units,
+    profiles,
+    registeredUsers,
+    setRegisteredUsers,
+    userPermissions,
+    currentUser,
+    selectedProfile,
+    onNavigateToRegistration,
+    onNavigateToEdit
+}) => {
     const isAdmin = userPermissions.includes('*') || userPermissions.includes('all');
     const isGestorLocal = selectedProfile === 'Gestor Local';
-
-    // Filter profiles based on permission rules
-    const availableProfiles = useMemo(() => {
-        // Universal Rule: "Administrador do sistema" profile CANNOT be assigned by anyone via the UI.
-        const assignableProfiles = profiles.filter(p => p.name !== 'Administrador do sistema' && p.name !== 'Administração do sistema');
-
-        // 1. Broad Access: Admin System or Admin GSO can assign ANY profile (except System Admin)
-        if (selectedProfile === 'Administrador do sistema' || selectedProfile === 'Administrador GSO') {
-            return assignableProfiles;
-        }
-
-        // 2. Restricted Access: Gestor Local can only assign "Unidade Solicitante" or "Gestor Local"
-        if (selectedProfile === 'Gestor Local') {
-            return assignableProfiles.filter(p => ['Gestor Local', 'Unidade Solicitante'].includes(p.name));
-        }
-
-        // Fallback for others
-        return assignableProfiles;
-    }, [profiles, selectedProfile]);
-
-    // Filter Units for Modal: Gestor Local only sees their own units
-    const availableUnits = useMemo(() => {
-        if (isGestorLocal) {
-            const userUnits = currentUser.linkedUnits || [];
-            return units.filter(u => userUnits.includes(u.unidadeResumida) || userUnits.includes(u.unidade));
-        }
-        return units;
-    }, [units, isGestorLocal, currentUser]);
-
-    // Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
-    // If null, we are in "Create" mode. If set, we are in "Edit" mode.
-    const [selectedUserForRegistration, setSelectedUserForRegistration] = useState<User | null>(null);
 
     // View Modal State
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -94,14 +63,6 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
         setToast({ message, type, visible: true });
         setTimeout(() => setToast(prev => prev ? { ...prev, visible: false } : null), 3000);
     };
-
-
-
-    // Filter out already registered users from the source list passed to the modal
-    // Only exclude users who are registered AND have at least one profile associated.
-    const availableSourceUsers = useMemo(() => {
-        return sourceUsers.filter(u => !registeredUsers.some(r => r.nif === u.nif && r.sigoProfiles && r.sigoProfiles.length > 0));
-    }, [sourceUsers, registeredUsers]);
 
     // Derived list for the Grid: Only show users with profiles
     // Restriction: Gestor Local only sees users dealing with their units
@@ -123,13 +84,11 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
     }, [registeredUsers, isGestorLocal, currentUser]);
 
     const handleNewUserClick = () => {
-        setSelectedUserForRegistration(null); // Create Mode
-        setIsModalOpen(true);
+        onNavigateToRegistration();
     };
 
     const handleEditClick = (user: User) => {
-        setSelectedUserForRegistration(user); // Edit Mode
-        setIsModalOpen(true);
+        onNavigateToEdit(user);
     };
 
     const handleDeleteClick = (user: User) => {
@@ -160,80 +119,41 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
         setUserToDelete(null);
     };
 
-    const handleConfirmRegistration = async (data: { profiles: string[], units: string[], selectedUser?: User, isApprover: boolean, isRequester: boolean }) => {
-
-        // If editing, we use the selectedUserForRegistration.
-        // If creating, we MUST have a selectedUser returned from the modal.
-        const targetUser = selectedUserForRegistration || data.selectedUser;
-
-        if (!targetUser) return;
-
-        const isEditing = !!targetUser.registrationDate;
-
-        // Prepare updated user object
-        const updatedUserPayload = {
-            ...targetUser,
-            sigo_profiles: data.profiles, // Sending IDs as requested
-            linked_units: data.units,
-            registrationDate: targetUser.registrationDate || new Date().toISOString() // Use ISO for DB consistency if possible, or date string
-        };
+    const handleToggleStatus = async (user: User) => {
+        const newStatus = !user.isActive;
+        // Optimistic update
+        setRegisteredUsers(prev => prev.map(u => u.nif === user.nif ? { ...u, isActive: newStatus } : u));
 
         try {
-            // Call API to persist
-            const method = isEditing ? 'PUT' : 'POST';
             const response = await fetch('/api/users', {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
-                    nif: updatedUserPayload.nif,
-                    // If creating, we need name/email. If editing, they are optional but good to send.
-                    name: updatedUserPayload.name,
-                    email: updatedUserPayload.email,
-                    sigo_profiles: data.profiles,
-                    linked_units: data.units,
-                    // Pass ID if available to be safe, though NIF lookup is supported
-                    id: targetUser.id
-                })
+                    nif: user.nif,
+                    name: user.name,
+                    email: user.email,
+                    isActive: newStatus
+                }),
             });
 
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error || 'Failed to save user');
-            }
-
-            const savedUser = await response.json();
-
-            // Simplified: Update local state to reflect change immediately.
-            const newUserState: User = {
-                ...targetUser,
-                sigoProfiles: data.profiles,
-                linkedUnits: data.units,
-                registrationDate: savedUser.registration_date || updatedUserPayload.registrationDate
-            };
-
-            if (isEditing) {
-                setRegisteredUsers(prev => prev.map(u => u.nif === newUserState.nif ? newUserState : u));
-                showToast('Acesso atualizado com sucesso!', 'success');
+            if (response.ok) {
+                showToast(`Usuário ${newStatus ? 'ativado' : 'desativado'} com sucesso.`, 'success');
             } else {
-                // Check if user already exists locally (e.g. had no profiles, so wasn't in "usersWithAccess" but was in "registeredUsers")
-                // If so, update them. If not, add them.
-                const exists = registeredUsers.some(u => u.nif === newUserState.nif);
-                if (exists) {
-                    setRegisteredUsers(prev => prev.map(u => u.nif === newUserState.nif ? newUserState : u));
-                } else {
-                    setRegisteredUsers(prev => [newUserState, ...prev]);
-                }
-                showToast('Usuário cadastrado com sucesso!', 'success');
+                // Revert
+                setRegisteredUsers(prev => prev.map(u => u.nif === user.nif ? { ...u, isActive: !newStatus } : u));
+                showToast('Erro ao atualizar status.', 'error');
             }
-
-            setIsModalOpen(false);
-            setSelectedUserForRegistration(null);
-
-        } catch (err: any) {
-            console.error(err);
-            showToast(`Erro ao salvar: ${err.message}`, 'error');
+        } catch (error) {
+            console.error('Error toggling status:', error);
+            // Revert
+            setRegisteredUsers(prev => prev.map(u => u.nif === user.nif ? { ...u, isActive: !newStatus } : u));
+            showToast('Erro de conexão.', 'error');
         }
     };
+
+
 
     return (
         <div className="space-y-8">
@@ -272,6 +192,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                                 <th className="px-6 py-4 font-semibold">E-mail</th>
                                 <th className="px-6 py-4 font-semibold">Perfis SIGO</th>
                                 <th className="px-6 py-4 font-semibold">Unidades Vinculadas</th>
+                                <th className="px-6 py-4 font-semibold text-center">Status</th>
                                 <th className="px-6 py-4 font-semibold text-center">Ações</th>
                             </tr>
                         </thead>
@@ -306,6 +227,12 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                                                 </span>
                                             ))}
                                         </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <ToggleSwitch
+                                            checked={!!user.isActive}
+                                            onChange={() => handleToggleStatus(user)}
+                                        />
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <div className="flex justify-center items-center gap-2">
@@ -348,15 +275,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({ units, 
                 </div>
             </div>
 
-            <AccessRegistrationModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                user={selectedUserForRegistration}
-                sourceUsers={availableSourceUsers}
-                onConfirm={handleConfirmRegistration}
-                units={availableUnits}
-                profiles={availableProfiles}
-            />
+
 
             <ConfirmationModal
                 isOpen={isDeleteConfirmOpen}

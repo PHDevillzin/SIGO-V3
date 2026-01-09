@@ -81,6 +81,7 @@ export interface User {
   linkedUnits?: string[];
   registrationDate?: string;
   instituicao?: string;
+  isActive?: boolean;
 }
 
 export interface Unit {

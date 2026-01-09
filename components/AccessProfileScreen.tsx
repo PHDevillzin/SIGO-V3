@@ -48,6 +48,40 @@ const NewProfileModal: React.FC<NewProfileModalProps> = ({ isOpen, onClose, onSa
                             className="w-full border border-gray-300 rounded-md px-4 py-2.5 text-sm focus:ring-2 focus:ring-sky-500 outline-none"
                         />
                     </div>
+
+                    <div>
+                        <h3 className="text-sm font-bold text-gray-800 mb-2">Permissões de Acesso</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {MENUS.map(menu => (
+                                <div key={menu.name} className="space-y-2 border p-3 rounded-md bg-gray-50">
+                                    <h4 className="text-xs font-bold text-[#0B1A4E] uppercase tracking-wider border-b pb-1">{menu.name}</h4>
+                                    <div className="space-y-1">
+                                        {menu.items.map(item => {
+                                            const isChecked = permissions.includes(item.backendKeys[0]) || item.backendKeys.some(k => permissions.includes(k));
+                                            return (
+                                                <label key={item.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => {
+                                                            const keys = item.backendKeys;
+                                                            setPermissions(prev => {
+                                                                const hasAll = keys.every(k => prev.includes(k));
+                                                                if (hasAll) return prev.filter(p => !keys.includes(p));
+                                                                return [...prev, ...keys];
+                                                            });
+                                                        }}
+                                                        className="rounded text-sky-600 focus:ring-sky-500 h-4 w-4"
+                                                    />
+                                                    <span className={`text-xs ${isChecked ? 'font-bold text-sky-700' : 'text-gray-600'}`}>{item.label}</span>
+                                                </label>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
                 <div className="p-6 border-t bg-gray-50 flex justify-end space-x-3 rounded-b-lg">
                     <button onClick={onClose} className="px-6 py-2 text-gray-600 hover:text-gray-800 font-bold text-sm transition-colors uppercase">Cancelar</button>

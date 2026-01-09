@@ -11,6 +11,7 @@ import TipologiaScreen from './components/TipologiaScreen';
 import UnitsScreen from './components/UnitsScreen';
 import TipoLocalScreen from './components/TipoLocalScreen';
 import AccessManagementScreen from './components/AccessManagementScreen';
+import AccessRegistrationScreen from './components/AccessRegistrationScreen';
 import AccessProfileScreen from './components/AccessProfileScreen';
 import ApprovalRequestsScreen from './components/ApprovalRequestsScreen';
 import OpenSedeRequestScreen from './components/OpenSedeRequestScreen';
@@ -35,6 +36,7 @@ const App: React.FC = () => {
     const [units, setUnits] = useState<Unit[]>([]);
     const [profiles, setProfiles] = useState<AccessProfile[]>([]);
     const [users, setUsers] = useState<User[]>([]);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
     const [tipologias, setTipologias] = useState<Tipologia[]>([]);
     const [tipoLocais, setTipoLocais] = useState<TipoLocal[]>([]);
 
@@ -152,7 +154,8 @@ const App: React.FC = () => {
                         updatedAt: u.updated_at,
                         createdBy: u.created_by,
                         sigoProfiles: u.sigo_profiles,
-                        linkedUnits: u.linked_units
+                        linkedUnits: u.linked_units,
+                        isActive: u.is_active
                     }));
                     setUsers(mappedUsers);
                 }
@@ -278,6 +281,33 @@ const App: React.FC = () => {
                 {currentView === 'tipologias' && <TipologiaScreen tipologias={tipologias} setTipologias={setTipologias} />}
                 {currentView === 'cadastro_unidades' && <UnitsScreen units={units} setUnits={setUnits} />}
                 {currentView === 'cadastro_tipo_local' && <TipoLocalScreen tipoLocais={tipoLocais} setTipoLocais={setTipoLocais} />}
+                {currentView === 'access_registration' && (
+                    <AccessRegistrationScreen
+                        onBack={() => {
+                            setEditingUser(null);
+                            setCurrentView('gestao_acesso');
+                        }}
+                        units={units || []}
+                        profiles={profiles || []}
+                        registeredUsers={users || []}
+                        initialUser={editingUser}
+                        currentUser={currentUser}
+                        currentProfile={selectedProfile}
+                        onSuccess={(updatedUser, isNew) => {
+                            setUsers(prev => {
+                                if (isNew) {
+                                    const exists = prev.some(u => u.nif === updatedUser.nif);
+                                    if (exists) return prev.map(u => u.nif === updatedUser.nif ? updatedUser : u);
+                                    return [updatedUser, ...prev];
+                                } else {
+                                    return prev.map(u => u.nif === updatedUser.nif ? updatedUser : u);
+                                }
+                            });
+                            setEditingUser(null);
+                            setCurrentView('gestao_acesso');
+                        }}
+                    />
+                )}
                 {currentView === 'gestao_acesso' && (
                     <AccessManagementScreen
                         units={units}
@@ -287,6 +317,14 @@ const App: React.FC = () => {
                         userPermissions={userPermissions}
                         currentUser={currentUser}
                         selectedProfile={selectedProfile}
+                        onNavigateToRegistration={() => {
+                            setEditingUser(null);
+                            setCurrentView('access_registration');
+                        }}
+                        onNavigateToEdit={(user) => {
+                            setEditingUser(user);
+                            setCurrentView('access_registration');
+                        }}
                     />
                 )}
                 {currentView === 'perfil_acesso' && (

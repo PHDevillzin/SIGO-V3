@@ -100,5 +100,35 @@ CREATE TABLE IF NOT EXISTS requests (
     inicio_obra DATE,
     saldo_obra_prazo INTEGER,
     saldo_obra_valor VARCHAR(100),
-    tipologia VARCHAR(255)
+    tipologia VARCHAR(255),
+    -- New Fields for Request Registration
+    solicitante VARCHAR(255),
+    gerencia VARCHAR(255),
+    objetivo TEXT,
+    expectativa_resultados TEXT,
+    justificativa TEXT,
+    resumo_servicos TEXT,
+    aumento TEXT[], -- Array
+    necessidades TEXT[], -- Array
+    servicos_necessarios TEXT[], -- Array
+    servicos_especificos TEXT[], -- Array
+    area_intervencao VARCHAR(100),
+    data_utilizacao DATE,
+    possui_projeto VARCHAR(50),
+    possui_laudo VARCHAR(50),
+    tem_autorizacao VARCHAR(50),
+    realizou_consulta VARCHAR(50),
+    houve_notificacao VARCHAR(50),
+    referencia VARCHAR(255),
+    area_responsavel VARCHAR(255),
+    areas_envolvidas TEXT,
+    programa_necessidades TEXT,
+    instalacoes_sesi_senai TEXT,
+    local_obra VARCHAR(255),
+    atividade VARCHAR(255),
+    local_nome VARCHAR(255),
+    problemas_nao_atendida VARCHAR(255),
+    prazo_acao VARCHAR(50),
+    probabilidade_evolucao VARCHAR(50),
+    observacao TEXT
 );
