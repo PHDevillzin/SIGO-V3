@@ -19,8 +19,14 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
     const [isAlertOpen, setIsAlertOpen] = useState(false);
 
     // Determine Solicitante (Entity) restriction
-    const isEntityRestricted = ['SESI', 'SENAI'].includes(userCategory);
-    const defaultSolicitante = isEntityRestricted ? userCategory : '';
+    // Normalized category to Capital Case or Title Case to match Select options if needed
+    // Select options: SESI, SENAI, Corporativo
+    let normalizedCategory = userCategory;
+    if (userCategory === 'CORPORATIVO') normalizedCategory = 'Corporativo';
+    
+    // Lock if SESI, SENAI, or Corporativo
+    const isEntityRestricted = ['SESI', 'SENAI', 'Corporativo'].includes(normalizedCategory);
+    const defaultSolicitante = isEntityRestricted ? normalizedCategory : '';
 
     // Determine default Gerencia based on user profiles (excluding Admin)
     const getInitialGerencia = () => {

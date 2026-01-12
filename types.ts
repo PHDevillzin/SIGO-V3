@@ -82,6 +82,8 @@ export interface User {
   registrationDate?: string;
   instituicao?: string;
   isActive?: boolean;
+  isApprover?: boolean;
+  isRequester?: boolean;
 }
 
 export interface Unit {

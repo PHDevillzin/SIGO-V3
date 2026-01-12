@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { PaperAirplaneIcon, XMarkIcon } from './Icons';
 import AlertModal from './AlertModal';
 import OrientationModal from './OrientationModal';
-import { Request, Criticality, AccessProfile, User } from '../types';
+import { Request, Criticality, AccessProfile, User, Unit } from '../types';
 
 interface OpenStrategicRequestScreenProps {
     onClose: () => void;
@@ -11,19 +11,31 @@ interface OpenStrategicRequestScreenProps {
     userCategory: string;
     currentUser: User;
     profiles: AccessProfile[];
+    units: Unit[];
+    userLinkedUnits: string[];
 }
 
-const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({ onClose, onSave, userCategory, currentUser, profiles }) => {
+const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({ onClose, onSave, userCategory, currentUser, profiles, units, userLinkedUnits }) => {
     const [showOrientation, setShowOrientation] = useState(true);
     const [alertMessage, setAlertMessage] = useState('');
     const [isAlertOpen, setIsAlertOpen] = useState(false);
 
     // Determine Entity restriction for initial state
-    const initialIsEntityRestricted = ['SESI', 'SENAI'].includes(userCategory);
-    const initialDefaultEntity = initialIsEntityRestricted ? userCategory : 'SENAI';
-
     // Variable used for rendering (reactive)
-    const isEntityRestricted = ['SESI', 'SENAI'].includes(userCategory);
+    // Existing logic: const isEntityRestricted = ['SESI', 'SENAI'].includes(userCategory);
+
+    // NIF-based Logic for 'Gestor Local' and 'Unidade Solicitante'
+    const userProfileNames = profiles
+        .filter(p => currentUser.sigoProfiles?.includes(p.id))
+        .map(p => p.name);
+    
+    const isTargetProfile = userProfileNames.includes('Gestor Local') || userProfileNames.includes('Unidade Solicitante');
+    
+    const nifPrefix = currentUser?.nif?.substring(0, 2).toUpperCase();
+    const nifEntidade = nifPrefix === 'SN' ? 'SENAI' : (nifPrefix === 'SS' ? 'SESI' : '');
+
+    const isEntityRestricted = ['SESI', 'SENAI'].includes(userCategory) || (isTargetProfile && !!nifEntidade);
+    const defaultEntity = isEntityRestricted ? userCategory : 'SENAI';
 
     // Determine default Area Responsavel based on user profiles (excluding Admin)
     const getInitialAreaResponsavel = () => {
@@ -37,7 +49,8 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
 
     const [formData, setFormData] = useState({
         referencia: '',
-        entidade: initialDefaultEntity,
+        entidade: (isTargetProfile && nifEntidade) ? nifEntidade : defaultEntity,
+        unidade: '', // Added
 
         // Checkboxes Group 1
         aumento: [] as string[],
@@ -80,12 +93,37 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
         houveNotificacao: ''
     });
 
-    // Update entidade if userCategory changes (e.g. profile switch while open)
+    // Filter Units based on Profile
+    const filteredUnits = React.useMemo(() => {
+        const userProfileNames = profiles
+            .filter(p => currentUser.sigoProfiles?.includes(p.id))
+            .map(p => p.name);
+
+        const isRestrictedProfile = userProfileNames.includes('Gestor Local') || userProfileNames.includes('Unidade Solicitante');
+
+        if (isRestrictedProfile && userLinkedUnits.length > 0) {
+             return units.filter(u => userLinkedUnits.includes(u.unidadeResumida) || userLinkedUnits.includes(u.unidade));
+        }
+        return units;
+    }, [units, currentUser, profiles, userLinkedUnits]);
+
+    // Update entidade if userCategory changes or Unit selected
     useEffect(() => {
         if (['SESI', 'SENAI'].includes(userCategory)) {
             setFormData(prev => ({ ...prev, entidade: userCategory }));
         }
     }, [userCategory]);
+
+    // Sync Entidade with Unit
+    useEffect(() => {
+        const selectedUnit = units.find(u => u.unidadeResumida === formData.unidade || u.unidade === formData.unidade);
+        if (selectedUnit) {
+            setFormData(prev => ({
+                ...prev,
+                entidade: selectedUnit.entidade || prev.entidade
+            }));
+        }
+    }, [formData.unidade, units]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -245,6 +283,23 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                             >
                                 <option value="SESI">SESI</option>
                                 <option value="SENAI">SENAI</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Unidade <span className="text-red-500">*</span></label>
+                            <select
+                                name="unidade"
+                                value={formData.unidade}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                            >
+                                <option value="">Selecione uma opção</option>
+                                {filteredUnits.map(u => (
+                                    <option key={u.id} value={u.unidadeResumida || u.unidade}>
+                                        {u.unidadeResumida || u.unidade}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 

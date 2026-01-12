@@ -11,6 +11,8 @@ interface SidebarProps {
   userPermissions: string[];
   userName: string;
   availableProfiles: string[];
+  isApprover?: boolean;
+  isRequester?: boolean;
 }
 
 const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boolean, onClick?: () => void }> = ({ icon: Icon, label, active = false, onClick }) => (
@@ -20,7 +22,7 @@ const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boole
   </a>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout, userPermissions, userName, availableProfiles }) => {
+const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout, userPermissions, userName, availableProfiles, isApprover, isRequester }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isManagementMenuOpen, setIsManagementMenuOpen] = useState(false);
   const [isSolicitacoesMenuOpen, setIsSolicitacoesMenuOpen] = useState(false);
@@ -31,6 +33,19 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
   const hasPermission = (permissionKey: string) => {
     // 1. Check for Admin wildcard
     if (userPermissions.includes('*') || userPermissions.includes('all')) return true;
+
+    // Rules for 'Gestor Local' and 'Unidade Solicitante'
+    const isRestrictedProfile = ['Gestor Local', 'Unidade Solicitante'].includes(selectedProfile);
+
+    // Rule 1: Approval Screen requires isApprover
+    if (isRestrictedProfile && permissionKey === 'aprovacao' && !isApprover) {
+      return false;
+    }
+
+    // Rule 2: Open Request Screens require isRequester
+    if (isRestrictedProfile && ['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(permissionKey) && !isRequester) {
+      return false;
+    }
 
     // 2. Map Frontend Keys to Backend Permission Strings
     const permissionMap: Record<string, string[]> = {
@@ -68,10 +83,6 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
 
     // 3. Check if user has ANY of the required permissions for this key
     const requiredPermissions = permissionMap[permissionKey];
-
-    // Special case for 'configuracoes' or 'solicitacoes' group - return true if user has ANY sub-permission?
-    // For now, let's use the map. If key not in map (e.g. group headers), we might need robust logic.
-    // Let's assume group headers check for specific sub-items in the JSX, but we can double check here.
 
     if (requiredPermissions) {
       return requiredPermissions.some(p => userPermissions.includes(p));

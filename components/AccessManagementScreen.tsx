@@ -64,24 +64,46 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
         setTimeout(() => setToast(prev => prev ? { ...prev, visible: false } : null), 3000);
     };
 
+    // Filter and Pagination State
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     // Derived list for the Grid: Only show users with profiles
-    // Restriction: Gestor Local only sees users dealing with their units
     const usersWithAccess = useMemo(() => {
-        const activeUsers = registeredUsers.filter(u => u.sigoProfiles && u.sigoProfiles.length > 0);
+        let activeUsers = registeredUsers.filter(u => u.sigoProfiles && u.sigoProfiles.length > 0);
 
         if (isGestorLocal) {
             const myUnits = currentUser.linkedUnits || [];
-            return activeUsers.filter(u => {
+            activeUsers = activeUsers.filter(u => {
                 const theirUnits = u.linkedUnits || [];
-                // Check intersection: Does the user have ANY unit that I also have?
-                // Or check if they were created by me? (Ambiguous, let's stick to Unit intersection as per prompt "para as unidades que ele possui")
-                const hasCommonUnit = theirUnits.some(unit => myUnits.includes(unit));
-                return hasCommonUnit;
+                return theirUnits.some(unit => myUnits.includes(unit));
             });
         }
 
+        // Apply Search Filter
+        if (searchTerm) {
+            const lowerTerm = searchTerm.toLowerCase();
+            activeUsers = activeUsers.filter(u => 
+                u.name.toLowerCase().includes(lowerTerm) ||
+                u.nif.toLowerCase().includes(lowerTerm) ||
+                u.email.toLowerCase().includes(lowerTerm)
+            );
+        }
+
         return activeUsers;
-    }, [registeredUsers, isGestorLocal, currentUser]);
+    }, [registeredUsers, isGestorLocal, currentUser, searchTerm]);
+
+    const totalPages = Math.ceil(usersWithAccess.length / itemsPerPage);
+    const paginatedUsers = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return usersWithAccess.slice(start, start + itemsPerPage);
+    }, [usersWithAccess, currentPage]);
+
+    // Reset pagination when search changes
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
 
     const handleNewUserClick = () => {
         onNavigateToRegistration();
@@ -178,10 +200,24 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
 
             {/* Registered Users Section */}
             <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                    <CheckCircleIcon className="w-5 h-5 text-green-500" />
-                    Usuários Cadastrados no Sistema
-                </h2>
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-lg font-bold text-gray-700 flex items-center gap-2">
+                        <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                        Usuários Cadastrados no Sistema
+                    </h2>
+                    
+                    {/* Search Input */}
+                    <div className="relative">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Buscar usuário..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-sky-500 focus:outline-none w-64"
+                        />
+                    </div>
+                </div>
 
                 <div className="overflow-x-auto border rounded-lg">
                     <table className="w-full text-sm text-left text-gray-500">
@@ -197,7 +233,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
                             </tr>
                         </thead>
                         <tbody className="divide-y">
-                            {usersWithAccess.length > 0 ? usersWithAccess.map(user => (
+                            {paginatedUsers.length > 0 ? paginatedUsers.map(user => (
                                 <tr key={user.nif} className="bg-white hover:bg-gray-50 animate-in fade-in slide-in-from-top-1 duration-300">
                                     <td className="px-6 py-4 font-medium text-gray-900">{user.nif}</td>
                                     <td className="px-6 py-4 text-gray-700">{user.name}</td>
@@ -266,13 +302,41 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
                             )) : (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-gray-400 italic">
-                                        Nenhum usuário com acesso cadastrado.
+                                        {searchTerm ? 'Nenhum usuário encontrado.' : 'Nenhum usuário com acesso cadastrado.'}
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
+                
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                        <span className="text-sm text-gray-500">
+                            Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, usersWithAccess.length)} de {usersWithAccess.length} resultados
+                        </span>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 text-gray-600"
+                            >
+                                Anterior
+                            </button>
+                            <span className="px-3 py-1 text-sm bg-gray-100 rounded text-gray-700 font-medium">
+                                {currentPage}
+                            </span>
+                            <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 text-gray-600"
+                            >
+                                Próximo
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
 

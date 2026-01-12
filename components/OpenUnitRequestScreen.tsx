@@ -21,11 +21,24 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
     const [isAlertOpen, setIsAlertOpen] = useState(false);
 
     // Determine Entity restriction
-    const isEntityRestricted = ['SESI', 'SENAI'].includes(userCategory);
+    // Variable used for rendering (reactive)
+    // Existing logic: const isEntityRestricted = ['SESI', 'SENAI'].includes(userCategory);
+    
+    // NIF-based Logic for 'Gestor Local' and 'Unidade Solicitante'
+    const userProfileNames = profiles
+        .filter(p => currentUser.sigoProfiles?.includes(p.id))
+        .map(p => p.name);
+    
+    const isTargetProfile = userProfileNames.includes('Gestor Local') || userProfileNames.includes('Unidade Solicitante');
+    
+    const nifPrefix = currentUser?.nif?.substring(0, 2).toUpperCase();
+    const nifEntidade = nifPrefix === 'SN' ? 'SENAI' : (nifPrefix === 'SS' ? 'SESI' : '');
+
+    const isEntityRestricted = ['SESI', 'SENAI'].includes(userCategory) || (isTargetProfile && !!nifEntidade);
     const defaultEntity = isEntityRestricted ? userCategory : 'SENAI';
 
     const [formData, setFormData] = useState({
-        entidade: defaultEntity,
+        entidade: (isTargetProfile && nifEntidade) ? nifEntidade : defaultEntity,
         unidade: '',
         local: '',
         atividade: '',
@@ -66,6 +79,20 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
         probabilidadeEvolucao: ''
     });
 
+    // Filter Units based on Profile
+    const filteredUnits = React.useMemo(() => {
+        const userProfileNames = profiles
+            .filter(p => currentUser.sigoProfiles?.includes(p.id))
+            .map(p => p.name);
+
+        const isRestrictedProfile = userProfileNames.includes('Gestor Local') || userProfileNames.includes('Unidade Solicitante');
+
+        if (isRestrictedProfile && userLinkedUnits.length > 0) {
+             return units.filter(u => userLinkedUnits.includes(u.unidadeResumida) || userLinkedUnits.includes(u.unidade));
+        }
+        return units;
+    }, [units, currentUser, profiles, userLinkedUnits]);
+
     // Mock data for auto-filling Local and Atividade
     // TODO: Use real data from Unit object if available
     useEffect(() => {
@@ -74,7 +101,8 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
             setFormData(prev => ({
                 ...prev,
                 local: selectedUnit.unidade,
-                atividade: selectedUnit.tipo // Assuming 'tipo' maps to Activity or similar
+                atividade: selectedUnit.tipo, // Assuming 'tipo' maps to Activity or similar
+                entidade: selectedUnit.entidade || prev.entidade
             }));
         } else {
             setFormData(prev => ({ ...prev, local: '', atividade: '' }));
@@ -100,6 +128,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
     const handleRadioChange = (name: string, value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -273,7 +302,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                             >
                                 <option value="">Selecione uma opção</option>
-                                {units.map(u => (
+                                {filteredUnits.map(u => (
                                     <option key={u.id} value={u.unidadeResumida || u.unidade}>
                                         {u.unidadeResumida || u.unidade}
                                     </option>

@@ -87,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (req.method === 'POST' || req.method === 'PUT') {
             const isPut = req.method === 'PUT';
-            const { nif, name, email, unidade, profile, sigo_profiles, linked_units, id, isActive } = req.body as any;
+            const { nif, name, email, unidade, profile, sigo_profiles, linked_units, id, isActive, isApprover, isRequester } = req.body as any;
 
             if (!nif || !name) {
                 return res.status(400).json({ error: 'Missing required fields' });
@@ -103,21 +103,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                      SET name = COALESCE($2, name), 
                          email = COALESCE($3, email), 
                          is_active = COALESCE($4, is_active),
+                         is_approver = COALESCE($5, is_approver),
+                         is_requester = COALESCE($6, is_requester),
                          updated_at = NOW()
                      WHERE nif = $1
-                     RETURNING id, nif, name, email, is_active`,
-                    [nif, name, email, isActive ?? null] // Basic fields only
+                     RETURNING id, nif, name, email, is_active, is_approver, is_requester`,
+                    [nif, name, email, isActive ?? null, isApprover ?? null, isRequester ?? null] 
                 );
             } else {
                 // Insert new (chk if exists first just in case to be safe, or rely on constraint)
                 // If conflict on NIF, we update (Upsert)
                 userResult = await query(
-                    `INSERT INTO users (nif, name, email, is_active, created_at, updated_at)
-                     VALUES ($1, $2, $3, COALESCE($4, true), NOW(), NOW())
+                    `INSERT INTO users (nif, name, email, is_active, is_approver, is_requester, created_at, updated_at)
+                     VALUES ($1, $2, $3, COALESCE($4, true), COALESCE($5, false), COALESCE($6, false), NOW(), NOW())
                      ON CONFLICT (nif) DO UPDATE 
-                     SET name = EXCLUDED.name, email = EXCLUDED.email, is_active = EXCLUDED.is_active, updated_at = NOW()
-                     RETURNING id, nif, name, email, is_active`,
-                    [nif, name, email, isActive ?? null]
+                     SET name = EXCLUDED.name, 
+                         email = EXCLUDED.email, 
+                         is_active = EXCLUDED.is_active, 
+                         is_approver = EXCLUDED.is_approver,
+                         is_requester = EXCLUDED.is_requester,
+                         updated_at = NOW()
+                     RETURNING id, nif, name, email, is_active, is_approver, is_requester`,
+                    [nif, name, email, isActive ?? null, isApprover ?? false, isRequester ?? false]
                 );
             }
 

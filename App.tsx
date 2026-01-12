@@ -87,14 +87,14 @@ const App: React.FC = () => {
                     const data = await unitsRes.json();
                     let mappedUnits = data.map((u: any) => ({
                         ...u,
-                        codigoUnidade: u.codigo_unidade,
-                        responsavelRE: u.responsavel_re,
-                        responsavelRA: u.responsavel_ra,
-                        responsavelRAR: u.responsavel_rar,
-                        tipoDeUnidade: u.tipo_de_unidade,
-                        unidadeResumida: u.unidade_resumida,
-                        gerenteRegional: u.gerente_regional,
-                        emailGR: u.email_gr
+                        codigoUnidade: u.codigoUnidade || u.codigo_unidade,
+                        responsavelRE: u.responsavelRE || u.responsavel_re,
+                        responsavelRA: u.responsavelRA || u.responsavel_ra,
+                        responsavelRAR: u.responsavelRAR || u.responsavel_rar,
+                        tipoDeUnidade: u.tipoDeUnidade || u.tipo_de_unidade,
+                        unidadeResumida: u.unidadeResumida || u.unidade_resumida,
+                        gerenteRegional: u.gerenteRegional || u.gerente_regional,
+                        emailGR: u.emailGR || u.email_gr
                     }));
 
                     // FILTER UNITS: 
@@ -237,6 +237,8 @@ const App: React.FC = () => {
                 userPermissions={userPermissions} // Pass permissions
                 userName={currentUser?.name || 'Usuário'} // Pass User Name
                 availableProfiles={profiles.map(p => p.name)}
+                isApprover={currentUser?.isApprover}
+                isRequester={currentUser?.isRequester}
                 onLogout={() => {
                     setIsAuthenticated(false);
                     setCurrentUser(null);
@@ -283,25 +285,32 @@ const App: React.FC = () => {
                 {currentView === 'cadastro_tipo_local' && <TipoLocalScreen tipoLocais={tipoLocais} setTipoLocais={setTipoLocais} />}
                 {currentView === 'access_registration' && (
                     <AccessRegistrationScreen
-                        onBack={() => {
-                            setEditingUser(null);
-                            setCurrentView('gestao_acesso');
-                        }}
                         units={units || []}
                         profiles={profiles || []}
                         registeredUsers={users || []}
                         initialUser={editingUser}
                         currentUser={currentUser}
                         currentProfile={selectedProfile}
-                        onSuccess={(updatedUser, isNew) => {
+                        onBack={() => {
+                            setEditingUser(null);
+                            setCurrentView('gestao_acesso');
+                        }}
+                        onSuccess={(updatedResult, isEditing) => {
                             setUsers(prev => {
-                                if (isNew) {
-                                    const exists = prev.some(u => u.nif === updatedUser.nif);
-                                    if (exists) return prev.map(u => u.nif === updatedUser.nif ? updatedUser : u);
-                                    return [updatedUser, ...prev];
-                                } else {
-                                    return prev.map(u => u.nif === updatedUser.nif ? updatedUser : u);
-                                }
+                                const updates = Array.isArray(updatedResult) ? updatedResult : [updatedResult];
+                                let newList = [...prev];
+                                
+                                updates.forEach(updatedUser => {
+                                    const existsIndex = newList.findIndex(u => u.nif === updatedUser.nif);
+                                    if (existsIndex >= 0) {
+                                        // Update existing
+                                        newList[existsIndex] = updatedUser;
+                                    } else {
+                                        // Add new
+                                        newList = [updatedUser, ...newList]; 
+                                    }
+                                });
+                                return newList;
                             });
                             setEditingUser(null);
                             setCurrentView('gestao_acesso');
@@ -353,6 +362,8 @@ const App: React.FC = () => {
                         userCategory={(currentUser?.linkedUnits?.length > 0 && currentUser?.instituicao) ? currentUser.instituicao : (profiles.find(p => p.name === selectedProfile)?.category || 'GERAL')}
                         currentUser={currentUser}
                         profiles={profiles}
+                        units={units}
+                        userLinkedUnits={currentUser?.linkedUnits || []}
                     />
                 )}
                 {currentView === 'nova_unidade' && (

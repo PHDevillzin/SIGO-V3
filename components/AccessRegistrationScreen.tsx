@@ -11,8 +11,10 @@ interface AccessRegistrationScreenProps {
     initialUser: User | null;
     currentUser: User;
     currentProfile: string;
-    onSuccess: (user: User, isNew: boolean) => void;
+    onSuccess: (users: User | User[], isNew: boolean) => void;
 }
+
+
 
 const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
     onBack,
@@ -27,6 +29,25 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
     // SELECTION STATE
     const [selectedUser, setSelectedUser] = useState<User | null>(initialUser);
     const [filterText, setFilterText] = useState('');
+    const [selectedBatchNifs, setSelectedBatchNifs] = useState<Set<string>>(new Set());
+
+    const toggleBatchSelection = (nif: string) => {
+        setSelectedBatchNifs(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(nif)) newSet.delete(nif);
+            else newSet.add(nif);
+            return newSet;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        // Select all FILTERED users
+        if (selectedBatchNifs.size === filteredUsers.length && filteredUsers.length > 0) {
+            setSelectedBatchNifs(new Set());
+        } else {
+            setSelectedBatchNifs(new Set(filteredUsers.map(u => u.nif)));
+        }
+    };
 
     const [selectedProfiles, setSelectedProfiles] = useState<string[]>([]);
     const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
@@ -98,7 +119,7 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
         return assignableProfiles;
     }, [profiles, currentProfile, isGestorLocal]);
 
-    // 2. Filter Units
+    // 2. Filter Units (Base availability for the current admin)
     const availableUnits = useMemo(() => {
         if (isGestorLocal && currentUser) {
             const userUnits = currentUser.linkedUnits || [];
@@ -106,6 +127,41 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
         }
         return units;
     }, [units, isGestorLocal, currentUser]);
+
+    // 2.5 Filter Units for Target User (NIF Logic)
+    const assignableUnits = useMemo(() => {
+        let filtered = availableUnits;
+
+        // Rule: If profile is 'Gestor Local' or 'Unidade Solicitante', filter by NIF
+        const isRestrictedProfile = selectedProfiles.includes('Gestor Local') || selectedProfiles.includes('Unidade Solicitante');
+        
+        if (isRestrictedProfile) {
+            let targetNifs: string[] = [];
+            if (selectedBatchNifs.size > 0) {
+                targetNifs = Array.from(selectedBatchNifs);
+            } else if (selectedUser?.nif) {
+                targetNifs = [selectedUser.nif];
+            }
+
+            const prefixes = new Set<string>();
+            targetNifs.forEach(nif => {
+                const p = nif.substring(0, 2).toUpperCase();
+                if (p === 'SS' || p === 'SN') prefixes.add(p);
+            });
+
+            if (prefixes.has('SS') && prefixes.has('SN')) {
+                // Mixed Entities selected: Cannot assume a common restricted unit.
+                // Return empty to prevent invalid assignment.
+                return [];
+            } else if (prefixes.has('SS')) {
+                filtered = filtered.filter(u => u.entidade === 'SESI');
+            } else if (prefixes.has('SN')) {
+                filtered = filtered.filter(u => u.entidade === 'SENAI');
+            }
+        }
+
+        return filtered;
+    }, [availableUnits, selectedUser, selectedProfiles, selectedBatchNifs]);
 
     // 3. Filter Source Users (exclude already registered)
     const availableSourceUsers = useMemo(() => {
@@ -146,7 +202,7 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
     }, [selectedUser, initialUser]);
 
     // COMPUTED OPTIONS
-    const unitOptions = useMemo(() => Array.from(new Set(availableUnits.map(u => u.unidade))).sort(), [availableUnits]);
+    const unitOptions = useMemo(() => Array.from(new Set(assignableUnits.map(u => u.unidade))).sort(), [assignableUnits]);
 
     const profileOptions = useMemo(() => {
         const sorted = [...availableProfiles].sort((a, b) => {
@@ -201,8 +257,22 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
     const showAdditionalFields = selectedProfiles.some(p => !EXEMPT_PROFILES.includes(p));
 
 
+
     const handleSave = async () => {
-        if (!selectedUser) return;
+        // Targets: either the batch (list) OR the single selectedUser (if batch is empty)
+        // If batch has items, we process strictly the batch list.
+        // If batch is empty, we process selectedUser.
+        let targets: User[] = [];
+        
+        if (selectedBatchNifs.size > 0) {
+            // Find all user objects in allUsers that match the NIFs
+            targets = allUsers.filter(u => selectedBatchNifs.has(u.nif));
+        } else if (selectedUser) {
+            targets = [selectedUser];
+        }
+
+        if (targets.length === 0) return;
+
 
         if (selectedProfiles.length === 0) {
             setError('Por favor, selecione ao menos um perfil de acesso.');
@@ -227,7 +297,7 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
             }
         }
 
-        const isEditing = !!initialUser || !!selectedUser.registrationDate;
+        const isEditing = !!initialUser || (targets.length === 1 && !!targets[0].registrationDate);
 
         // Map names back to IDs
         const profileIds = selectedProfiles.map(name => {
@@ -235,50 +305,72 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
             return profile ? profile.id : name;
         });
 
-        // Payload
-        const updatedUserPayload = {
-            ...selectedUser,
-            sigo_profiles: profileIds,
-            linked_units: selectedUnits,
-            registrationDate: selectedUser.registrationDate || new Date().toISOString()
-        };
-
         try {
-            const method = isEditing ? 'PUT' : 'POST';
-            const response = await fetch('/api/users', {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    nif: updatedUserPayload.nif,
-                    name: updatedUserPayload.name,
-                    email: updatedUserPayload.email,
+            let successCount = 0;
+            const errors: string[] = [];
+
+            // Process each target sequentially (or parallel)
+            for (const targetUser of targets) {
+                 const isTargetEditing = !!targetUser.registrationDate; // Assume if date exists, it's an edit
+                 const method = isTargetEditing ? 'PUT' : 'POST';
+                 
+                 const payload = {
+                    nif: targetUser.nif,
+                    name: targetUser.name,
+                    email: targetUser.email,
                     sigo_profiles: profileIds,
                     linked_units: selectedUnits,
-                    id: selectedUser.id
-                })
-            });
+                    isApprover,
+                    isRequester,
+                    id: targetUser.id
+                 };
 
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error || 'Failed to save user');
+                const response = await fetch('/api/users', {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    errors.push(`${targetUser.nif}: ${err.error || 'Failed'}`);
+                } else {
+                    successCount++;
+                }
             }
 
-            const savedUser = await response.json();
+            if (errors.length > 0) {
+                 showToast(`Salvo ${successCount} de ${targets.length}. Erros: ${errors.length}`, 'error');
+                 console.error('Batch errors:', errors);
+            } else {
+                 showToast(isEditing && targets.length === 1 ? 'Acesso atualizado com sucesso!' : `${successCount} usuários cadastrados com sucesso!`, 'success');
+            }
 
-            // Construct local user state
-            const newUserState: User = {
-                ...selectedUser,
-                sigoProfiles: profileIds,
-                linkedUnits: selectedUnits,
-                registrationDate: savedUser.registration_date || updatedUserPayload.registrationDate
-            };
+            if (targets.length === 1) {
+                const savedTarget = targets[0];
+                 const newUserState: User = {
+                    ...savedTarget,
+                    sigoProfiles: profileIds,
+                    linkedUnits: selectedUnits,
+                    registrationDate: savedTarget.registrationDate || new Date().toISOString()
+                };
+                 setTimeout(() => {
+                    onSuccess(newUserState, !isEditing);
+                }, 1000);
+            } else {
+                 // Batch Success
+                 // Construct array of updated users
+                 const updatedBatch = targets.map(t => ({
+                     ...t,
+                     sigoProfiles: profileIds,
+                     linkedUnits: selectedUnits,
+                     registrationDate: t.registrationDate || new Date().toISOString()
+                 }));
 
-            showToast(isEditing ? 'Acesso atualizado com sucesso!' : 'Usuário cadastrado com sucesso!', 'success');
-
-            // Delay navigation slightly to show toast
-            setTimeout(() => {
-                onSuccess(newUserState, !isEditing);
-            }, 1000);
+                 setTimeout(() => {
+                    onSuccess(updatedBatch, false); 
+                 }, 1000);
+            }
 
         } catch (err: any) {
             console.error(err);
@@ -338,6 +430,14 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                             <table className="w-full text-sm text-left">
                                 <thead className="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0">
                                     <tr>
+                                        <th className="px-4 py-3 w-10">
+                                            <input 
+                                                type="checkbox"
+                                                onChange={toggleSelectAll}
+                                                checked={filteredUsers.length > 0 && selectedBatchNifs.size === filteredUsers.length}
+                                                className="w-4 h-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+                                            />
+                                        </th>
                                         <th className="px-4 py-3">NIF</th>
                                         <th className="px-4 py-3">Nome</th>
                                         <th className="px-4 py-3">Email</th>
@@ -346,7 +446,7 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                                 <tbody className="divide-y divide-gray-100">
                                     {isLoading ? (
                                         <tr>
-                                            <td colSpan={3} className="px-4 py-8 text-center text-gray-400 text-xs italic">
+                                            <td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-xs italic">
                                                 Carregando usuários...
                                             </td>
                                         </tr>
@@ -356,6 +456,14 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                                             onClick={() => setSelectedUser(u)}
                                             className={`cursor-pointer hover:bg-sky-50 transition-colors ${selectedUser?.nif === u.nif ? 'bg-sky-50 border-l-4 border-l-sky-500' : ''}`}
                                         >
+                                            <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={selectedBatchNifs.has(u.nif)}
+                                                    onChange={() => toggleBatchSelection(u.nif)}
+                                                    className="w-4 h-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+                                                />
+                                            </td>
                                             <td className="px-4 py-3 font-medium text-gray-900">{u.nif}</td>
                                             <td className="px-4 py-3 text-gray-600">{u.name}</td>
                                             <td className="px-4 py-3 text-gray-600 opacity-80">{u.email}</td>
@@ -389,22 +497,43 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                     </div>
 
                     <div className="p-6 flex-1 overflow-y-auto space-y-6">
-                        {selectedUser ? (
+                        {selectedUser || selectedBatchNifs.size > 0 ? (
                             <>
-                                <div className="bg-sky-50 rounded-lg p-4 border border-sky-100 grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-[10px] font-bold text-sky-700 uppercase">Nome</label>
-                                        <p className="text-sm font-bold text-sky-900">{selectedUser.name}</p>
+                                {selectedBatchNifs.size > 1 ? (
+                                    <div className="bg-sky-50 rounded-lg p-4 border border-sky-100 flex flex-col gap-2">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <label className="text-[10px] font-bold text-sky-700 uppercase">Usuários Selecionados</label>
+                                            <span className="bg-sky-200 text-sky-800 text-xs font-bold px-2 py-0.5 rounded-full">{selectedBatchNifs.size}</span>
+                                        </div>
+                                        <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                            {allUsers.filter(u => selectedBatchNifs.has(u.nif)).map(u => (
+                                                <div key={u.nif} className="text-sm font-bold text-sky-900 border-b border-sky-200/50 last:border-0 pb-1 last:pb-0">
+                                                    {u.name} <span className="text-xs font-normal text-sky-600 opacity-80">- {u.nif}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mt-2 pt-2 border-t border-sky-200">
+                                            <p className="text-[10px] text-sky-600 italic leading-tight">
+                                                A configuração abaixo será aplicada a <strong>todos</strong> os usuários listados acima.
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <label className="text-[10px] font-bold text-sky-700 uppercase">NIF</label>
-                                        <p className="text-sm font-bold text-sky-900">{selectedUser.nif}</p>
+                                ) : (selectedUser || (selectedBatchNifs.size === 1 && allUsers.find(u => selectedBatchNifs.has(u.nif)))) ? (
+                                    <div className="bg-sky-50 rounded-lg p-4 border border-sky-100 grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-sky-700 uppercase">Nome</label>
+                                            <p className="text-sm font-bold text-sky-900">{selectedUser?.name || allUsers.find(u => selectedBatchNifs.has(u.nif))?.name}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <label className="text-[10px] font-bold text-sky-700 uppercase">NIF</label>
+                                            <p className="text-sm font-bold text-sky-900">{selectedUser?.nif || allUsers.find(u => selectedBatchNifs.has(u.nif))?.nif}</p>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="text-[10px] font-bold text-sky-700 uppercase">Email</label>
+                                            <p className="text-sm text-sky-900">{selectedUser?.email || allUsers.find(u => selectedBatchNifs.has(u.nif))?.email}</p>
+                                        </div>
                                     </div>
-                                    <div className="col-span-2">
-                                        <label className="text-[10px] font-bold text-sky-700 uppercase">Email</label>
-                                        <p className="text-sm text-sky-900">{selectedUser.email}</p>
-                                    </div>
-                                </div>
+                                ) : null}
 
                                 <div className="space-y-4">
                                     <MultiSelectDropdown
@@ -463,11 +592,11 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                         </button>
                         <button
                             onClick={handleSave}
-                            disabled={!selectedUser}
-                            className={`px-6 py-2 rounded-md font-bold text-sm uppercase text-white shadow-lg transition-all flex items-center gap-2 ${selectedUser ? 'bg-[#0EA5E9] hover:bg-sky-600' : 'bg-gray-300 cursor-not-allowed'}`}
+                            disabled={!selectedUser && selectedBatchNifs.size === 0}
+                            className={`px-6 py-2 rounded-md font-bold text-sm uppercase text-white shadow-lg transition-all flex items-center gap-2 ${(selectedUser || selectedBatchNifs.size > 0) ? 'bg-[#0EA5E9] hover:bg-sky-600' : 'bg-gray-300 cursor-not-allowed'}`}
                         >
                             <PaperAirplaneIcon className="w-4 h-4 -rotate-45" />
-                            <span>{initialUser ? 'Salvar Alterações' : 'Concluir Cadastro'}</span>
+                            <span>{initialUser ? 'Salvar Alterações' : (selectedBatchNifs.size > 0 ? `Salvar (${selectedBatchNifs.size})` : 'Concluir Cadastro')}</span>
                         </button>
                     </div>
                 </div>
