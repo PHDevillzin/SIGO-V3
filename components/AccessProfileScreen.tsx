@@ -104,9 +104,10 @@ interface AccessProfileScreenProps {
     setProfiles: React.Dispatch<React.SetStateAction<AccessProfile[]>>;
     userPermissions: string[];
     currentUser: User | null;
+    currentProfileName?: string;
 }
 
-const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, setProfiles, userPermissions, currentUser }) => {
+const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, setProfiles, userPermissions, currentUser, currentProfileName }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedProfileId, setSelectedProfileId] = useState<string>(profiles[0]?.id || '');
     const [isNewModalOpen, setIsNewModalOpen] = useState(false);
@@ -143,14 +144,22 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
 
     const handleTogglePermission = (keys: string[]) => {
         if (!isEditingExisting) return;
-        // Same permission logic...
+        
+        // RESTRICTION LOGIC for toggle
         const isAdmin = editName === 'Administração do Sistema' || editName === 'Administrador do sistema';
-        const isRestricted = keys.includes('Configurações:Perfil Acesso');
-        if (isRestricted && !isAdmin) return;
+        // Check if Admin GSO is acting
+        const isAdminGSO = currentProfileName === 'Administrador GSO';
+        
+        const isRestrictedTarget = keys.includes('Configurações:Perfil Acesso');
+        
+        // Block if:
+        // 1. Target is restricted AND not editing Admin (Legacy rule)
+        // 2. Target is restricted AND active user is Admin GSO (New rule)
+        if (isRestrictedTarget && (!isAdmin || isAdminGSO)) {
+             return;
+        }
 
         setEditPermissions(prev => {
-            // Simplify for brevity, assuming same logic as before or simplified
-            // Keeping original logic structure recommended
             if (prev.includes('*')) {
                 const allKeys = MENUS.flatMap(m => m.items.flatMap(i => i.backendKeys));
                 return allKeys.filter(k => !keys.includes(k));
@@ -280,12 +289,15 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
             <div className="bg-white rounded-lg shadow p-6 flex justify-between items-center">
                 <h1 className="text-2xl font-semibold text-gray-800">Perfil acesso</h1>
                 <div className="flex items-center space-x-3">
-                    <button
-                        onClick={() => setIsNewModalOpen(true)}
-                        className="bg-[#0B1A4E] text-white px-6 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors text-sm"
-                    >
-                        Cadastrar
-                    </button>
+                    {/* Hide Cadastrar button for Admin GSO */}
+                    {currentProfileName !== 'Administrador GSO' && (
+                        <button
+                            onClick={() => setIsNewModalOpen(true)}
+                            className="bg-[#0B1A4E] text-white px-6 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors text-sm"
+                        >
+                            Cadastrar
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -390,7 +402,14 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                                                     {menu.items.map(item => {
                                                         const currentPermissions = isEditingExisting ? editPermissions : selectedProfile.permissions;
                                                         const isChecked = currentPermissions.includes('*') || item.backendKeys.some(k => currentPermissions.includes(k));
-                                                        const isPermissionRestricted = (item.id === 'perfil_acesso' && editName !== 'Administração do Sistema' && editName !== 'Administrador do sistema');
+                                                        
+                                                        // RESTRICTION LOGIC
+                                                        const isAdminGSO = currentProfileName === 'Administrador GSO';
+                                                        const isPermissionRestricted = (item.id === 'perfil_acesso' && (
+                                                            (editName !== 'Administração do Sistema' && editName !== 'Administrador do sistema') || 
+                                                            isAdminGSO
+                                                        ));
+                                                        
                                                         const isDisabled = !isEditingExisting || isPermissionRestricted;
 
                                                         return (
@@ -411,7 +430,7 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                                                                     {item.label}
                                                                     {isPermissionRestricted && (
                                                                         <span className={`ml-2 text-[9px] font-bold italic uppercase tracking-tighter ${isEditingExisting ? 'text-red-400' : 'text-gray-400'}`}>
-                                                                            (Apenas Administrador)
+                                                                            (Restrito)
                                                                         </span>
                                                                     )}
                                                                 </span>

@@ -84,6 +84,11 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     // 3. Check if user has ANY of the required permissions for this key
     const requiredPermissions = permissionMap[permissionKey];
 
+    // EXCEPTION: "Administrador GSO" always sees "Perfil Acesso"
+    if (selectedProfile === 'Administrador GSO' && permissionKey === 'perfil_acesso') {
+       return true;
+    }
+
     if (requiredPermissions) {
       return requiredPermissions.some(p => userPermissions.includes(p));
     }
