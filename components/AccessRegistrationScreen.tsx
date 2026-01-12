@@ -427,53 +427,72 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                         </div>
 
                         <div className="flex-1 overflow-y-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0">
+                            <table className="w-full text-sm text-left border-collapse">
+                                <thead className="text-xs text-white uppercase bg-[#0B1A4E] sticky top-0 z-10 shadow-sm">
                                     <tr>
-                                        <th className="px-4 py-3 w-10">
-                                            <input 
-                                                type="checkbox"
-                                                onChange={toggleSelectAll}
-                                                checked={filteredUsers.length > 0 && selectedBatchNifs.size === filteredUsers.length}
-                                                className="w-4 h-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
-                                            />
+                                        <th className="px-4 py-3 w-10 text-center font-semibold">
+                                            <div className="flex items-center justify-center">
+                                                <input
+                                                    type="checkbox"
+                                                    onChange={toggleSelectAll}
+                                                    checked={filteredUsers.length > 0 && selectedBatchNifs.size === filteredUsers.length}
+                                                    className="w-4 h-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded cursor-pointer bg-white"
+                                                />
+                                            </div>
                                         </th>
-                                        <th className="px-4 py-3">NIF</th>
-                                        <th className="px-4 py-3">Nome</th>
-                                        <th className="px-4 py-3">Email</th>
+                                        <th className="px-4 py-3 font-semibold tracking-wider">NIF</th>
+                                        <th className="px-4 py-3 font-semibold tracking-wider">Nome</th>
+                                        <th className="px-4 py-3 font-semibold tracking-wider">Email</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100">
+                                <tbody className="divide-y divide-gray-100 bg-white">
                                     {isLoading ? (
                                         <tr>
-                                            <td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-xs italic">
-                                                Carregando usuários...
+                                            <td colSpan={4} className="px-4 py-12 text-center text-gray-400 text-sm italic">
+                                                <div className="flex flex-col items-center justify-center space-y-2">
+                                                    <MagnifyingGlassIcon className="w-6 h-6 animate-pulse" />
+                                                    <span>Carregando usuários...</span>
+                                                </div>
                                             </td>
                                         </tr>
-                                    ) : paginatedUsers.length > 0 ? paginatedUsers.map(u => (
-                                        <tr
-                                            key={u.id}
-                                            onClick={() => setSelectedUser(u)}
-                                            className={`cursor-pointer hover:bg-sky-50 transition-colors ${selectedUser?.nif === u.nif ? 'bg-sky-50 border-l-4 border-l-sky-500' : ''}`}
-                                        >
-                                            <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={selectedBatchNifs.has(u.nif)}
-                                                    onChange={() => toggleBatchSelection(u.nif)}
-                                                    className="w-4 h-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
-                                                />
-                                            </td>
-                                            <td className="px-4 py-3 font-medium text-gray-900">{u.nif}</td>
-                                            <td className="px-4 py-3 text-gray-600">{u.name}</td>
-                                            <td className="px-4 py-3 text-gray-600 opacity-80">{u.email}</td>
-                                        </tr>
-                                    )) : (
+                                    ) : filteredUsers.length === 0 ? (
                                         <tr>
-                                            <td colSpan={3} className="px-4 py-8 text-center text-gray-400 text-xs italic">
-                                                Nenhum usuário disponível.
+                                            <td colSpan={4} className="px-4 py-12 text-center text-gray-400 text-sm">
+                                                Nenhum usuário encontrado.
                                             </td>
                                         </tr>
+                                    ) : (
+                                        paginatedUsers.map(user => {
+                                            const isSelected = selectedBatchNifs.has(user.nif);
+                                            return (
+                                                <tr
+                                                    key={user.nif}
+                                                    onClick={() => !isLoading && toggleBatchSelection(user.nif)} // Changed setSelectedUser(u) to toggleBatchSelection(user.nif)
+                                                    className={`hover:bg-sky-50 transition-colors cursor-pointer group ${isSelected ? 'bg-sky-50/60' : ''}`}
+                                                >
+                                                    <td className="px-4 py-3 text-center">
+                                                        <div className="flex items-center justify-center">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={() => toggleBatchSelection(user.nif)}
+                                                                className={`w-4 h-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500 cursor-pointer ${isSelected ? 'accent-sky-600' : ''}`}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            />
+                                                        </div>
+                                                    </td>
+                                                    <td className={`px-4 py-3 font-medium transition-colors ${isSelected ? 'text-sky-700' : 'text-gray-900'}`}>
+                                                        {user.nif}
+                                                    </td>
+                                                    <td className={`px-4 py-3 transition-colors ${isSelected ? 'text-sky-900 font-medium' : 'text-gray-700'}`}>
+                                                        {user.name}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-500 font-light text-xs">
+                                                        {user.email}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>
