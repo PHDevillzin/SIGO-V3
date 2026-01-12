@@ -7,7 +7,6 @@ interface LoginScreenProps {
 const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     const [nif, setNif] = useState('');
     const [password, setPassword] = useState('');
-    const [entidade, setEntidade] = useState('SESI');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -20,7 +19,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             const response = await fetch('/api/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nif, password, entidade }),
+                body: JSON.stringify({ nif, password }),
             });
 
             const data = await response.json();
@@ -98,19 +97,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
-                        </div>
-
-                        <div>
-                            <label htmlFor="entidade" className="sr-only">Entidade</label>
-                            <select
-                                id="entidade"
-                                className="appearance-none rounded-md relative block w-full px-4 py-3 border border-gray-300 text-gray-700 bg-white focus:outline-none focus:ring-[#00AEEF] focus:border-[#00AEEF] sm:text-sm shadow-sm"
-                                value={entidade}
-                                onChange={(e) => setEntidade(e.target.value)}
-                            >
-                                <option value="SESI">SESI</option>
-                                <option value="SENAI">SENAI</option>
-                            </select>
                         </div>
 
                         <div>

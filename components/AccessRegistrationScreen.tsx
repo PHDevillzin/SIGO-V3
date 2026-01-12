@@ -3,23 +3,6 @@ import { XMarkIcon, PaperAirplaneIcon, InformationCircleIcon, MagnifyingGlassIco
 import { MultiSelectDropdown } from './AdvancedFilters';
 import type { User, Unit, AccessProfile } from '../types';
 
-// Moved from AccessManagementScreen
-const csvDataRaw = [
-    { id: "25", nif: "SS0000002", name: "Ana Beatriz Costa", email: "ana.costa@sesisenaisp.org.br", unidade: "SESI - Campinas", profile: "Unidade", createdBy: "Daniel", createdAt: "10/01/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "26", nif: "SN0000004", name: "Bruno Alves", email: "bruno.alves@sesisenaisp.org.br", unidade: "", profile: "Sede", createdBy: "Paulo H. R. Silva", createdAt: "12/02/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "27", nif: "SS0000003", name: "Carlos Eduardo Lima", email: "carlos.lima@sesisenaisp.org.br", unidade: "SESI - Jundiaí", profile: "Gestor de unidade", createdBy: "Rafael", createdAt: "05/03/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "28", nif: "SN0000005", name: "Daniela Ferreira", email: "daniela.ferreira@sesisenaisp.org.br", unidade: "SESI - Jundiaí", profile: "Unidade", createdBy: "Teste", createdAt: "18/04/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "29", nif: "SS0000004", name: "Fernando Almeida", email: "fernando.almeida@sesisenaisp.org.br", unidade: "", profile: "Sede", createdBy: "Paulo H. R. Silva", createdAt: "22/07/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "30", nif: "SN0000006", name: "Fernanda Gonçalves", email: "fernanda.goncalves@sesisenaisp.org.br", unidade: "SENAI - Osasco", profile: "Gestor de unidade", createdBy: "Daniel", createdAt: "14/05/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "31", nif: "SS0000005", name: "Gustavo Ribeiro", email: "gustavo.ribeiro@sesisenaisp.org.br", unidade: "SESI - Piracicaba", profile: "Unidade", createdBy: "Teste", createdAt: "30/06/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "32", nif: "SN0000007", name: "Helena Souza", email: "helena.souza@sesisenaisp.org.br", unidade: "", profile: "Sede", createdBy: "Paulo H. R. Silva", createdAt: "09/08/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "33", nif: "SS0000001", name: "Paulo H. R. Silva", email: "paulo.ribeiro.3@sesisenaisp.org.br", unidade: "", profile: "Gerência de Facilities", createdBy: "Sistema", createdAt: "01/01/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "34", nif: "SN0000001", name: "Daniel", email: "daniel@sesisenaisp.org.br", unidade: "", profile: "Sede", createdBy: "Sistema", createdAt: "01/01/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "35", nif: "SN0000002", name: "Rafael", email: "rafael@sesisenaisp.org.br", unidade: "SENAI - SP - Brás", profile: "Gestor de unidade", createdBy: "Sistema", createdAt: "01/01/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "36", nif: "SN0000003", name: "Teste", email: "teste@sesisenaisp.org.br", unidade: "SENAI - SP - Mooca", profile: "Unidade", createdBy: "Sistema", createdAt: "01/01/2023", updatedAt: "2025-12-16 12:14:35.831+00" },
-    { id: "37", nif: "SN0000008", name: "Ana Silva", email: "ana.silva@sesisenaisp.org.br", unidade: "", profile: "Sede", createdBy: "Paulo H. R. Silva", createdAt: "26/12/2025", updatedAt: "2025-12-26 18:23:14.53+00" }
-] as unknown as User[];
-
 interface AccessRegistrationScreenProps {
     onBack: () => void;
     units: Unit[];
@@ -55,10 +38,50 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error', visible: boolean } | null>(null);
 
+    // FETCH STATE
+    const [allUsers, setAllUsers] = useState<User[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
     const showToast = (message: string, type: 'success' | 'error') => {
         setToast({ message, type, visible: true });
         setTimeout(() => setToast(prev => prev ? { ...prev, visible: false } : null), 3000);
     };
+
+    // Load All Users
+    useEffect(() => {
+        if (initialUser) return; 
+        
+        async function fetchUsers() {
+            setIsLoading(true);
+            try {
+                const res = await fetch('/api/users');
+                if (!res.ok) throw new Error('Falha ao carregar usuários');
+                const data = await res.json();
+                
+                // Map API response (snake_case) to Frontend User Type (camelCase)
+                const mappedUsers: User[] = data.map((u: any) => ({
+                    id: String(u.id),
+                    nif: u.nif,
+                    name: u.name,
+                    email: u.email,
+                    createdBy: u.created_by,
+                    createdAt: u.created_at,
+                    updatedAt: u.updated_at,
+                    sigoProfiles: u.sigo_profiles,
+                    linkedUnits: u.linked_units,
+                    isActive: u.is_active
+                }));
+                setAllUsers(mappedUsers);
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao carregar lista de usuários', 'error');
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchUsers();
+    }, [initialUser]);
 
     // Permission Logic
     const isGestorLocal = currentProfile === 'Gestor Local';
@@ -86,9 +109,9 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
 
     // 3. Filter Source Users (exclude already registered)
     const availableSourceUsers = useMemo(() => {
-        const sourceList = csvDataRaw; // Using the mock data as source
+        const sourceList = allUsers; 
         return sourceList.filter(u => !registeredUsers.some(r => r.nif === u.nif && r.sigoProfiles && r.sigoProfiles.length > 0));
-    }, [registeredUsers]);
+    }, [registeredUsers, allUsers]);
 
 
     // Initial Data Pre-fill
@@ -101,7 +124,6 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                 : [];
             setSelectedProfiles(profileNames);
             setSelectedUnits(initialUser.linkedUnits || []);
-            // TODO: if specific fields exist for approver/requester, load them here
         } else {
             setSelectedUser(null);
             setSelectedProfiles([]);
@@ -218,15 +240,6 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
             ...selectedUser,
             sigo_profiles: profileIds,
             linked_units: selectedUnits,
-            // Add isApprover/isRequester if DB supports it. Current prompt is about Transferring Logic.
-            // Check if backend supports saving these. The original handleConfirmRegistration didn't seem to send isApprover/isRequester in body? 
-            // Re-reading handleConfirmRegistration... it received data.isApprover but I don't see it in the BODY fetch. 
-            // Wait, line 187 of AccessManagementScreen.tsx: body: JSON.stringify({ ... })
-            // It sent nif, name, email, sigo_profiles, linked_units, id. 
-            // It did NOT send isApprover/isRequester. The checkbox state was seemingly lost or handled elsewhere? 
-            // User requirement: "Toda a logica do modal deve ser trasferida para tela."
-            // If the modal gathered them, I should gather them. But if they weren't saved, I'll follow strict logic transfer.
-            // I will strictly follow what was there.
             registrationDate: selectedUser.registrationDate || new Date().toISOString()
         };
 
@@ -327,10 +340,17 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                                     <tr>
                                         <th className="px-4 py-3">NIF</th>
                                         <th className="px-4 py-3">Nome</th>
+                                        <th className="px-4 py-3">Email</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {paginatedUsers.length > 0 ? paginatedUsers.map(u => (
+                                    {isLoading ? (
+                                        <tr>
+                                            <td colSpan={3} className="px-4 py-8 text-center text-gray-400 text-xs italic">
+                                                Carregando usuários...
+                                            </td>
+                                        </tr>
+                                    ) : paginatedUsers.length > 0 ? paginatedUsers.map(u => (
                                         <tr
                                             key={u.id}
                                             onClick={() => setSelectedUser(u)}
@@ -338,10 +358,11 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                                         >
                                             <td className="px-4 py-3 font-medium text-gray-900">{u.nif}</td>
                                             <td className="px-4 py-3 text-gray-600">{u.name}</td>
+                                            <td className="px-4 py-3 text-gray-600 opacity-80">{u.email}</td>
                                         </tr>
                                     )) : (
                                         <tr>
-                                            <td colSpan={2} className="px-4 py-8 text-center text-gray-400 text-xs italic">
+                                            <td colSpan={3} className="px-4 py-8 text-center text-gray-400 text-xs italic">
                                                 Nenhum usuário disponível.
                                             </td>
                                         </tr>
