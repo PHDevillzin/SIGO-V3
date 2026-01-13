@@ -51,6 +51,25 @@ const AccessDetailsModal: React.FC<AccessDetailsModalProps> = ({ isOpen, onClose
         });
     }, [user, profiles])
 
+    // EXEMPT PROFILES (Copy from AccessRegistrationScreen to ensuring consistency)
+    const EXEMPT_PROFILES = [
+        'Administrador GSO', 'Diretoria Corporativa', 'Gestor (GSO)', 'Planejamento (GSO)',
+        'Gerência de Comunicação e Marketing Institucional', 'Gerência de Facilities',
+        'Gerência de Planejamento e Controladoria', 'Gerência Sênior Contábil e Financeira',
+        'Gerência Sênior de Obras', 'Gerência Sênior de Recursos Humanos',
+        'Gerência Sênior de Tecnologia da Informação', 'Gerência Sênior Jurídica e Editora',
+        'Administração do sistema', 'Administrador do sistema'
+    ];
+
+    const isExempt = user.sigoProfiles?.some(id => {
+        const p = profiles.find(prof => prof.id === id);
+        // "Gestor (GSO)" is exempt from checkboxes (hidden in registration), but NOT implicitly True for permissions.
+        return p && EXEMPT_PROFILES.includes(p.name) && p.name !== 'Gestor (GSO)';
+    });
+
+    const isEffectiveApprover = user.isApprover || isExempt;
+    const isEffectiveRequester = user.isRequester || isExempt;
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[120] flex justify-center items-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-[95vw] xl:max-w-7xl max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-5 duration-300 overflow-hidden">
@@ -84,16 +103,31 @@ const AccessDetailsModal: React.FC<AccessDetailsModalProps> = ({ isOpen, onClose
                                         <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Nome</label>
                                         <div className="font-semibold text-gray-800 text-sm md:text-base">{user.name}</div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400">NIF</label>
-                                            <div className="font-semibold text-gray-800 text-sm md:text-base">{user.nif}</div>
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400">E-mail</label>
-                                            <div className="font-semibold text-gray-800 text-sm md:text-base truncate" title={user.email}>{user.email}</div>
-                                        </div>
+                                    <div>
+                                        <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400">NIF</label>
+                                        <div className="font-semibold text-gray-800 text-sm md:text-base">{user.nif}</div>
                                     </div>
+                                    <div>
+                                        <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400">E-mail</label>
+                                        <div className="font-semibold text-gray-800 text-sm md:text-base truncate" title={user.email}>{user.email}</div>
+                                    </div>
+                                    
+                                     {/* Special Permissions (Is Approver / Is Requester) */}
+                                    <div className="pt-3 border-t border-gray-100 mt-2 flex gap-4">
+                                         <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-md border ${isEffectiveApprover ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
+                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center ${isEffectiveApprover ? 'bg-green-500 text-white' : 'bg-gray-300'}`}>
+                                                 {isEffectiveApprover && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                                            </div>
+                                            <span className={`text-xs font-bold uppercase ${isEffectiveApprover ? 'text-green-800' : 'text-gray-500'}`}>Aprovador</span>
+                                         </div>
+                                         <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-md border ${isEffectiveRequester ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
+                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center ${isEffectiveRequester ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}>
+                                                 {isEffectiveRequester && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                                            </div>
+                                            <span className={`text-xs font-bold uppercase ${isEffectiveRequester ? 'text-blue-800' : 'text-gray-500'}`}>Solicitante</span>
+                                         </div>
+                                    </div>
+
                                 </div>
                             </div>
 

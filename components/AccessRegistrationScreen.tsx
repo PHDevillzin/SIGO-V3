@@ -90,7 +90,9 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                     updatedAt: u.updated_at,
                     sigoProfiles: u.sigo_profiles,
                     linkedUnits: u.linked_units,
-                    isActive: u.is_active
+                    isActive: u.is_active,
+                    isApprover: u.is_approver,
+                    isRequester: u.is_requester
                 }));
                 setAllUsers(mappedUsers);
             } catch (err) {
@@ -180,6 +182,8 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                 : [];
             setSelectedProfiles(profileNames);
             setSelectedUnits(initialUser.linkedUnits || []);
+            setIsApprover(!!initialUser.isApprover);
+            setIsRequester(!!initialUser.isRequester);
         } else {
             setSelectedUser(null);
             setSelectedProfiles([]);
@@ -254,7 +258,18 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
         'Gerência Sênior de Tecnologia da Informação', 'Gerência Sênior Jurídica e Editora',
         'Administração do sistema', 'Administrador do sistema'
     ];
-    const showAdditionalFields = selectedProfiles.some(p => !EXEMPT_PROFILES.includes(p));
+    
+    // Force Gestor (GSO) to never be Approver/Requester
+    useEffect(() => {
+        if (selectedProfiles.includes('Gestor (GSO)')) {
+            setIsApprover(false);
+            setIsRequester(false);
+        }
+    }, [selectedProfiles]);
+
+    const showAdditionalFields = selectedProfiles.some(p => 
+        ['Gestor Local', 'Unidade Solicitante'].includes(p) || !EXEMPT_PROFILES.includes(p)
+    );
 
 
 
@@ -352,6 +367,8 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                     ...savedTarget,
                     sigoProfiles: profileIds,
                     linkedUnits: selectedUnits,
+                    isApprover,
+                    isRequester,
                     registrationDate: savedTarget.registrationDate || new Date().toISOString()
                 };
                  setTimeout(() => {
@@ -364,6 +381,8 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                      ...t,
                      sigoProfiles: profileIds,
                      linkedUnits: selectedUnits,
+                     isApprover,
+                     isRequester,
                      registrationDate: t.registrationDate || new Date().toISOString()
                  }));
 

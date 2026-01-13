@@ -155,7 +155,9 @@ const App: React.FC = () => {
                         createdBy: u.created_by,
                         sigoProfiles: u.sigo_profiles,
                         linkedUnits: u.linked_units,
-                        isActive: u.is_active
+                        isActive: u.is_active,
+                        isApprover: u.is_approver,
+                        isRequester: u.is_requester
                     }));
                     setUsers(mappedUsers);
                 }

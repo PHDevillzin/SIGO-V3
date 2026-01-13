@@ -200,11 +200,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const targetNif = nif as string; // Ideally resolve ID to NIF if only ID provided, but NIF is primary key for logic
 
             if (!targetNif) return res.status(400).json({ error: 'NIF required for deletion' });
-
-            await query('DELETE FROM user_access WHERE user_nif = $1', [targetNif]); // Clean permissions first
-            await query('DELETE FROM users WHERE nif = $1', [targetNif]);
-
-            return res.status(200).json({ message: 'User and permissions deleted' });
+            
+            // SOFT DELETE (Unlink Only): Remove permissions but keep User in DB for re-registration
+            await query('DELETE FROM user_access WHERE user_nif = $1', [targetNif]); 
+            
+            // Optionally, we could set is_active = false or similar, but for now just removing access is sufficient
+            // to allow them to appear in the "Available Users" list (which excludes users with profiles).
+            
+            return res.status(200).json({ message: 'User access revoked (unlinked)' });
         }
 
         res.status(405).json({ error: 'Method not allowed' });

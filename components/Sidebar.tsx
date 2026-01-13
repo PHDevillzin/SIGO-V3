@@ -31,6 +31,11 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
 
   // Helper to check permission
   const hasPermission = (permissionKey: string) => {
+    // BLOCK: "Gestor (GSO)" cannot see Reclassification (Explicit Restriction)
+    if (selectedProfile === 'Gestor (GSO)' && permissionKey === 'solicitacoes_reclassificacao') {
+        return false;
+    }
+
     // 1. Check for Admin wildcard
     if (userPermissions.includes('*') || userPermissions.includes('all')) return true;
 
@@ -175,7 +180,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                     onClick={() => setCurrentView('solicitacoes')}
                   />
                 )}
-                {hasPermission('solicitacoes') && (
+                {hasPermission('solicitacoes_reclassificacao') && (
                   <NavItem
                     icon={DocumentDuplicateIcon}
                     label="Solicitações para reclassificação"
