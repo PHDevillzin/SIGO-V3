@@ -157,7 +157,11 @@ const App: React.FC = () => {
                         linkedUnits: u.linked_units,
                         isActive: u.is_active,
                         isApprover: u.is_approver,
-                        isRequester: u.is_requester
+                        isRequester: u.is_requester,
+                        isApproverStrategic: u.isApproverStrategic || u.is_approver_strategic,
+                        isApproverSede: u.isApproverSede || u.is_approver_sede,
+                        isRequesterStrategic: u.isRequesterStrategic || u.is_requester_strategic,
+                        isRequesterSede: u.isRequesterSede || u.is_requester_sede
                     }));
                     setUsers(mappedUsers);
                 }
@@ -239,8 +243,10 @@ const App: React.FC = () => {
                 userPermissions={userPermissions} // Pass permissions
                 userName={currentUser?.name || 'Usuário'} // Pass User Name
                 availableProfiles={profiles.map(p => p.name)}
-                isApprover={currentUser?.isApprover}
-                isRequester={currentUser?.isRequester}
+                isApproverStrategic={currentUser?.isApproverStrategic || currentUser?.is_approver_strategic}
+                isApproverSede={currentUser?.isApproverSede || currentUser?.is_approver_sede}
+                isRequesterStrategic={currentUser?.isRequesterStrategic || currentUser?.is_requester_strategic}
+                isRequesterSede={currentUser?.isRequesterSede || currentUser?.is_requester_sede}
                 onLogout={() => {
                     setIsAuthenticated(false);
                     setCurrentUser(null);
@@ -278,6 +284,8 @@ const App: React.FC = () => {
                         setRequests={setRequests}
                         selectedProfile={selectedProfile}
                         userName={currentUser?.name || 'Usuário'}
+                        isApproverStrategic={currentUser?.isApproverStrategic || currentUser?.is_approver_strategic}
+                        isApproverSede={currentUser?.isApproverSede || currentUser?.is_approver_sede}
                     />
                 )}
                 {currentView === 'planejamento' && <PlanningScreen />}

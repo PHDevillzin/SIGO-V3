@@ -44,9 +44,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (req.method === 'GET') {
             const { nif } = req.query;
 
-            // Query to fetch user data with aggregated permissions from user_access
-            // We use COALESCE to fallback to empty arrays if no access found
-            // We prefer data from user_access, but if completely missing, we might see legacy array columns (optional, ignoring for now as per instruction)
             const listQuery = `
                 SELECT 
                     u.*, 
@@ -73,58 +70,81 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 GROUP BY u.id, u.nif, u.name, u.email, u.created_by, u.created_at, u.updated_at, u.last_edited_by, u.registration_date, u.password
             `;
 
+            // Transform snake_case DB columns to camelCase for specific fields if needed
+            // But usually we just return row. Frontend maps it.
+            // We need to ensure new columns is_requester_sede, etc are in the select *
+
             if (nif) {
                 const result = await query(singleUserQuery, [nif as string]);
                 if (result.rows.length === 0) {
                     return res.status(404).json({ error: 'User not found' });
                 }
-                return res.status(200).json(result.rows[0]);
+                const user = result.rows[0];
+                // Map snake_case to camelCase for the new booleans
+                const mappedUser = {
+                    ...user,
+                    isRequesterSede: user.is_requester_sede,
+                    isRequesterStrategic: user.is_requester_strategic,
+                    isApproverSede: user.is_approver_sede,
+                    isApproverStrategic: user.is_approver_strategic
+                };
+                return res.status(200).json(mappedUser);
             } else {
                 const result = await query(listQuery);
-                return res.status(200).json(result.rows);
+                 const mappedUsers = result.rows.map((user: any) => ({
+                    ...user,
+                    isRequesterSede: user.is_requester_sede,
+                    isRequesterStrategic: user.is_requester_strategic,
+                    isApproverSede: user.is_approver_sede,
+                    isApproverStrategic: user.is_approver_strategic
+                }));
+                return res.status(200).json(mappedUsers);
             }
         }
 
         if (req.method === 'POST' || req.method === 'PUT') {
             const isPut = req.method === 'PUT';
-            const { nif, name, email, unidade, profile, sigo_profiles, linked_units, id, isActive, isApprover, isRequester } = req.body as any;
+            const { 
+                nif, name, email, isActive, 
+                isRequesterSede, isRequesterStrategic, isApproverSede, isApproverStrategic,
+                sigo_profiles, linked_units 
+            } = req.body as any;
 
             if (!nif || !name) {
                 return res.status(400).json({ error: 'Missing required fields' });
             }
 
-            // 1. Upsert User in `users` table
-            // We focus on basic identity here. Access is handled separately.
             let userResult;
             if (isPut) {
-                // Update existing
                 userResult = await query(
                     `UPDATE users 
                      SET name = COALESCE($2, name), 
                          email = COALESCE($3, email), 
                          is_active = COALESCE($4, is_active),
-                         is_approver = COALESCE($5, is_approver),
-                         is_requester = COALESCE($6, is_requester),
+                         is_requester_sede = COALESCE($5, is_requester_sede),
+                         is_requester_strategic = COALESCE($6, is_requester_strategic),
+                         is_approver_sede = COALESCE($7, is_approver_sede),
+                         is_approver_strategic = COALESCE($8, is_approver_strategic),
                          updated_at = NOW()
                      WHERE nif = $1
-                     RETURNING id, nif, name, email, is_active, is_approver, is_requester`,
-                    [nif, name, email, isActive ?? null, isApprover ?? null, isRequester ?? null] 
+                     RETURNING id, nif, name, email, is_active, is_requester_sede, is_requester_strategic, is_approver_sede, is_approver_strategic`,
+                    [nif, name, email, isActive ?? null, isRequesterSede ?? null, isRequesterStrategic ?? null, isApproverSede ?? null, isApproverStrategic ?? null] 
                 );
             } else {
-                // Insert new (chk if exists first just in case to be safe, or rely on constraint)
-                // If conflict on NIF, we update (Upsert)
                 userResult = await query(
-                    `INSERT INTO users (nif, name, email, is_active, is_approver, is_requester, created_at, updated_at)
-                     VALUES ($1, $2, $3, COALESCE($4, true), COALESCE($5, false), COALESCE($6, false), NOW(), NOW())
+                    `INSERT INTO users (nif, name, email, is_active, is_requester_sede, is_requester_strategic, is_approver_sede, is_approver_strategic, created_at, updated_at)
+                     VALUES ($1, $2, $3, COALESCE($4, true), COALESCE($5, false), COALESCE($6, false), COALESCE($7, false), COALESCE($8, false), NOW(), NOW())
                      ON CONFLICT (nif) DO UPDATE 
                      SET name = EXCLUDED.name, 
                          email = EXCLUDED.email, 
                          is_active = EXCLUDED.is_active, 
-                         is_approver = EXCLUDED.is_approver,
-                         is_requester = EXCLUDED.is_requester,
+                         is_requester_sede = EXCLUDED.is_requester_sede,
+                         is_requester_strategic = EXCLUDED.is_requester_strategic,
+                         is_approver_sede = EXCLUDED.is_approver_sede,
+                         is_approver_strategic = EXCLUDED.is_approver_strategic,
                          updated_at = NOW()
-                     RETURNING id, nif, name, email, is_active, is_approver, is_requester`,
-                    [nif, name, email, isActive ?? null, isApprover ?? false, isRequester ?? false]
+                     RETURNING id, nif, name, email, is_active, is_requester_sede, is_requester_strategic, is_approver_sede, is_approver_strategic`,
+                    [nif, name, email, isActive ?? null, isRequesterSede ?? false, isRequesterStrategic ?? false, isApproverSede ?? false, isApproverStrategic ?? false]
                 );
             }
 
@@ -133,16 +153,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
 
             // 2. Manage `user_access`
-            // Strategy: Wipe existing permissions for this user and re-insert ONLY if profiles/units are provided.
             if (sigo_profiles !== undefined || linked_units !== undefined) {
                 await query('DELETE FROM user_access WHERE user_nif = $1', [nif]);
 
-                // 3. Insert new permissions
-                // We expect sigo_profiles (array of IDs) and linked_units (array of names)
-                // We need to resolve Unit Names to Unit IDs.
                 if (sigo_profiles && sigo_profiles.length > 0) {
-
-                    // Fetch Units map if needed
                     let unitMap: Record<string, number> = {};
                     if (linked_units && linked_units.length > 0) {
                         const unitsRes = await query('SELECT id, unidade FROM units WHERE unidade = ANY($1)', [linked_units]);
@@ -155,12 +169,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     let placeholders: string[] = [];
                     let paramCounter = 1;
 
-                    // Cartesian Product: Each Profile x Each Unit
-                    // If NO units provided (e.g. Admin), we verify if logic allows.
-                    // Assuming Admin doesn't need Unit ID (NULL).
                     const targetUnits = (linked_units && linked_units.length > 0) ? linked_units : [null];
-
-                    // Determine Instituicao based on NIF
                     let instituicao = null;
                     if (nif.toUpperCase().startsWith('SS')) instituicao = 'SESI';
                     else if (nif.toUpperCase().startsWith('SN')) instituicao = 'SENAI';
@@ -168,9 +177,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     for (const pid of sigo_profiles) {
                         for (const uname of targetUnits) {
                             const uid = uname ? unitMap[uname] : null;
-
-                            // Validation: If unit provided but not found, skip or error? 
-                            // We skip if unit name existed in request but not in DB.
                             if (uname && !uid) continue;
 
                             placeholders.push(`($${paramCounter++}, $${paramCounter++}, $${paramCounter++}, $${paramCounter++})`);
@@ -188,25 +194,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 }
             }
 
-            return res.status(200).json({
-                ...userResult.rows[0],
+             const user = userResult.rows[0];
+             const responseData = {
+                ...user,
+                isRequesterSede: user.is_requester_sede,
+                isRequesterStrategic: user.is_requester_strategic,
+                isApproverSede: user.is_approver_sede,
+                isApproverStrategic: user.is_approver_strategic,
                 sigo_profiles: sigo_profiles || [],
                 linked_units: linked_units || []
-            });
+            };
+
+            return res.status(200).json(responseData);
         }
 
         if (req.method === 'DELETE') {
             const { id, nif } = req.query;
-            const targetNif = nif as string; // Ideally resolve ID to NIF if only ID provided, but NIF is primary key for logic
+            const targetNif = nif as string; 
 
             if (!targetNif) return res.status(400).json({ error: 'NIF required for deletion' });
             
-            // SOFT DELETE (Unlink Only): Remove permissions but keep User in DB for re-registration
             await query('DELETE FROM user_access WHERE user_nif = $1', [targetNif]); 
-            
-            // Optionally, we could set is_active = false or similar, but for now just removing access is sufficient
-            // to allow them to appear in the "Available Users" list (which excludes users with profiles).
-            
             return res.status(200).json({ message: 'User access revoked (unlinked)' });
         }
 

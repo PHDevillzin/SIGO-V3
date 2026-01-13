@@ -82,7 +82,12 @@ export interface User {
   registrationDate?: string;
   instituicao?: string;
   isActive?: boolean;
-  isApprover?: boolean;
+  isApproverSede?: boolean;
+  isApproverStrategic?: boolean;
+  isRequesterSede?: boolean;
+  isRequesterStrategic?: boolean;
+  // Deprecated but keeping for backward compat if needed temporarily
+  isApprover?: boolean; 
   isRequester?: boolean;
 }
 

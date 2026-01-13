@@ -111,7 +111,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     email: user.email,
                     sigoProfiles: uniqueProfileIds,
                     linkedUnits: uniqueUnitNames,
-                    permissions: aggregatedPermissions // Used for Menu Filtering
+                    permissions: aggregatedPermissions, // Used for Menu Filtering
+                    isApproverStrategic: user.is_approver_strategic,
+                    isApproverSede: user.is_approver_sede,
+                    isRequesterStrategic: user.is_requester_strategic,
+                    isRequesterSede: user.is_requester_sede,
+                    isApprover: user.is_approver,
+                    isRequester: user.is_requester
                 },
                 // Legacy compat: send first profile as "main" if needed
                 profile: {

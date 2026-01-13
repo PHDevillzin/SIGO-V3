@@ -53,8 +53,10 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
     const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
 
     // CHECKBOXES
-    const [isApprover, setIsApprover] = useState(false);
-    const [isRequester, setIsRequester] = useState(false);
+    const [isApproverStrategic, setIsApproverStrategic] = useState(false);
+    const [isApproverSede, setIsApproverSede] = useState(false);
+    const [isRequesterStrategic, setIsRequesterStrategic] = useState(false);
+    const [isRequesterSede, setIsRequesterSede] = useState(false);
 
     const [error, setError] = useState<string | null>(null);
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error', visible: boolean } | null>(null);
@@ -91,8 +93,10 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                     sigoProfiles: u.sigo_profiles,
                     linkedUnits: u.linked_units,
                     isActive: u.is_active,
-                    isApprover: u.is_approver,
-                    isRequester: u.is_requester
+                    isApproverStrategic: u.is_approver_strategic,
+                    isApproverSede: u.is_approver_sede,
+                    isRequesterStrategic: u.is_requester_strategic,
+                    isRequesterSede: u.is_requester_sede
                 }));
                 setAllUsers(mappedUsers);
             } catch (err) {
@@ -116,7 +120,7 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
             return assignableProfiles;
         }
         if (isGestorLocal) {
-            return assignableProfiles.filter(p => ['Gestor Local', 'Unidade Solicitante'].includes(p.name));
+            return assignableProfiles.filter(p => p.name === 'Unidade Solicitante');
         }
         return assignableProfiles;
     }, [profiles, currentProfile, isGestorLocal]);
@@ -182,14 +186,18 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                 : [];
             setSelectedProfiles(profileNames);
             setSelectedUnits(initialUser.linkedUnits || []);
-            setIsApprover(!!initialUser.isApprover);
-            setIsRequester(!!initialUser.isRequester);
+            setIsApproverStrategic(!!initialUser.isApproverStrategic);
+            setIsApproverSede(!!initialUser.isApproverSede);
+            setIsRequesterStrategic(!!initialUser.isRequesterStrategic);
+            setIsRequesterSede(!!initialUser.isRequesterSede);
         } else {
             setSelectedUser(null);
             setSelectedProfiles([]);
             setSelectedUnits([]);
-            setIsApprover(false);
-            setIsRequester(false);
+            setIsApproverStrategic(false);
+            setIsApproverSede(false);
+            setIsRequesterStrategic(false);
+            setIsRequesterSede(false);
         }
         setError(null);
     }, [initialUser, profiles]);
@@ -199,8 +207,10 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
         if (!initialUser && selectedUser) {
             setSelectedProfiles([]);
             setSelectedUnits([]);
-            setIsApprover(false);
-            setIsRequester(false);
+            setIsApproverStrategic(false);
+            setIsApproverSede(false);
+            setIsRequesterStrategic(false);
+            setIsRequesterSede(false);
             setError(null);
         }
     }, [selectedUser, initialUser]);
@@ -262,8 +272,10 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
     // Force Gestor (GSO) to never be Approver/Requester
     useEffect(() => {
         if (selectedProfiles.includes('Gestor (GSO)')) {
-            setIsApprover(false);
-            setIsRequester(false);
+            setIsApproverStrategic(false);
+            setIsApproverSede(false);
+            setIsRequesterStrategic(false);
+            setIsRequesterSede(false);
         }
     }, [selectedProfiles]);
 
@@ -335,8 +347,10 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                     email: targetUser.email,
                     sigo_profiles: profileIds,
                     linked_units: selectedUnits,
-                    isApprover,
-                    isRequester,
+                    isApproverStrategic,
+                    isApproverSede,
+                    isRequesterStrategic,
+                    isRequesterSede,
                     id: targetUser.id
                  };
 
@@ -367,8 +381,10 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                     ...savedTarget,
                     sigoProfiles: profileIds,
                     linkedUnits: selectedUnits,
-                    isApprover,
-                    isRequester,
+                    isApproverStrategic,
+                    isApproverSede,
+                    isRequesterStrategic,
+                    isRequesterSede,
                     registrationDate: savedTarget.registrationDate || new Date().toISOString()
                 };
                  setTimeout(() => {
@@ -376,13 +392,14 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                 }, 1000);
             } else {
                  // Batch Success
-                 // Construct array of updated users
                  const updatedBatch = targets.map(t => ({
                      ...t,
                      sigoProfiles: profileIds,
                      linkedUnits: selectedUnits,
-                     isApprover,
-                     isRequester,
+                     isApproverStrategic,
+                     isApproverSede,
+                     isRequesterStrategic,
+                     isRequesterSede,
                      registrationDate: t.registrationDate || new Date().toISOString()
                  }));
 
@@ -595,16 +612,57 @@ const AccessRegistrationScreen: React.FC<AccessRegistrationScreenProps> = ({
                                                 <p className="text-[10px] text-gray-400 mt-1 italic">* Obrigatório para Gestor Local e Unidade Solicitante.</p>
                                             </div>
 
-                                            <div className="flex gap-6 p-4 bg-gray-50 rounded border border-gray-100">
-                                                <label className="flex items-center space-x-2 cursor-pointer">
-                                                    <input type="checkbox" checked={isApprover} onChange={e => setIsApprover(e.target.checked)} className="rounded text-sky-600 focus:ring-sky-500" />
-                                                    <span className="text-sm text-gray-700 font-medium">Aprovador</span>
-                                                </label>
-                                                <label className="flex items-center space-x-2 cursor-pointer">
-                                                    <input type="checkbox" checked={isRequester} onChange={e => setIsRequester(e.target.checked)} className="rounded text-sky-600 focus:ring-sky-500" />
-                                                    <span className="text-sm text-gray-700 font-medium">Solicitante</span>
-                                                </label>
-                                            </div>
+                                            {!isGestorLocal && (
+                                                <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded border border-gray-100">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">Tipo de perfil solicitante</label>
+                                                        <div className="flex gap-4">
+                                                            <label className="flex items-center space-x-2 cursor-pointer">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    checked={isRequesterStrategic} 
+                                                                    onChange={e => setIsRequesterStrategic(e.target.checked)} 
+                                                                    className="rounded text-sky-600 focus:ring-sky-500" 
+                                                                />
+                                                                <span className="text-sm text-gray-700 font-medium">Solicitante Estratégico</span>
+                                                            </label>
+                                                            <label className="flex items-center space-x-2 cursor-pointer">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    checked={isRequesterSede} 
+                                                                    onChange={e => setIsRequesterSede(e.target.checked)} 
+                                                                    className="rounded text-sky-600 focus:ring-sky-500" 
+                                                                />
+                                                                <span className="text-sm text-gray-700 font-medium">Solicitante Sede</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="border-t border-gray-200 pt-3">
+                                                        <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">Tipo de perfil aprovador</label>
+                                                        <div className="flex gap-4">
+                                                            <label className="flex items-center space-x-2 cursor-pointer">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    checked={isApproverStrategic} 
+                                                                    onChange={e => setIsApproverStrategic(e.target.checked)} 
+                                                                    className="rounded text-sky-600 focus:ring-sky-500" 
+                                                                />
+                                                                <span className="text-sm text-gray-700 font-medium">Aprovador Estratégico</span>
+                                                            </label>
+                                                            <label className="flex items-center space-x-2 cursor-pointer">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    checked={isApproverSede} 
+                                                                    onChange={e => setIsApproverSede(e.target.checked)} 
+                                                                    className="rounded text-sky-600 focus:ring-sky-500" 
+                                                                />
+                                                                <span className="text-sm text-gray-700 font-medium">Aprovador Sede</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

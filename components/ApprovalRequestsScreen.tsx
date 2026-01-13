@@ -18,6 +18,8 @@ interface ApprovalRequestsScreenProps {
     setRequests: React.Dispatch<React.SetStateAction<Request[]>>;
     selectedProfile: string;
     userName?: string;
+    isApproverStrategic?: boolean;
+    isApproverSede?: boolean;
 }
 
 const ApprovalRequestsScreen: React.FC<ApprovalRequestsScreenProps> = ({ 
@@ -25,9 +27,34 @@ const ApprovalRequestsScreen: React.FC<ApprovalRequestsScreenProps> = ({
     requests, 
     setRequests,
     selectedProfile,
-    userName
+    userName,
+    isApproverStrategic,
+    isApproverSede
 }) => {
     const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
+
+    // Filter requests based on Approver Role
+    const visibleRequests = useMemo(() => {
+        // Admins see everything
+        if (['Administrador do sistema', 'Administração do sistema', 'Administrador GSO'].includes(selectedProfile)) {
+            return requests;
+        }
+        
+        // If no specific approver flag is set (strict mode), show nothing (or all? assuming strict for now)
+        if (!isApproverStrategic && !isApproverSede) {
+             // Fallback: if user got here but has no flags, maybe show all? 
+             // Or maybe they are a legacy approver? 
+             // Ideally, show nothing to be safe, or just return requests if we trust the Sidebar check.
+             // Given the requirements, let's filter strict.
+             return [];
+        }
+
+        return requests.filter(r => {
+             const matchesStrategic = isApproverStrategic && (r.categoriaInvestimento === 'Intervenção Estratégica' || r.executingUnit === 'GSO');
+             const matchesSede = isApproverSede && (r.unit === 'Sede');
+             return matchesStrategic || matchesSede;
+        });
+    }, [requests, isApproverStrategic, isApproverSede, selectedProfile]);
 
     const summaryData = useMemo(() => {
         const formatValue = (val: number) => 
@@ -42,14 +69,14 @@ const ApprovalRequestsScreen: React.FC<ApprovalRequestsScreenProps> = ({
         const calcTotal = (reqs: Request[]) => reqs.reduce((acc, r) => acc + parseValue(r.expectedValue), 0);
         const calcCount = (reqs: Request[]) => reqs.length;
 
-        const novaUnidade = requests.filter(r => r.tipologia === 'Nova Unidade' || r.categoriaInvestimento === 'Nova Unidade');
-        const intervencao = requests.filter(r => r.categoriaInvestimento === 'Intervenção Estratégica' || r.tipologia === 'Intervenção Estratégica');
-        const reforma = requests.filter(r => r.categoriaInvestimento === 'Reforma Operacional' || r.tipologia === 'Reforma Operacional');
-        const baixaComplex = requests.filter(r => r.categoriaInvestimento === 'Baixa Complexidade');
-        const manutencao = requests.filter(r => r.categoriaInvestimento === 'Manutenção');
+        const novaUnidade = visibleRequests.filter(r => r.tipologia === 'Nova Unidade' || r.categoriaInvestimento === 'Nova Unidade');
+        const intervencao = visibleRequests.filter(r => r.categoriaInvestimento === 'Intervenção Estratégica' || r.tipologia === 'Intervenção Estratégica');
+        const reforma = visibleRequests.filter(r => r.categoriaInvestimento === 'Reforma Operacional' || r.tipologia === 'Reforma Operacional');
+        const baixaComplex = visibleRequests.filter(r => r.categoriaInvestimento === 'Baixa Complexidade');
+        const manutencao = visibleRequests.filter(r => r.categoriaInvestimento === 'Manutenção');
         
-        const totalVal = calcTotal(requests);
-        const totalCount = calcCount(requests);
+        const totalVal = calcTotal(visibleRequests);
+        const totalCount = calcCount(visibleRequests);
 
         return [
             { 
@@ -101,15 +128,15 @@ const ApprovalRequestsScreen: React.FC<ApprovalRequestsScreenProps> = ({
                 onClick: () => setSelectedCategory(null) // Reset filter
             },
         ];
-    }, [requests]);
+    }, [visibleRequests, requests]); // Added requests dependency to be safe, but visibleRequests is derived
 
     const filteredRequests = useMemo(() => {
-        if (!selectedCategory) return requests;
-        return requests.filter(r => 
+        if (!selectedCategory) return visibleRequests;
+        return visibleRequests.filter(r => 
             r.tipologia === selectedCategory || 
             r.categoriaInvestimento === selectedCategory
         );
-    }, [requests, selectedCategory]);
+    }, [visibleRequests, selectedCategory]);
 
     return (
         <div className="space-y-6">

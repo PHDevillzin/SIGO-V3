@@ -11,8 +11,10 @@ interface SidebarProps {
   userPermissions: string[];
   userName: string;
   availableProfiles: string[];
-  isApprover?: boolean;
-  isRequester?: boolean;
+  isApproverStrategic?: boolean;
+  isApproverSede?: boolean;
+  isRequesterStrategic?: boolean;
+  isRequesterSede?: boolean;
 }
 
 const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boolean, onClick?: () => void }> = ({ icon: Icon, label, active = false, onClick }) => (
@@ -22,7 +24,7 @@ const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boole
   </a>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout, userPermissions, userName, availableProfiles, isApprover, isRequester }) => {
+const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout, userPermissions, userName, availableProfiles, isApproverStrategic, isApproverSede, isRequesterStrategic, isRequesterSede }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isManagementMenuOpen, setIsManagementMenuOpen] = useState(false);
   const [isSolicitacoesMenuOpen, setIsSolicitacoesMenuOpen] = useState(false);
@@ -42,14 +44,45 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     // Rules for 'Gestor Local' and 'Unidade Solicitante'
     const isRestrictedProfile = ['Gestor Local', 'Unidade Solicitante'].includes(selectedProfile);
 
-    // Rule 1: Approval Screen requires isApprover
-    if (isRestrictedProfile && permissionKey === 'aprovacao' && !isApprover) {
-      return false;
+    // Rule 1: Approval Screen
+    // Grant access if explicit flags are set
+    if (permissionKey === 'aprovacao') {
+        if (isApproverStrategic || isApproverSede) return true;
+        
+        // If profile is Restricted (Gestor Local/Unidade Solicitante) and NOT an approver, deny access.
+        if (isRestrictedProfile) return false;
     }
 
-    // Rule 2: Open Request Screens require isRequester
-    if (isRestrictedProfile && ['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(permissionKey) && !isRequester) {
-      return false;
+    // Rule 2: Open Request Screens 
+    // Strict Granular Check for Requesters:
+    // If ANY granular requester flag is present, we enforce strict mode for these specific screens.
+    // This effectively overrides base profile permissions to prevent leakage (e.g., Sede appearing for Strategic-only users).
+    const hasGranularRequesterFlags = isRequesterStrategic || isRequesterSede;
+
+    if (hasGranularRequesterFlags) {
+        if (permissionKey === 'nova_estrategica') return !!isRequesterStrategic;
+        if (permissionKey === 'nova_sede') return !!isRequesterSede;
+        // Proceed for other keys (like nova_unidade)
+    } else {
+        // Fallback: Default flags grant access if present (Universal Grant for non-strict cases or if logic changes)
+         if (permissionKey === 'nova_estrategica' && isRequesterStrategic) return true;
+         if (permissionKey === 'nova_sede' && isRequesterSede) return true;
+    }
+
+    if (isRestrictedProfile) {
+        // If restricted and didn't match above (flags false or strict mode processed), deny.
+        // Note: if hasGranularRequesterFlags was true, we already returned based on the flag value.
+        // If we are here, either flags were false (strict denied) OR flags were absent.
+        // If absent, we deny for restricted users.
+        if (permissionKey === 'nova_estrategica' || permissionKey === 'nova_sede') return false; 
+        
+        // For 'nova_unidade', restricted usually have access, but check flag?
+        // Requirements didn't specify nova_unidade flag, so leave default or check isRequester?
+        // Legacy: if (permissionKey === 'nova_unidade' && !isRequester) return false;
+        // But we are moving away from isRequester? 
+        // Let's assume nova_unidade relies on base permissions or 'isRequester' (if we still pass it).
+        // For now, let's strictly handle the new flags.
+        if (permissionKey === 'nova_unidade') return true; 
     }
 
     // 2. Map Frontend Keys to Backend Permission Strings
