@@ -141,10 +141,23 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
         setUserToDelete(null);
     };
 
-    const handleToggleStatus = async (user: User) => {
+    const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
+    const [userToStatusToggle, setUserToStatusToggle] = useState<User | null>(null);
+
+    const handleToggleStatus = (user: User) => {
+        setUserToStatusToggle(user);
+        setIsStatusConfirmOpen(true);
+    };
+
+    const confirmStatusToggle = async () => {
+        if (!userToStatusToggle) return;
+
+        const user = userToStatusToggle;
         const newStatus = !user.isActive;
+
         // Optimistic update
         setRegisteredUsers(prev => prev.map(u => u.nif === user.nif ? { ...u, isActive: newStatus } : u));
+        setIsStatusConfirmOpen(false);
 
         try {
             const response = await fetch('/api/users', {
@@ -172,7 +185,15 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
             // Revert
             setRegisteredUsers(prev => prev.map(u => u.nif === user.nif ? { ...u, isActive: !newStatus } : u));
             showToast('Erro de conexão.', 'error');
+        } finally {
+            setUserToStatusToggle(null);
         }
+    };
+
+    const cancelStatusToggle = () => {
+        setIsStatusConfirmOpen(false);
+        setUserToStatusToggle(null);
+        showToast('Ação cancelada.', 'error'); // Using 'error' style for cancellation as per convention in this app for non-success
     };
 
 
@@ -348,6 +369,16 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
                 title="Excluir Cadastro de Acesso"
                 message={`Deseja realmente excluir todos os acessos e perfis de ${userToDelete?.name}? O usuário voltará para a lista de disponíveis para novo cadastro.`}
                 confirmLabel="Excluir"
+                cancelLabel="Não"
+            />
+
+            <ConfirmationModal
+                isOpen={isStatusConfirmOpen}
+                onClose={cancelStatusToggle}
+                onConfirm={confirmStatusToggle}
+                title="Confirmar Alteração de Status"
+                message={`Deseja realmente ${userToStatusToggle?.isActive ? 'DESATIVAR' : 'ATIVAR'} o acesso de ${userToStatusToggle?.name}?`}
+                confirmLabel="Sim"
                 cancelLabel="Não"
             />
 
