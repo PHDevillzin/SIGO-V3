@@ -13,6 +13,8 @@ import {
 import AccessDetailsModal from './AccessDetailsModal';
 import ConfirmationModal from './ConfirmationModal';
 import type { User, Unit, AccessProfile } from '../types';
+import AccessAdvancedFilters, { AccessAdvancedFiltersState } from './AccessAdvancedFilters';
+import { FilterIcon } from './Icons';
 
 const ToggleSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
     <button
@@ -67,6 +69,8 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
     // Filter and Pagination State
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [advancedFilters, setAdvancedFilters] = useState<AccessAdvancedFiltersState>({});
     const itemsPerPage = 10;
 
     // Derived list for the Grid: Only show users with profiles
@@ -84,15 +88,74 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
         // Apply Search Filter
         if (searchTerm) {
             const lowerTerm = searchTerm.toLowerCase();
-            activeUsers = activeUsers.filter(u => 
+            activeUsers = activeUsers.filter(u =>
                 u.name.toLowerCase().includes(lowerTerm) ||
                 u.nif.toLowerCase().includes(lowerTerm) ||
                 u.email.toLowerCase().includes(lowerTerm)
             );
         }
 
+        // Apply Advanced Filters
+        if (advancedFilters.entidades && advancedFilters.entidades.length > 0) {
+            activeUsers = activeUsers.filter(u => {
+                // Check explicit instituicao field or infer from NIF/Units
+                const userEntidade = u.instituicao || (u.nif.startsWith('SS') ? 'SESI' : u.nif.startsWith('SN') ? 'SENAI' : null);
+                return userEntidade && advancedFilters.entidades!.includes(userEntidade);
+            });
+        }
+
+        if (advancedFilters.unidades && advancedFilters.unidades.length > 0) {
+            activeUsers = activeUsers.filter(u =>
+                u.linkedUnits?.some(unit => advancedFilters.unidades!.includes(unit))
+            );
+        }
+
+        if (advancedFilters.perfis && advancedFilters.perfis.length > 0) {
+            activeUsers = activeUsers.filter(u =>
+                u.sigoProfiles?.some(pId => {
+                    const profileName = profiles.find(p => p.id === pId)?.name;
+                    return profileName && advancedFilters.perfis!.includes(profileName);
+                })
+            );
+        }
+
+        if (advancedFilters.status && advancedFilters.status.length > 0) {
+            activeUsers = activeUsers.filter(u => {
+                const isActive = !!u.isActive;
+                const showActive = advancedFilters.status!.includes('Ativo');
+                const showInactive = advancedFilters.status!.includes('Inativo');
+
+                if (showActive && showInactive) return true;
+                if (showActive) return isActive;
+                if (showInactive) return !isActive;
+                return true;
+            });
+        }
+
+        if (advancedFilters.de) {
+            const de = new Date(advancedFilters.de.split('/').reverse().join('-')); // dd/mm/yyyy -> yyyy-mm-dd
+            if (!isNaN(de.getTime())) {
+                activeUsers = activeUsers.filter(u => {
+                    const created = new Date(u.createdAt);
+                    return created >= de;
+                });
+            }
+        }
+
+        if (advancedFilters.ate) {
+            const ate = new Date(advancedFilters.ate.split('/').reverse().join('-'));
+            if (!isNaN(ate.getTime())) {
+                // Set to end of day
+                ate.setHours(23, 59, 59, 999);
+                activeUsers = activeUsers.filter(u => {
+                    const created = new Date(u.createdAt);
+                    return created <= ate;
+                });
+            }
+        }
+
         return activeUsers;
-    }, [registeredUsers, isGestorLocal, currentUser, searchTerm]);
+    }, [registeredUsers, isGestorLocal, currentUser, searchTerm, advancedFilters, profiles]);
 
     const totalPages = Math.ceil(usersWithAccess.length / itemsPerPage);
     const paginatedUsers = useMemo(() => {
@@ -226,19 +289,40 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
                         <CheckCircleIcon className="w-5 h-5 text-green-500" />
                         Usuários Cadastrados no Sistema
                     </h2>
-                    
+
                     {/* Search Input */}
-                    <div className="relative">
-                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Buscar usuário..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-sky-500 focus:outline-none w-64"
-                        />
+                    <div className="flex gap-2">
+                        <div className="relative">
+                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Buscar usuário..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-sky-500 focus:outline-none w-64"
+                            />
+                        </div>
+                        <button
+                            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded-md transition-colors ${showAdvancedFilters ? 'bg-sky-50 text-sky-700 border-sky-200' : 'text-gray-600 hover:bg-gray-50 border-gray-300'}`}
+                        >
+                            <FilterIcon className="w-4 h-4" />
+                            Filtros avançados
+                        </button>
                     </div>
                 </div>
+
+                {/* Advanced Filters Panel */}
+                {showAdvancedFilters && (
+                    <div className="mb-6 animate-in slide-in-from-top-2">
+                        <AccessAdvancedFilters
+                            units={units}
+                            profiles={profiles}
+                            activeFilters={advancedFilters}
+                            onFilter={setAdvancedFilters}
+                        />
+                    </div>
+                )}
 
                 <div className="overflow-x-auto border rounded-lg">
                     <table className="w-full text-sm text-left text-gray-500">
@@ -330,7 +414,7 @@ const AccessManagementScreen: React.FC<AccessManagementScreenProps> = ({
                         </tbody>
                     </table>
                 </div>
-                
+
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
                     <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
