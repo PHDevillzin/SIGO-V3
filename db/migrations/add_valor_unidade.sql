@@ -1,0 +1,1 @@
+ALTER TABLE units ADD COLUMN IF NOT EXISTS valor_unidade VARCHAR(100);

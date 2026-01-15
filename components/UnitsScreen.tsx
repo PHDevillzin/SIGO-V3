@@ -17,6 +17,13 @@ import AdvancedFilters, { AdvancedFiltersState } from './AdvancedFilters';
 
 export const initialUnits: Unit[] = [];
 
+const BASE_TIPO_OPTIONS = [
+    'Alugado Caixa', 'CAT', 'CE', 'CFP', 'CT', 'EAD',
+    'Estação de Cultura', 'Faculdade', 'Sede'
+];
+
+const BASE_TIPO_UNIDADE_OPTIONS = ['Própria', 'Terceiro'];
+
 interface UnitsScreenProps {
     units: Unit[];
     setUnits: React.Dispatch<React.SetStateAction<Unit[]>>;
@@ -67,6 +74,12 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
             }
             if (activeFilters.unidades && activeFilters.unidades.length > 0) {
                 result = result.filter(u => activeFilters.unidades?.includes(u.unidade));
+            }
+            if (activeFilters.tipos && activeFilters.tipos.length > 0) {
+                result = result.filter(u => activeFilters.tipos?.includes(u.tipo));
+            }
+            if (activeFilters.tiposUnidade && activeFilters.tiposUnidade.length > 0) {
+                result = result.filter(u => activeFilters.tiposUnidade?.includes(u.tipoDeUnidade));
             }
         }
 
@@ -200,6 +213,16 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
         }
     };
 
+    const tipoOptions = useMemo(() => {
+        const uniqueTipos = Array.from(new Set(units.map(u => u.tipo).filter(Boolean)));
+        return Array.from(new Set([...BASE_TIPO_OPTIONS, ...uniqueTipos])).sort();
+    }, [units]);
+
+    const tipoUnidadeOptions = useMemo(() => {
+        const uniqueTiposUnidade = Array.from(new Set(units.map(u => u.tipoDeUnidade).filter(Boolean)));
+        return Array.from(new Set([...BASE_TIPO_UNIDADE_OPTIONS, ...uniqueTiposUnidade])).sort();
+    }, [units]);
+
     return (
         <div className="space-y-6">
             {/* Toast Notification */}
@@ -254,6 +277,8 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                             setCurrentPage(1);
                         }}
                         activeFilters={activeFilters}
+                        tipoOptions={tipoOptions}
+                        tipoUnidadeOptions={tipoUnidadeOptions}
                         hideSituacao
                         hideTipologia
                     />

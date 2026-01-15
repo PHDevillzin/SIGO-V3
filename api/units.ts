@@ -56,7 +56,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             site: row.site || '',
             latitude: row.latitude || '',
             longitude: row.longitude || '',
-            status: row.status
+            status: row.status,
+            valorImovel: row.valor_imovel
         };
     }
 
@@ -72,13 +73,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 `INSERT INTO units (
                     codigo_unidade, entidade, tipo, centro, cat, unidade,
                     cidade, bairro, endereco, cep, re, responsavel_re, ra, responsavel_ra, responsavel_rar, tipo_de_unidade,
-                    email_gr, gerente_regional, unidade_resumida, site, latitude, longitude, status
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+                    email_gr, gerente_regional, unidade_resumida, site, latitude, longitude, status, valor_imovel
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
                 RETURNING *`,
                 [
                     body.codigoUnidade, body.entidade, body.tipo, body.centro, body.cat, body.unidade,
                     body.cidade, body.bairro, body.endereco, body.cep, body.re, body.responsavelRE, body.ra, body.responsavelRA, body.responsavelRAR, body.tipoDeUnidade,
-                    body.emailGR, body.gerenteRegional, body.unidadeResumida, body.site, body.latitude, body.longitude, body.status ?? true
+                    body.cidade, body.bairro, body.endereco, body.cep, body.re, body.responsavelRE, body.ra, body.responsavelRA, body.responsavelRAR, body.tipoDeUnidade,
+                    body.emailGR, body.gerenteRegional, body.unidadeResumida, body.site, body.latitude, body.longitude, body.status ?? true,
+                    body.valorImovel
                 ]
             );
             return res.status(201).json(mapToFrontend(result.rows[0]));
@@ -115,12 +118,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     latitude = COALESCE($21, latitude),
                     longitude = COALESCE($22, longitude),
                     status = COALESCE($23, status)
-                WHERE id = $24
+                    latitude = COALESCE($21, latitude),
+                    longitude = COALESCE($22, longitude),
+                    status = COALESCE($23, status),
+                    valor_imovel = COALESCE($24, valor_imovel)
+                WHERE id = $25
                 RETURNING *`,
                 [
                     body.codigoUnidade, body.entidade, body.tipo, body.centro, body.cat, body.unidade,
                     body.cidade, body.bairro, body.endereco, body.cep, body.re, body.responsavelRE, body.ra, body.responsavelRA, body.responsavelRAR, body.tipoDeUnidade,
                     body.emailGR, body.gerenteRegional, body.unidadeResumida, body.site, body.latitude, body.longitude, body.status,
+                    body.emailGR, body.gerenteRegional, body.unidadeResumida, body.site, body.latitude, body.longitude, body.status,
+                    body.valorImovel,
                     id
                 ]
             );

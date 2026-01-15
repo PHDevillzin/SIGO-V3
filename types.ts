@@ -87,7 +87,7 @@ export interface User {
   isRequesterSede?: boolean;
   isRequesterStrategic?: boolean;
   // Deprecated but keeping for backward compat if needed temporarily
-  isApprover?: boolean; 
+  isApprover?: boolean;
   isRequester?: boolean;
 }
 
@@ -116,6 +116,7 @@ export interface Unit {
   latitude: string;
   longitude: string;
   status: boolean;
+  valorImovel?: string;
 }
 
 export interface SummaryData {

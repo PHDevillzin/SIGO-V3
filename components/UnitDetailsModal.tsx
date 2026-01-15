@@ -36,7 +36,8 @@ const UnitDetailsModal: React.FC<UnitDetailsModalProps> = ({ isOpen, onClose, un
                 responsavelRAR: '',
                 tipoDeUnidade: '',
                 unidadeResumida: '',
-                gerenteRegional: ''
+                gerenteRegional: '',
+                valorImovel: ''
             });
         }
     }, [unit, mode, isOpen]);
@@ -72,7 +73,7 @@ const UnitDetailsModal: React.FC<UnitDetailsModalProps> = ({ isOpen, onClose, un
 
                 {/* Form Body */}
                 <form onSubmit={handleSubmit} id="unit-form" className="p-8 overflow-y-auto space-y-8 bg-white">
-                    
+
                     {/* Identification Section */}
                     <div>
                         <h3 className="text-sm font-bold text-sky-600 mb-4 border-b border-sky-100 pb-1">Identificação e Estrutura</h3>
@@ -90,11 +91,11 @@ const UnitDetailsModal: React.FC<UnitDetailsModalProps> = ({ isOpen, onClose, un
                             </div>
                             <div>
                                 <label className={labelClass}>Tipo local</label>
-                                <select 
-                                    name="tipo" 
-                                    value={formData.tipo} 
-                                    onChange={handleChange} 
-                                    disabled={isReadOnly} 
+                                <select
+                                    name="tipo"
+                                    value={formData.tipo}
+                                    onChange={handleChange}
+                                    disabled={isReadOnly}
                                     className={inputClass}
                                 >
                                     <option value="">Selecione...</option>
@@ -133,6 +134,18 @@ const UnitDetailsModal: React.FC<UnitDetailsModalProps> = ({ isOpen, onClose, un
                             <div>
                                 <label className={labelClass}>Tipo de Unidade</label>
                                 <input type="text" name="tipoDeUnidade" value={formData.tipoDeUnidade} onChange={handleChange} readOnly={isReadOnly} className={inputClass} />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Valor do imóvel</label>
+                                <input
+                                    type="text"
+                                    name="valorImovel"
+                                    value={formData.valorImovel || ''}
+                                    onChange={handleChange}
+                                    readOnly={isReadOnly}
+                                    className={inputClass}
+                                    placeholder="R$ 0,00"
+                                />
                             </div>
                         </div>
                     </div>
@@ -194,14 +207,14 @@ const UnitDetailsModal: React.FC<UnitDetailsModalProps> = ({ isOpen, onClose, un
 
                 {/* Footer Buttons */}
                 <div className="p-6 border-t bg-gray-50 flex justify-end items-center space-x-3 rounded-b-lg">
-                    <button 
+                    <button
                         onClick={onClose}
                         className="px-6 py-2 text-gray-600 hover:text-gray-800 font-bold text-sm transition-colors"
                     >
                         {isReadOnly ? 'FECHAR' : 'CANCELAR'}
                     </button>
                     {!isReadOnly && (
-                        <button 
+                        <button
                             type="submit"
                             form="unit-form"
                             className="bg-[#0EA5E9] text-white px-8 py-2 rounded-md font-bold hover:bg-sky-600 transition-all flex items-center space-x-2 shadow-lg shadow-sky-100"
