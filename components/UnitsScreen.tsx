@@ -295,6 +295,7 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                                 <th className="px-4 py-4 whitespace-nowrap font-bold tracking-wider">CAT</th>
                                 <th className="px-4 py-4 whitespace-nowrap font-bold tracking-wider">Unidade</th>
                                 <th className="px-4 py-4 whitespace-nowrap font-bold tracking-wider">Cidade</th>
+                                <th className="px-4 py-4 whitespace-nowrap font-bold tracking-wider">RE</th>
                                 <th className="px-4 py-4 whitespace-nowrap font-bold tracking-wider">Responsável RE</th>
                                 <th className="px-4 py-4 whitespace-nowrap font-bold tracking-wider">RA</th>
                                 <th className="px-4 py-4 whitespace-nowrap font-bold tracking-wider">Responsável RA</th>
@@ -314,6 +315,7 @@ const UnitsScreen: React.FC<UnitsScreenProps> = ({ units, setUnits }) => {
                                     <td className="px-4 py-4 whitespace-nowrap truncate max-w-[200px]" title={unit.cat}>{unit.cat}</td>
                                     <td className="px-4 py-4 whitespace-nowrap font-medium text-gray-900 truncate max-w-[250px]" title={unit.unidade}>{unit.unidade}</td>
                                     <td className="px-4 py-4 whitespace-nowrap">{unit.cidade}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap">{unit.re}</td>
                                     <td className="px-4 py-4 whitespace-nowrap">{unit.responsavelRE}</td>
                                     <td className="px-4 py-4 whitespace-nowrap">{unit.ra}</td>
                                     <td className="px-4 py-4 whitespace-nowrap">{unit.responsavelRA}</td>

@@ -220,7 +220,7 @@ const UnitDetailsModal: React.FC<UnitDetailsModalProps> = ({ isOpen, onClose, un
                             className="bg-[#0EA5E9] text-white px-8 py-2 rounded-md font-bold hover:bg-sky-600 transition-all flex items-center space-x-2 shadow-lg shadow-sky-100"
                         >
                             <PaperAirplaneIcon className="w-4 h-4 -rotate-45" />
-                            <span>SALVAR DADOS</span>
+                            <span>SALVAR</span>
                         </button>
                     )}
                 </div>
