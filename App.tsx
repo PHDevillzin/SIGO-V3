@@ -19,7 +19,7 @@ import OpenStrategicRequestScreen from './components/OpenStrategicRequestScreen'
 import OpenUnitRequestScreen from './components/OpenUnitRequestScreen';
 import InvestmentPolicyScreen from './components/InvestmentPolicyScreen';
 import LoginScreen from './components/LoginScreen';
-import { ListIcon } from './components/Icons';
+import { ListIcon, CalculatorIcon } from './components/Icons';
 import type { SummaryData, Request, Unit, AccessProfile, User, Tipologia, TipoLocal } from './types';
 
 
@@ -189,23 +189,133 @@ const App: React.FC = () => {
         fetchData();
     }, [isAuthenticated, currentUser, userPermissions, selectedProfile]);
 
-    useEffect(() => {
-        // This effect runs when requests or units change
-        // Recalculate summary data based on filtered requests
-        const totalRequests = requests.length;
-        const pendingRequests = requests.filter(req => req.status === 'Pendente').length;
-        const approvedRequests = requests.filter(req => req.status === 'Aprovado').length;
-        const rejectedRequests = requests.filter(req => req.status === 'Rejeitado').length;
-        const inProgressRequests = requests.filter(req => req.status === 'Em Andamento').length;
+    // Helper to parse currency strings like "3,5 mi", "300 mil", "R$ 3.500.000,00"
+    const parseCurrency = (str: string) => {
+        if (!str) return 0;
+        let cleanStr = str.replace('R$', '').trim();
+        let multiplier = 1;
 
-        setSummaryData([
-            { title: 'Total de Solicitações', count: totalRequests, value: totalRequests.toString(), icon: ListIcon, color: 'text-blue-500' },
-            { title: 'Solicitações Pendentes', count: pendingRequests, value: pendingRequests.toString(), icon: ListIcon, color: 'text-yellow-500' },
-            { title: 'Solicitações Aprovadas', count: approvedRequests, value: approvedRequests.toString(), icon: ListIcon, color: 'text-green-500' },
-            { title: 'Solicitações Rejeitadas', count: rejectedRequests, value: rejectedRequests.toString(), icon: ListIcon, color: 'text-red-500' },
-            { title: 'Solicitações Em Andamento', count: inProgressRequests, value: inProgressRequests.toString(), icon: ListIcon, color: 'text-purple-500' },
-        ]);
-    }, [requests, units]); // Depend on requests and units
+        if (cleanStr.toLowerCase().includes('mi')) {
+            multiplier = 1000000;
+            cleanStr = cleanStr.toLowerCase().replace('mi', '').replace('l', '').trim(); // Handle 'mil' vs 'mi' overlap if needed, but 'mi' is 1M
+            // Actually 'mil' contains 'mi'?? No. 'm' 'i' 'l'. 'm' 'i'.
+            // If it has 'mil', it has 'mi' inside? Yes.
+            // Strict check:
+            if (str.toLowerCase().endsWith('mil') || str.toLowerCase().includes(' mil')) {
+                multiplier = 1000;
+                cleanStr = cleanStr.toLowerCase().replace('mil', '').trim();
+            } else {
+                 multiplier = 1000000;
+                 cleanStr = cleanStr.toLowerCase().replace('mi', '').trim();
+            }
+        } else if (cleanStr.toLowerCase().includes('mil')) {
+             multiplier = 1000;
+             cleanStr = cleanStr.toLowerCase().replace('mil', '').trim();
+        }
+
+        // Handle separators
+        if (cleanStr.includes('.') && cleanStr.includes(',')) {
+             cleanStr = cleanStr.replace(/\./g, '').replace(',', '.');
+        } else if (cleanStr.includes(',')) {
+            // Assume comma is decimal if no dots present, OR comma is decimal (Brazilian standard)
+            cleanStr = cleanStr.replace(',', '.');
+        }
+        
+        const val = parseFloat(cleanStr);
+        return isNaN(val) ? 0 : val * multiplier;
+    };
+
+    const formatCurrency = (val: number) => {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    };
+
+    const getColorForCategory = (cat: string) => {
+        const lower = cat.toLowerCase();
+        if (lower.includes('nova unidade') || lower.includes('expansão')) return 'border-green-500';
+        if (lower.includes('estratégica')) return 'border-purple-500';
+        if (lower.includes('reforma') || lower.includes('modernização')) return 'border-blue-500';
+        if (lower.includes('baixa complexidade')) return 'border-sky-500';
+        if (lower.includes('manutenção')) return 'border-indigo-500';
+        return 'border-gray-500';
+    };
+
+    useEffect(() => {
+        if (requests.length === 0) {
+            setSummaryData([]);
+            return;
+        }
+
+        const categoryMap = new Map<string, { count: number; value: number }>();
+
+        requests.forEach(req => {
+            const cat = req.categoriaInvestimento || 'Outros';
+            const val = parseCurrency(req.expectedValue);
+            
+            if (!categoryMap.has(cat)) {
+                categoryMap.set(cat, { count: 0, value: 0 });
+            }
+            const current = categoryMap.get(cat)!;
+            current.count += 1;
+            current.value += val;
+        });
+
+        // Specific order based on image if possible, or alphabetical
+        // Image: Nova Unidade, Intervenção, Reforma, Baixa, Manutenção
+        // We will sort to try and match this hierarchy: 
+        // 1. Nova Unidade/Expansão
+        // 2. Intervenção Estratégica
+        // 3. Reforma Operacional / Modernização
+        // 4. Baixa Complexidade
+        // 5. Manutenção
+        // 6. Outros
+        
+        const sortOrder = [
+            'Nova Unidade', 'Expansão',
+            'Intervenção Estratégica',
+            'Reforma Operacional', 'Modernização',
+            'Baixa Complexidade', 
+            'Manutenção', 'Manutenção Corretiva'
+        ];
+
+        const sortedCategories = Array.from(categoryMap.keys()).sort((a, b) => {
+             const idxA = sortOrder.indexOf(a);
+             const idxB = sortOrder.indexOf(b);
+             // If both found, sort by index
+             if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+             // If only A found, A comes first
+             if (idxA !== -1) return -1;
+             // If only B found, B comes first
+             if (idxB !== -1) return 1;
+             // Alphabetical otherwise
+             return a.localeCompare(b);
+        });
+
+        const newSummary: SummaryData[] = sortedCategories.map(cat => {
+            const data = categoryMap.get(cat)!;
+            return {
+                title: cat,
+                count: data.count,
+                value: formatCurrency(data.value),
+                icon: ListIcon,
+                color: getColorForCategory(cat)
+            };
+        });
+
+        // Add Total Geral
+        const totalCount = requests.length;
+        const totalValue = requests.reduce((acc, r) => acc + parseCurrency(r.expectedValue), 0);
+        
+        newSummary.push({
+            title: 'Total Geral',
+            count: totalCount,
+            value: formatCurrency(totalValue),
+            icon: CalculatorIcon, // Ensure CalculatorIcon is imported
+            color: 'border-orange-500' // Distinct color
+        });
+
+        setSummaryData(newSummary);
+
+    }, [requests, units]);
 
     if (!isAuthenticated) {
         return <LoginScreen onLogin={(data) => {
