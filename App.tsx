@@ -231,11 +231,11 @@ const App: React.FC = () => {
 
     const getColorForCategory = (cat: string) => {
         const lower = cat.toLowerCase();
-        if (lower.includes('nova unidade') || lower.includes('expansão')) return 'border-green-500';
-        if (lower.includes('estratégica')) return 'border-purple-500';
-        if (lower.includes('reforma') || lower.includes('modernização')) return 'border-blue-500';
-        if (lower.includes('baixa complexidade')) return 'border-sky-500';
-        if (lower.includes('manutenção')) return 'border-indigo-500';
+        if (lower === 'nova unidade') return 'border-green-500'; // Green
+        if (lower === 'intervenção estratégica') return 'border-purple-500'; // Purple
+        if (lower === 'reforma operacional') return 'border-blue-500'; // Blue
+        if (lower === 'baixa complexidade') return 'border-sky-500'; // Light Blue
+        if (lower === 'manutenção') return 'border-indigo-500'; // Indigo
         return 'border-gray-500';
     };
 
@@ -269,26 +269,15 @@ const App: React.FC = () => {
         // 5. Manutenção
         // 6. Outros
         
-        const sortOrder = [
-            'Nova Unidade', 'Expansão',
-            'Intervenção Estratégica',
-            'Reforma Operacional', 'Modernização',
+        const validCategories = [
+            'Nova Unidade', 
+            'Intervenção Estratégica', 
+            'Reforma Operacional', 
             'Baixa Complexidade', 
-            'Manutenção', 'Manutenção Corretiva'
+            'Manutenção'
         ];
 
-        const sortedCategories = Array.from(categoryMap.keys()).sort((a, b) => {
-             const idxA = sortOrder.indexOf(a);
-             const idxB = sortOrder.indexOf(b);
-             // If both found, sort by index
-             if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-             // If only A found, A comes first
-             if (idxA !== -1) return -1;
-             // If only B found, B comes first
-             if (idxB !== -1) return 1;
-             // Alphabetical otherwise
-             return a.localeCompare(b);
-        });
+        const sortedCategories = validCategories.filter(cat => categoryMap.has(cat));
 
         const newSummary: SummaryData[] = sortedCategories.map(cat => {
             const data = categoryMap.get(cat)!;

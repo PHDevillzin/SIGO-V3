@@ -19,11 +19,11 @@ const locaisAtuais = [
     'Planejamento'
 ];
 const categoriasInvestimento = [
-    'Reforma Operacional', 
+    'Nova Unidade', 
     'Intervenção Estratégica', 
-    'Manutenção Corretiva', 
-    'Expansão',
-    'Modernização'
+    'Reforma Operacional', 
+    'Baixa Complexidade',
+    'Manutenção'
 ];
 const tiposServico = ['Sede', 'Estratégico', 'Operacional', 'Consultoria'];
 const areasFim = [
