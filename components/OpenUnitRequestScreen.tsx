@@ -40,6 +40,8 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
     const [formData, setFormData] = useState({
         entidade: (isTargetProfile && nifEntidade) ? nifEntidade : defaultEntity,
         unidade: '',
+        planoDiretor: '', // New field
+        cat: '', // New visual field, potentially derived
         local: '',
         atividade: '',
 
@@ -63,8 +65,13 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
         dataUtilizacao: '',
 
         // Files
-        plantaBaixa: null,
-        fotos: null,
+        arquivoPlantaBaixa: '', // Updated name
+        arquivoFotos: '', // Updated name
+        arquivoProjeto: '',
+        arquivoLaudo: '',
+        arquivoAutorizacao: '',
+        arquivoConsulta: '',
+        arquivoNotificacao: '',
 
         // Radios - Compliance
         possuiProjeto: '',
@@ -80,19 +87,38 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
     });
 
     // Filter Units based on Profile
+    // Filter Units based on Profile and Selected Entity
     const filteredUnits = React.useMemo(() => {
-        const userProfileNames = profiles
-            .filter(p => currentUser.sigoProfiles?.includes(p.id))
-            .map(p => p.name);
-
-        const isRestrictedProfile = userProfileNames.includes('Gestor Local') || userProfileNames.includes('Unidade Solicitante');
-
-        if (isRestrictedProfile && userLinkedUnits.length > 0) {
-             return units.filter(u => userLinkedUnits.includes(u.unidadeResumida) || userLinkedUnits.includes(u.unidade));
+        // 1. Filter by Entity first (Form selection)
+        let filtered = units;
+        
+        if (formData.entidade) {
+            filtered = filtered.filter(u => u.entidade === formData.entidade);
         }
-        return units;
-    }, [units, currentUser, profiles, userLinkedUnits]);
 
+        // 2. Filter by Access Profile / Linked Units
+        if (userLinkedUnits && userLinkedUnits.length > 0) {
+             const userProfileNames = profiles
+                .filter(p => currentUser.sigoProfiles?.includes(p.id))
+                .map(p => p.name);
+             
+             // If Admin, show all (subject to Entity filter)
+             // Otherwise, restrict to linked units
+             const isAdmin = userProfileNames.includes('Administrador');
+             
+             if (!isAdmin) {
+                 filtered = filtered.filter(u => 
+                     userLinkedUnits.includes(u.unidadeResumida) || 
+                     userLinkedUnits.includes(u.unidade)
+                 );
+             }
+        }
+        
+        return filtered.sort((a, b) => (a.unidadeResumida || a.unidade).localeCompare(b.unidadeResumida || b.unidade));
+    }, [units, formData.entidade, userLinkedUnits, currentUser, profiles]);
+
+    // Mock data for auto-filling Local and Atividade
+    // TODO: Use real data from Unit object if available
     // Mock data for auto-filling Local and Atividade
     // TODO: Use real data from Unit object if available
     useEffect(() => {
@@ -100,12 +126,13 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
         if (selectedUnit) {
             setFormData(prev => ({
                 ...prev,
-                local: selectedUnit.unidade,
-                atividade: selectedUnit.tipo, // Assuming 'tipo' maps to Activity or similar
+                local: selectedUnit.cidade || selectedUnit.unidade, // Approximation from image
+                atividade: selectedUnit.tipoDeUnidade || selectedUnit.tipo, // Approximation
+                cat: selectedUnit.cat || selectedUnit.centro || selectedUnit.unidade, // Approximation
                 entidade: selectedUnit.entidade || prev.entidade
             }));
         } else {
-            setFormData(prev => ({ ...prev, local: '', atividade: '' }));
+            setFormData(prev => ({ ...prev, local: '', atividade: '', cat: '' }));
         }
     }, [formData.unidade, units]);
 
@@ -163,7 +190,18 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                 situacaoObra: 'Não Iniciada',
                 inicioObra: null,
                 saldoObraPrazo: 0,
-                saldoObraValor: 'R$ 0,00'
+                saldoObraValor: 'R$ 0,00',
+                planoDiretor: formData.planoDiretor,
+                problemasNaoAtendida: formData.problemasNaoAtendida,
+                prazoAcao: formData.prazoAcao,
+                probabilidadeEvolucao: formData.probabilidadeEvolucao,
+                arquivoPlantaBaixa: formData.arquivoPlantaBaixa,
+                arquivoFotos: formData.arquivoFotos,
+                arquivoProjeto: formData.arquivoProjeto,
+                arquivoLaudo: formData.arquivoLaudo,
+                arquivoAutorizacao: formData.arquivoAutorizacao,
+                arquivoConsulta: formData.arquivoConsulta,
+                arquivoNotificacao: formData.arquivoNotificacao
             };
 
             const response = await fetch('/api/requests', {
@@ -215,15 +253,59 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
         ])
     );
 
-    const renderFileUpload = (label: string, accept: string) => (
+    const renderSimpleRadioGroup = (label: string, name: string) => (
+        <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+                {label} <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center space-x-6">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                        type="radio"
+                        name={name}
+                        value="Sim"
+                        checked={formData[name as keyof typeof formData] === 'Sim'}
+                        onChange={() => handleRadioChange(name, 'Sim')}
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <span className="text-sm text-gray-600">Sim</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                        type="radio"
+                        name={name}
+                        value="Nao"
+                        checked={formData[name as keyof typeof formData] === 'Nao'}
+                        onChange={() => handleRadioChange(name, 'Nao')}
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <span className="text-sm text-gray-600">Não</span>
+                </label>
+            </div>
+        </div>
+    );
+
+    const renderFileUpload = (label: string, accept: string, name: string) => (
         <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">{label} <span className="text-red-500">*</span></label>
             <div className="flex w-full border border-gray-300 rounded-md overflow-hidden bg-white">
                 <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm font-medium transition-colors">
                     Escolher Arquivo
-                    <input type="file" className="hidden" accept={accept} />
+                    <input 
+                        type="file" 
+                        className="hidden" 
+                        accept={accept} 
+                        onChange={(e) => {
+                            // Mocking file upload by setting a fake URL
+                            if (e.target.files && e.target.files[0]) {
+                                setFormData(prev => ({ ...prev, [name]: `https://fake-url.com/${e.target.files![0].name}` }));
+                            }
+                        }}
+                    />
                 </label>
-                <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">Nenhum arquivo escolhido</span>
+                <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">
+                     {formData[name as keyof typeof formData] ? 'Arquivo selecionado' : 'Nenhum arquivo escolhido'}
+                </span>
             </div>
             <div className="mt-1">
                 <a href="#" className="text-xs text-blue-400 hover:text-blue-600 hover:underline">*Link para download do modelo do arquivo disponibilizado</a>
@@ -281,16 +363,9 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                     <div className="space-y-6">
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1">Entidade <span className="text-red-500">*</span></label>
-                            <select
-                                name="entidade"
-                                value={formData.entidade}
-                                onChange={handleChange}
-                                disabled={isEntityRestricted}
-                                className={`w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 ${isEntityRestricted ? 'bg-gray-100 text-gray-500 corsor-not-allowed' : 'bg-white'}`}
-                            >
-                                <option value="SESI">SESI</option>
-                                <option value="SENAI">SENAI</option>
-                            </select>
+                            <div className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-600">
+                                {formData.entidade || 'SESI'}
+                            </div>
                         </div>
 
                         <div>
@@ -301,7 +376,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                                 onChange={handleChange}
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                             >
-                                <option value="">Selecione uma opção</option>
+                                <option value="">Selecione uma unidade</option>
                                 {filteredUnits.map(u => (
                                     <option key={u.id} value={u.unidadeResumida || u.unidade}>
                                         {u.unidadeResumida || u.unidade}
@@ -310,17 +385,26 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                             </select>
                         </div>
 
+                        {renderSimpleRadioGroup('A demanda faz parte do Plano Diretor?', 'planoDiretor')}
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cat:</label>
+                            <div className="w-full text-sm text-gray-800 font-medium">
+                                {formData.cat || 'Nome da unidade aqui'}
+                            </div>
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Local:</label>
                             <div className="w-full text-sm text-gray-800 font-medium">
-                                {formData.local || '-'}
+                                {formData.local || 'Local unidade aqui'}
                             </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Atividade principal da edificação:</label>
                             <div className="w-full text-sm text-gray-800 font-medium">
-                                {formData.atividade || '-'}
+                                {formData.atividade || 'Atividade unidade aqui'}
                             </div>
                         </div>
                     </div>
@@ -335,7 +419,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                                 value={formData.titulo}
                                 onChange={handleChange}
                                 maxLength={MAX_CHARS}
-                                placeholder="[Descrever brevemente o serviço a ser realizado. Ver exemplo no Guia de Orientações.]"
+                                placeholder="Descrever brevemente o serviço a ser realizado. Ver exemplo no Guia de Orientações."
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
                             <div className="text-right text-xs text-gray-500 mt-1">{formData.titulo.length}/{MAX_CHARS}</div>
@@ -349,7 +433,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                                 value={formData.objetivo}
                                 onChange={handleChange}
                                 maxLength={MAX_CHARS}
-                                placeholder="[Descrever o que se pretende realizar para resolver o problema central ou explorar a oportunidade identificada. Ver exemplo no Guia de Orientações.]"
+                                placeholder="Descrever o que se pretende realizar para resolver o problema central ou explorar a oportunidade identificada. Ver exemplo no Guia de Orientações."
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                             />
                             <div className="text-right text-xs text-gray-500 mt-1">{formData.objetivo.length}/{MAX_CHARS}</div>
@@ -363,7 +447,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                                 value={formData.expectativaResultados}
                                 onChange={handleChange}
                                 maxLength={MAX_CHARS}
-                                placeholder="[Descrever o resultado a ser gerado com a realização da demanda. Ver exemplo no Guia de Orientações.]"
+                                placeholder="Descrever o resultado a ser gerado com a realização da demanda. Ver exemplo no Guia de Orientações."
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                             />
                             <div className="text-right text-xs text-gray-500 mt-1">{formData.expectativaResultados.length}/{MAX_CHARS}</div>
@@ -377,7 +461,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                                 value={formData.justificativa}
                                 onChange={handleChange}
                                 maxLength={MAX_CHARS}
-                                placeholder="[Descrever o problema ou a oportunidade que justifica o desenvolvimento desde projeto. Ver exemplo no Guia de Orientações.]"
+                                placeholder="Descrever o problema ou a oportunidade que justifica o desenvolvimento desde projeto. Ver exemplo no Guia de Orientações."
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                             />
                             <div className="text-right text-xs text-gray-500 mt-1">{formData.justificativa.length}/{MAX_CHARS}</div>
@@ -391,7 +475,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                                 value={formData.resumoServicos}
                                 onChange={handleChange}
                                 maxLength={MAX_CHARS}
-                                placeholder="[Descrever em tópicos os serviços a serem realizados. Ver exemplo no Guia de Orientações.]"
+                                placeholder="Descrever em tópicos os serviços a serem realizados. Ver exemplo no Guia de Orientações."
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                             />
                             <div className="text-right text-xs text-gray-500 mt-1">{formData.resumoServicos.length}/{MAX_CHARS}</div>
@@ -424,7 +508,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                                     'Aquisição de mobiliário',
                                     'Aquisição de equipamentos gerais',
                                     'Aquisição de equipamentos de TI',
-                                    'Instalação de Dados e Voz',
+                                    'Instalação de Dados de Voz',
                                     'Alteração nos Contratos Facilities',
                                     'Não haverá necessidades ou alterações adicionais'
                                 ].map(opt => (
@@ -520,21 +604,57 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                     <div className="space-y-6 pt-4">
                         {renderFileUpload(
                             "Indicar em planta baixa a localização e área de intervenção:",
-                            ".pdf, .doc, .docx"
+                            ".pdf, .doc, .docx",
+                            "arquivoPlantaBaixa"
                         )}
                         {renderFileUpload(
                             "Incluir fotografias do local da intervenção:",
-                            ".jpeg, .jpg, .png, .pdf"
+                            ".jpeg, .jpg, .png, .pdf",
+                            "arquivoFotos"
                         )}
                     </div>
 
                     {/* Section 6: Yes/No Questions - Compliance */}
                     <div className="space-y-6 pt-4">
-                        {renderYesNoRadioGroup('A demanda possui algum projeto de construção elaborado ou contratado pela Unidade?', 'possuiProjeto')}
-                        {renderYesNoRadioGroup('A demanda possui algum laudo, relatório técnico ou documento complementar elaborado ou contratado pela Unidade?', 'possuiLaudo')}
-                        {renderYesNoRadioGroup('A unidade tem autorização da Prefeitura para realizar a demanda?', 'temAutorizacao')}
-                        {renderYesNoRadioGroup('A unidade realizou consulta à Prefeitura quanto ao tempo médio de aprovação do processo?', 'realizouConsulta')}
-                        {renderYesNoRadioGroup('Houve notificação a algum órgão público sobre a realização da demanda?', 'houveNotificacao')}
+                        <div className="space-y-4">
+                            {renderRadioGroup('A demanda possui algum projeto de construção elaborado ou contratado pela Unidade?', 'possuiProjeto', [
+                                { label: 'Não ou não tenho conhecimento', value: 'Nao' },
+                                { label: 'Sim', value: 'Sim' }
+                            ])}
+                            {formData.possuiProjeto === 'Sim' && renderFileUpload('Enviar arquivo do projeto:', '.pdf, .doc, .docx', 'arquivoProjeto')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderRadioGroup('A demanda possui algum laudo, relatório técnico ou documento complementar elaborado ou contratado pela Unidade?', 'possuiLaudo', [
+                                { label: 'Não ou não tenho conhecimento', value: 'Nao' },
+                                { label: 'Sim', value: 'Sim' }
+                            ])}
+                            {formData.possuiLaudo === 'Sim' && renderFileUpload('Enviar arquivo do laudo:', '.pdf, .doc, .docx', 'arquivoLaudo')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderRadioGroup('A unidade tem autorização da Prefeitura para realizar a demanda?', 'temAutorizacao', [
+                                { label: 'Não ou não tenho conhecimento', value: 'Nao' },
+                                { label: 'Sim', value: 'Sim' }
+                            ])}
+                            {formData.temAutorizacao === 'Sim' && renderFileUpload('Enviar arquivo de autorização:', '.pdf, .doc, .docx', 'arquivoAutorizacao')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderRadioGroup('A unidade realizou consulta à Prefeitura quanto ao tempo médio de aprovação do processo?', 'realizouConsulta', [
+                                { label: 'Não ou não tenho conhecimento', value: 'Nao' },
+                                { label: 'Sim', value: 'Sim' }
+                            ])}
+                            {formData.realizouConsulta === 'Sim' && renderFileUpload('Enviar documento da consulta:', '.pdf, .doc, .docx', 'arquivoConsulta')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderRadioGroup('Houve notificação a algum órgão público sobre a realização da demanda?', 'houveNotificacao', [
+                                { label: 'Não ou não tenho conhecimento', value: 'Nao' },
+                                { label: 'Sim', value: 'Sim' }
+                            ])}
+                            {formData.houveNotificacao === 'Sim' && renderFileUpload('Enviar notificação:', '.pdf, .doc, .docx', 'arquivoNotificacao')}
+                        </div>
                     </div>
 
                     {/* Section 7: Risk Assessment */}

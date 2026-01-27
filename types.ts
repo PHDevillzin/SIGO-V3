@@ -58,6 +58,7 @@ export interface Request {
   localObra?: string;
   atividade?: string;
   local?: string;
+  planoDiretor?: string;
   problemasNaoAtendida?: string;
   prazoAcao?: string;
   probabilidadeEvolucao?: string;
