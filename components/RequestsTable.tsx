@@ -683,9 +683,15 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                 {!isReclassificationView && !isAprovacaoView && (
                                     <>
                                         <th scope="col" className="px-6 py-3 font-semibold">Local Atual</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Gestor Local</th>
                                         <th scope="col" className="px-6 py-3 font-semibold">Início Esperado</th>
                                         <th scope="col" className="px-6 py-3 font-semibold">Valor Esperado</th>
                                         <th scope="col" className="px-6 py-3 font-semibold">Unidade Exec...</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Categoria Investimento</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Tipo Serviço</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold whitespace-nowrap">Área Fim</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Entidade</th>
+                                        <th scope="col" className="px-6 py-3 font-semibold">Ordem</th>
                                     </>
                                 )}
 
@@ -737,6 +743,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                     {!isReclassificationView && !isAprovacaoView && (
                                         <>
                                             <td className="px-6 py-4">{request.currentLocation}</td>
+                                            <td className="px-6 py-4">{request.gestorLocal || '-'}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center space-x-1">
                                                     <span>{request.expectedStartDate}</span>
@@ -745,6 +752,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                             </td>
                                             <td className="px-6 py-4">{request.expectedValue}</td>
                                             <td className="px-6 py-4">{request.executingUnit}</td>
+                                            <td className="px-6 py-4">{request.categoriaInvestimento}</td>
+                                            <td className="px-6 py-4">{request.atividade}</td>
+                                            <td className="px-6 py-4">{request.areaResponsavel}</td>
+                                            <td className="px-6 py-4">{request.entidade}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{request.ordem}</td>
                                         </>
                                     )}
 
