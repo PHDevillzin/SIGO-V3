@@ -173,6 +173,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const isReclassificationView = currentView === 'solicitacoes_reclassificacao';
     const isManutencaoView = currentView === 'manutencao';
     const isAprovacaoView = currentView === 'aprovacao';
+    const isCienciaView = currentView === 'ciencia';
 
     const filteredRequests = useMemo(() => {
         let sourceRequests = requests;
@@ -185,6 +186,27 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         } else if (isAprovacaoView) {
             // For approval, we might want to filter by status, but for now we'll just show all non-maintenance for the sake of the prototype or filter a subset
             sourceRequests = requests.filter(request => request.categoriaInvestimento !== 'Manutenção');
+        } else if (isCienciaView) {
+             sourceRequests = requests.filter(request => {
+                 if (request.categoriaInvestimento === 'Manutenção') return false; 
+                 if (request.status === 'Concluído' || request.status === 'Recusada' || request.currentLocation === 'Planejamento') return false;
+
+                 const isSesi = request.entidade === 'SESI';
+                 const isSenai = request.entidade === 'SENAI';
+                 const loc = request.currentLocation;
+
+                 // SESI: Approved by 'Gestor Local' -> Not in 'Gestão Local'
+                 if (isSesi) {
+                     return loc !== 'Gestão Local';
+                 }
+
+                 // SENAI: Approved by 'Gestor Local' AND 'GIS' -> Not in 'Gestão Local' AND Not in 'GSO'
+                 if (isSenai) {
+                     return loc !== 'Gestão Local' && loc !== 'GSO';
+                 }
+
+                 return false;
+             });
         }
 
         // Filter by Search Term

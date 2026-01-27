@@ -94,6 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
       'solicitacoes_reclassificacao': ['Menu Solicitações:Reclassificação'],
       'aprovacao': ['Menu Solicitações:Aprovação'],
       'manutencao': ['Menu Solicitações:Manutenção'],
+      'ciencia': ['Menu Solicitações:Gerais', 'Menu Solicitações:Gerais (PDF + Ciência)'], // Allow general access or specific science access
 
       // Abrir Solicitações
       'nova_estrategica': ['Abrir Solicitações:Estratégica'],
@@ -152,7 +153,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
 
 
   useEffect(() => {
-    const isSolicitacoes = ['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao'].includes(currentView);
+    const isSolicitacoes = ['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao', 'ciencia'].includes(currentView);
     const isGerenciamento = currentView === 'planejamento' || currentView === 'plurianual';
     const isAbrirSolicitacoes = ['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(currentView);
     const isConfiguracoes = [
@@ -195,7 +196,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
           <div>
             <button
               onClick={() => setIsSolicitacoesMenuOpen(prev => !prev)}
-              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
+              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao', 'ciencia'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
             >
               <div className="flex items-center space-x-3">
                 <ListIcon className="w-5 h-5 flex-shrink-0" />
@@ -213,7 +214,15 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                     onClick={() => setCurrentView('solicitacoes')}
                   />
                 )}
-                {hasPermission('solicitacoes_reclassificacao') && (
+                {hasPermission('ciencia') && (
+                   <NavItem
+                    icon={InformationCircleIcon}
+                    label="Solicitações manifestação/ciência"
+                    active={currentView === 'ciencia'}
+                    onClick={() => setCurrentView('ciencia')}
+                   />
+                )}
+                 {hasPermission('solicitacoes_reclassificacao') && (
                   <NavItem
                     icon={DocumentDuplicateIcon}
                     label="Solicitações para reclassificação"

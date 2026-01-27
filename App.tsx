@@ -40,7 +40,7 @@ const App: React.FC = () => {
     const [tipologias, setTipologias] = useState<Tipologia[]>([]);
     const [tipoLocais, setTipoLocais] = useState<TipoLocal[]>([]);
 
-    const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao'].includes(currentView);
+    const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao', 'ciencia'].includes(currentView);
 
     let solicitacoesTitle = 'Solicitações';
     if (currentView === 'nova_sede' || currentView === 'nova_estrategica' || currentView === 'nova_unidade') {
@@ -49,6 +49,8 @@ const App: React.FC = () => {
         solicitacoesTitle = 'Solicitações para Reclassificação';
     } else if (currentView === 'manutencao') {
         solicitacoesTitle = 'Manutenção';
+    } else if (currentView === 'ciencia') {
+        solicitacoesTitle = 'Solicitações manifestação/ciência';
     }
 
     const handleAddRequest = (newRequest: Request) => {
