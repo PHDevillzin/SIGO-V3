@@ -273,37 +273,6 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                     {/* Section 1: Classification */}
                     <div className="space-y-6">
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Entidade <span className="text-red-500">*</span></label>
-                            <select
-                                name="entidade"
-                                value={formData.entidade}
-                                onChange={handleChange}
-                                disabled={isEntityRestricted}
-                                className={`w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 ${isEntityRestricted ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
-                            >
-                                <option value="SESI">SESI</option>
-                                <option value="SENAI">SENAI</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Unidade <span className="text-red-500">*</span></label>
-                            <select
-                                name="unidade"
-                                value={formData.unidade}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                            >
-                                <option value="">Selecione uma opção</option>
-                                {filteredUnits.map(u => (
-                                    <option key={u.id} value={u.unidadeResumida || u.unidade}>
-                                        {u.unidadeResumida || u.unidade}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1">A demanda refere-se a: <span className="text-red-500">*</span></label>
                             <select
                                 name="referencia"
@@ -347,10 +316,10 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                                 value={formData.titulo}
                                 onChange={handleChange}
                                 maxLength={MAX_CHARS}
-                                placeholder="[Descrever brevemente o serviço a ser realizado. Ver exemplo no Guia de Orientações.]"
+                                placeholder="Descrever brevemente o serviço a ser realizado. Ver exemplo no Guia de Orientações."
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
-                            <div className="text-right text-xs text-gray-500 mt-1">{formData.titulo.length}/{MAX_CHARS}</div>
+                            <div className="text-xs text-gray-500 mt-1">Caracteres restantes: {MAX_CHARS - formData.titulo.length}</div>
                         </div>
 
                         {/* Objetivo */}
@@ -362,10 +331,10 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                                 value={formData.objetivo}
                                 onChange={handleChange}
                                 maxLength={MAX_CHARS}
-                                placeholder="[Descrever o que se pretende realizar para resolver o problema central ou explorar a oportunidade identificada. Ver exemplo no Guia de Orientações.]"
+                                placeholder="Descrever o que se pretende realizar para resolver o problema central ou explorar a oportunidade identificada. Ver exemplo no Guia de Orientações."
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                             />
-                            <div className="text-right text-xs text-gray-500 mt-1">{formData.objetivo.length}/{MAX_CHARS}</div>
+                            <div className="text-xs text-gray-500 mt-1">Caracteres restantes: {MAX_CHARS - formData.objetivo.length}</div>
                         </div>
 
                         {/* Expectativa de resultados */}
@@ -377,10 +346,10 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                                 value={formData.expectativaResultados}
                                 onChange={handleChange}
                                 maxLength={MAX_CHARS}
-                                placeholder="[Descrever o resultado a ser gerado com a realização da demanda. Ver exemplo no Guia de Orientações.]"
+                                placeholder="Descrever o resultado a ser gerado com a realização da demanda. Ver exemplo no Guia de Orientações."
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                             />
-                            <div className="text-right text-xs text-gray-500 mt-1">{formData.expectativaResultados.length}/{MAX_CHARS}</div>
+                            <div className="text-xs text-gray-500 mt-1">Caracteres restantes: {MAX_CHARS - formData.expectativaResultados.length}</div>
                         </div>
 
                         {/* Justificativa */}
@@ -392,10 +361,10 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                                 value={formData.justificativa}
                                 onChange={handleChange}
                                 maxLength={MAX_CHARS}
-                                placeholder="[Descrever o problema ou a oportunidade que justifica o desenvolvimento desde projeto. Ver exemplo no Guia de Orientações.]"
+                                placeholder="Descrever o problema ou a oportunidade que justifica o desenvolvimento desde projeto. Ver exemplo no Guia de Orientações."
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                             />
-                            <div className="text-right text-xs text-gray-500 mt-1">{formData.justificativa.length}/{MAX_CHARS}</div>
+                            <div className="text-xs text-gray-500 mt-1">Caracteres restantes: {MAX_CHARS - formData.justificativa.length}</div>
                         </div>
 
                         {/* Resumo dos Serviços */}
@@ -407,10 +376,10 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                                 value={formData.resumoServicos}
                                 onChange={handleChange}
                                 maxLength={MAX_CHARS}
-                                placeholder="[Descrever em tópicos os serviços a serem realizados. Ver exemplo no Guia de Orientações.]"
+                                placeholder="Descrever a qualidade do serviço/resultado precisa apresentar para ter valor para a área demandante. Ver exemplo no Guia de Orientações."
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                             />
-                            <div className="text-right text-xs text-gray-500 mt-1">{formData.resumoServicos.length}/{MAX_CHARS}</div>
+                            <div className="text-xs text-gray-500 mt-1">Caracteres restantes: {MAX_CHARS - formData.resumoServicos.length}</div>
                         </div>
                     </div>
 
