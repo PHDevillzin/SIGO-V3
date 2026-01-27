@@ -60,8 +60,13 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
         dataUtilizacao: '',
 
         // Files
-        plantaBaixa: null,
-        fotos: null,
+        arquivoPlantaBaixa: '',
+        arquivoFotos: '',
+        arquivoProjeto: '',
+        arquivoLaudo: '',
+        arquivoAutorizacao: '',
+        arquivoConsulta: '',
+        arquivoNotificacao: '',
 
         // Radios
         possuiProjeto: '',
@@ -128,7 +133,14 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                 situacaoObra: 'Não Iniciada',
                 inicioObra: null,
                 saldoObraPrazo: 0,
-                saldoObraValor: 'R$ 0,00'
+                saldoObraValor: 'R$ 0,00',
+                arquivoPlantaBaixa: formData.arquivoPlantaBaixa,
+                arquivoFotos: formData.arquivoFotos,
+                arquivoProjeto: formData.arquivoProjeto,
+                arquivoLaudo: formData.arquivoLaudo,
+                arquivoAutorizacao: formData.arquivoAutorizacao,
+                arquivoConsulta: formData.arquivoConsulta,
+                arquivoNotificacao: formData.arquivoNotificacao
             };
 
             const response = await fetch('/api/requests', {
@@ -191,15 +203,27 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
         </div>
     );
 
-    const renderFileUpload = (label: string, accept: string) => (
+    const renderFileUpload = (label: string, accept: string, name: string) => (
         <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">{label} <span className="text-red-500">*</span></label>
             <div className="flex w-full border border-gray-300 rounded-md overflow-hidden bg-white">
                 <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm font-medium transition-colors">
                     Escolher Arquivo
-                    <input type="file" className="hidden" accept={accept} />
+                    <input 
+                        type="file" 
+                        className="hidden" 
+                        accept={accept} 
+                        onChange={(e) => {
+                            // Mocking file upload by setting a fake URL
+                            if (e.target.files && e.target.files[0]) {
+                                setFormData(prev => ({ ...prev, [name]: `https://fake-url.com/${e.target.files![0].name}` }));
+                            }
+                        }}
+                    />
                 </label>
-                <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">Nenhum arquivo escolhido</span>
+                <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">
+                     {formData[name as keyof typeof formData] ? 'Arquivo selecionado' : 'Nenhum arquivo escolhido'}
+                </span>
             </div>
             <div className="mt-1">
                 <a href="#" className="text-xs text-blue-400 hover:text-blue-600 hover:underline">*Link para download do modelo do arquivo disponibilizado</a>
@@ -239,8 +263,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                                 name="solicitante"
                                 value={formData.solicitante}
                                 onChange={handleChange}
-                                disabled={isEntityRestricted}
-                                className={`w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 ${isEntityRestricted ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                             >
                                 <option value="">Selecione uma opção</option>
                                 <option value="SESI">SESI</option>
@@ -456,21 +479,42 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                     <div className="space-y-6 pt-4">
                         {renderFileUpload(
                             "Indicar em planta baixa a localização e área de intervenção:",
-                            ".pdf, .doc, .docx"
+                            ".pdf, .doc, .docx",
+                            "arquivoPlantaBaixa"
                         )}
                         {renderFileUpload(
                             "Incluir fotografias do local da intervenção:",
-                            ".jpeg, .jpg, .png, .pdf"
+                            ".jpeg, .jpg, .png, .pdf",
+                            "arquivoFotos"
                         )}
                     </div>
 
                     {/* Section 5: Yes/No Questions */}
                     <div className="space-y-6 pt-4">
-                        {renderRadioGroup('A demanda possui algum projeto de construção elaborado ou contratado pela Sede?', 'possuiProjeto')}
-                        {renderRadioGroup('A demanda possui algum laudo, relatório técnico ou documento complementar elaborado ou contratado pela Sede?', 'possuiLaudo')}
-                        {renderRadioGroup('A Sede tem autorização da Prefeitura para realizar a demanda?', 'temAutorizacao')}
-                        {renderRadioGroup('A Sede realizou consulta à Prefeitura quanto ao tempo médio de aprovação do processo?', 'realizouConsulta')}
-                        {renderRadioGroup('Houve notificação a algum órgão público sobre a realização da demanda?', 'houveNotificacao')}
+                        <div className="space-y-4">
+                            {renderRadioGroup('A demanda possui algum projeto de construção elaborado ou contratado pela Sede?', 'possuiProjeto')}
+                            {formData.possuiProjeto === 'Sim' && renderFileUpload('Enviar arquivo do projeto:', '.pdf, .doc, .docx', 'arquivoProjeto')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderRadioGroup('A demanda possui algum laudo, relatório técnico ou documento complementar elaborado ou contratado pela Sede?', 'possuiLaudo')}
+                            {formData.possuiLaudo === 'Sim' && renderFileUpload('Enviar arquivo do laudo:', '.pdf, .doc, .docx', 'arquivoLaudo')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderRadioGroup('A Sede tem autorização da Prefeitura para realizar a demanda?', 'temAutorizacao')}
+                            {formData.temAutorizacao === 'Sim' && renderFileUpload('Enviar arquivo de autorização:', '.pdf, .doc, .docx', 'arquivoAutorizacao')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderRadioGroup('A Sede realizou consulta à Prefeitura quanto ao tempo médio de aprovação do processo?', 'realizouConsulta')}
+                            {formData.realizouConsulta === 'Sim' && renderFileUpload('Enviar documento da consulta:', '.pdf, .doc, .docx', 'arquivoConsulta')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderRadioGroup('Houve notificação a algum órgão público sobre a realização da demanda?', 'houveNotificacao')}
+                            {formData.houveNotificacao === 'Sim' && renderFileUpload('Enviar notificação:', '.pdf, .doc, .docx', 'arquivoNotificacao')}
+                        </div>
                     </div>
 
                     {/* Action Buttons */}

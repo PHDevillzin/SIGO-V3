@@ -79,6 +79,9 @@ export interface Request {
   arquivoAutorizacao?: string; // URL
   arquivoConsulta?: string; // URL
   arquivoNotificacao?: string; // URL
+  // Sede Request Files
+  arquivoPlantaBaixa?: string; // URL
+  arquivoFotos?: string; // URL
 }
 
 export interface User {
