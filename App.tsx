@@ -117,18 +117,9 @@ const App: React.FC = () => {
                     const data = await requestsRes.json();
                     let mappedRequests = data.map((r: any) => ({
                         ...r,
-                        currentLocation: r.current_location,
-                        expectedStartDate: r.expected_start_date,
-                        hasInfo: r.has_info,
-                        expectedValue: r.expected_value,
-                        executingUnit: r.executing_unit,
-                        categoriaInvestimento: r.categoria_investimento,
-                        situacaoProjeto: r.situacao_projeto,
-                        situacaoObra: r.situacao_obra,
-                        inicioObra: r.inicio_obra,
-                        saldoObraPrazo: r.saldo_obra_prazo,
-                        saldoObraValor: r.saldo_obra_valor,
-                        gestorLocal: r.gestor_local
+                        // API now returns camelCase, so we don't need to remap snake_case
+                        // unless we need specific transformations.
+                        // Ensuring Date strings are handled if needed, but for now passing through.
                     }));
 
                     // FILTER REQUESTS: Show only requests from linked units (unless Admin or Sede/Gerencia)

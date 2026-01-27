@@ -48,6 +48,17 @@ const getCriticalityClass = (criticality: Criticality) => {
     }
 };
 
+const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return '-';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString; // Fallback if already formatted or invalid
+        return new Intl.DateTimeFormat('pt-BR').format(date);
+    } catch (e) {
+        return dateString;
+    }
+};
+
 interface RequestsTableProps {
     selectedProfile: string;
     currentView: string;
@@ -746,7 +757,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                             <td className="px-6 py-4">{request.gestorLocal || '-'}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center space-x-1">
-                                                    <span>{request.expectedStartDate}</span>
+                                                    <span>{formatDate(request.expectedStartDate)}</span>
                                                     {request.hasInfo && <InformationCircleIcon className="w-5 h-5 text-gray-400" />}
                                                 </div>
                                             </td>
