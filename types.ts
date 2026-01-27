@@ -62,6 +62,23 @@ export interface Request {
   prazoAcao?: string;
   probabilidadeEvolucao?: string;
   observacao?: string;
+  // Dynamic fields for Strategic Request (Novo Terreno Doado)
+  existeLeiDoacao?: string;
+  entidadeDoadora?: string;
+  arquivoLeiDoacao?: string; // URL
+  certidaoMatricula?: string; // URL
+  iptuAtualizado?: string; // URL
+  certidaoNegativaDebitos?: string; // URL
+  certidaoNegativaTributosMunicipais?: string; // URL
+  certidaoDebitosTrabalhistas?: string; // URL
+  certidaoTributosFederais?: string; // URL
+  licencasAmbientais?: string; // URL
+  // Additional Conditional Files
+  arquivoProjeto?: string; // URL
+  arquivoLaudo?: string; // URL
+  arquivoAutorizacao?: string; // URL
+  arquivoConsulta?: string; // URL
+  arquivoNotificacao?: string; // URL
 }
 
 export interface User {

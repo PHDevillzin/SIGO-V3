@@ -84,6 +84,26 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
         arquivoUpload: null,
         estudoMercado: null,
 
+        // Dynamic fields
+        existeLeiDoacao: '',
+        entidadeDoadora: '',
+        // Files (URLs)
+        arquivoLeiDoacao: '',
+        certidaoMatricula: '',
+        iptuAtualizado: '',
+        certidaoNegativaDebitos: '',
+        certidaoNegativaTributosMunicipais: '',
+        certidaoDebitosTrabalhistas: '',
+        certidaoTributosFederais: '',
+        licencasAmbientais: '',
+
+        // Additional Conditional Files
+        arquivoProjeto: '',
+        arquivoLaudo: '',
+        arquivoAutorizacao: '',
+        arquivoConsulta: '',
+        arquivoNotificacao: '',
+
         // Radios
         localObra: '',
         possuiProjeto: '',
@@ -178,7 +198,24 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                 situacaoObra: 'Não Iniciada',
                 inicioObra: null,
                 saldoObraPrazo: 0,
-                saldoObraValor: 'R$ 0,00'
+                saldoObraValor: 'R$ 0,00',
+                // Map new fields
+                existeLeiDoacao: formData.existeLeiDoacao,
+                entidadeDoadora: formData.entidadeDoadora,
+                arquivoLeiDoacao: formData.arquivoLeiDoacao,
+                certidaoMatricula: formData.certidaoMatricula,
+                iptuAtualizado: formData.iptuAtualizado,
+                certidaoNegativaDebitos: formData.certidaoNegativaDebitos,
+                certidaoNegativaTributosMunicipais: formData.certidaoNegativaTributosMunicipais,
+                certidaoDebitosTrabalhistas: formData.certidaoDebitosTrabalhistas,
+                certidaoTributosFederais: formData.certidaoTributosFederais,
+                licencasAmbientais: formData.licencasAmbientais,
+                // Map additional conditional files
+                arquivoProjeto: formData.arquivoProjeto,
+                arquivoLaudo: formData.arquivoLaudo,
+                arquivoAutorizacao: formData.arquivoAutorizacao,
+                arquivoConsulta: formData.arquivoConsulta,
+                arquivoNotificacao: formData.arquivoNotificacao
             };
 
             const response = await fetch('/api/requests', {
@@ -230,19 +267,60 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
         ])
     );
 
-    const renderFileUpload = (label: string, accept: string) => (
+    const renderFileUpload = (label: string, accept: string, name: string) => (
         <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">{label} <span className="text-red-500">*</span></label>
             <div className="flex w-full border border-gray-300 rounded-md overflow-hidden bg-white">
                 <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm font-medium transition-colors">
                     Escolher Arquivo
-                    <input type="file" className="hidden" accept={accept} />
+                    <input 
+                        type="file" 
+                        className="hidden" 
+                        accept={accept} 
+                        onChange={(e) => {
+                            // Mocking file upload by setting a fake URL
+                            if (e.target.files && e.target.files[0]) {
+                                setFormData(prev => ({ ...prev, [name]: `https://fake-url.com/${e.target.files![0].name}` }));
+                            }
+                        }}
+                    />
                 </label>
-                <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">Nenhum arquivo escolhido</span>
+                <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">
+                    {formData[name as keyof typeof formData] ? 'Arquivo selecionado' : 'Nenhum arquivo escolhido'}
+                </span>
             </div>
             <div className="mt-1">
                 <a href="#" className="text-xs text-blue-400 hover:text-blue-600 hover:underline">*Link para download do modelo do arquivo disponibilizado</a>
             </div>
+        </div>
+    );
+
+    const renderNovoTerrenoFields = () => (
+        <div className="space-y-6 bg-gray-50 p-6 rounded-md border border-gray-200">
+             {renderRadioGroup('Existe Lei de Doação publicada?', 'existeLeiDoacao', [
+                 { label: 'Sim', value: 'Sim' },
+                 { label: 'Não', value: 'Nao' }
+             ])}
+
+             {(formData.existeLeiDoacao === 'Sim' || formData.existeLeiDoacao === 'Nao') && (
+                 <div className="space-y-6 pt-4 border-t border-gray-200">
+                     {formData.existeLeiDoacao === 'Sim' && renderFileUpload('Anexar Arquivo', '.pdf', 'arquivoLeiDoacao')}
+                     
+                     {renderFileUpload('Certidão de Registro (Matrícula)', '.pdf', 'certidaoMatricula')}
+                     {renderFileUpload('IPTU atualizado', '.pdf', 'iptuAtualizado')}
+                     {renderFileUpload('Certidão Negativa de Débitos do terreno', '.pdf', 'certidaoNegativaDebitos')}
+                     
+                     {renderRadioGroup('Entidade doadora', 'entidadeDoadora', [
+                         { label: 'Privada', value: 'Privada' },
+                         { label: 'Pública', value: 'Publica' }
+                     ])}
+
+                     {renderFileUpload('Certidão Negativa de Tributos Municipais da doadora', '.pdf', 'certidaoNegativaTributosMunicipais')}
+                     {renderFileUpload('Certidão de Débitos Trabalhistas da Entidade doadora', '.pdf', 'certidaoDebitosTrabalhistas')}
+                     {renderFileUpload('Certidão de Tributos Federais da Entidade doadora', '.pdf', 'certidaoTributosFederais')}
+                     {renderFileUpload('Documentos e Licenças emitidas com os órgãos ambientais competentes', '.pdf', 'licencasAmbientais')}
+                 </div>
+             )}
         </div>
     );
 
@@ -281,9 +359,10 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-gray-600"
                             >
                                 <option value="">Selecione uma opção</option>
-                                <option value="Nova Obra">Nova Obra</option>
-                                <option value="Reforma">Reforma</option>
-                                <option value="Ampliação">Ampliação</option>
+                                <option value="Construção de nova unidade">Construção de nova unidade</option>
+                                <option value="Construção de nova edificação em unidade existente">Construção de nova edificação em unidade existente</option>
+                                <option value="Alteração da vocação de unidade existente">Alteração da vocação de unidade existente</option>
+                                <option value="Ampliação de edificação existente">Ampliação de edificação existente</option>
                             </select>
                         </div>
 
@@ -506,12 +585,14 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
 
                         {renderFileUpload(
                             "Upload de Arquivo",
-                            ".pdf, .doc, .docx"
+                            ".pdf, .doc, .docx",
+                            "arquivoUpload"
                         )}
 
                         {renderFileUpload(
                             "Estudo de Mercado",
-                            ".pdf, .doc, .docx"
+                            ".pdf, .doc, .docx",
+                            "estudoMercado"
                         )}
 
                         <div>
@@ -535,11 +616,34 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                             { label: 'Área de terreno disponível na unidade', value: 'Disponivel' },
                             { label: 'Novo terreno doado', value: 'Novo' }
                         ])}
-                        {renderYesNoRadioGroup('A demanda possui algum projeto de construção elaborado ou contratado?', 'possuiProjeto')}
-                        {renderYesNoRadioGroup('A demanda possui algum laudo, relatório técnico ou documento complementar?', 'possuiLaudo')}
-                        {renderYesNoRadioGroup('A Unidade tem autorização da Prefeitura para realizar a demanda?', 'temAutorizacao')}
-                        {renderYesNoRadioGroup('A Unidade realizou consulta na Prefeitura quanto ao tempo médio de aprovação do processo?', 'realizouConsulta')}
-                        {renderYesNoRadioGroup('Houve alguma notificação de órgão público para a realização da demanda?', 'houveNotificacao')}
+
+                        {/* Condition for "Novo terreno doado" */}
+                        {formData.localObra === 'Novo' && renderNovoTerrenoFields()}
+
+                        <div className="space-y-4">
+                            {renderYesNoRadioGroup('A demanda possui algum projeto de construção elaborado ou contratado?', 'possuiProjeto')}
+                            {formData.possuiProjeto === 'Sim' && renderFileUpload('Anexar Arquivo do Projeto', '.pdf, .doc, .docx', 'arquivoProjeto')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderYesNoRadioGroup('A demanda possui algum laudo, relatório técnico ou documento complementar?', 'possuiLaudo')}
+                            {formData.possuiLaudo === 'Sim' && renderFileUpload('Anexar Arquivo do Laudo / Documento Complementar', '.pdf, .doc, .docx', 'arquivoLaudo')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderYesNoRadioGroup('A Unidade tem autorização da Prefeitura para realizar a demanda?', 'temAutorizacao')}
+                            {formData.temAutorizacao === 'Sim' && renderFileUpload('Anexar Arquivo da Autorização', '.pdf, .doc, .docx', 'arquivoAutorizacao')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderYesNoRadioGroup('A Unidade realizou consulta na Prefeitura quanto ao tempo médio de aprovação do processo?', 'realizouConsulta')}
+                            {formData.realizouConsulta === 'Sim' && renderFileUpload('Anexar Arquivo da Consulta', '.pdf, .doc, .docx', 'arquivoConsulta')}
+                        </div>
+
+                        <div className="space-y-4">
+                            {renderYesNoRadioGroup('Houve alguma notificação de órgão público para a realização da demanda?', 'houveNotificacao')}
+                            {formData.houveNotificacao === 'Sim' && renderFileUpload('Anexar Arquivo da Notificação', '.pdf, .doc, .docx', 'arquivoNotificacao')}
+                        </div>
                     </div>
 
                     {/* Action Buttons */}
