@@ -345,7 +345,17 @@ const App: React.FC = () => {
                 }}
             />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                {currentView === 'home' && <HomeScreen setCurrentView={setCurrentView} />}
+                {currentView === 'home' && (
+                    <HomeScreen 
+                        setCurrentView={setCurrentView}
+                        userPermissions={userPermissions}
+                        selectedProfile={selectedProfile}
+                        isApproverStrategic={currentUser?.isApproverStrategic || currentUser?.is_approver_strategic}
+                        isApproverSede={currentUser?.isApproverSede || currentUser?.is_approver_sede}
+                        isRequesterStrategic={currentUser?.isRequesterStrategic || currentUser?.is_requester_strategic}
+                        isRequesterSede={currentUser?.isRequesterSede || currentUser?.is_requester_sede}
+                    />
+                )}
                 {isSolicitacoesView && (
                     <>
                         <Header

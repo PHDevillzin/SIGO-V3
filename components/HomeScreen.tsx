@@ -15,6 +15,12 @@ import {
 
 interface HomeScreenProps {
   setCurrentView: (view: string) => void;
+  userPermissions: string[];
+  selectedProfile: string;
+  isApproverStrategic?: boolean;
+  isApproverSede?: boolean;
+  isRequesterStrategic?: boolean;
+  isRequesterSede?: boolean;
 }
 
 interface ActionCardProps {
@@ -55,8 +61,89 @@ const ActionCard: React.FC<ActionCardProps> = ({ title, description, buttonText,
     );
 };
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ 
+    setCurrentView, 
+    userPermissions, 
+    selectedProfile, 
+    isApproverStrategic, 
+    isApproverSede, 
+    isRequesterStrategic, 
+    isRequesterSede 
+}) => {
     
+    // Helper to check permission (Copied from Sidebar.tsx)
+    const hasPermission = (permissionKey: string) => {
+        // BLOCK: "Gestor (GSO)" cannot see Reclassification (Explicit Restriction)
+        if (selectedProfile === 'Gestor (GSO)' && permissionKey === 'solicitacoes_reclassificacao') {
+            return false;
+        }
+
+        // 1. Check for Admin wildcard
+        if (userPermissions.includes('*') || userPermissions.includes('all')) return true;
+
+        // Rules for 'Gestor Local' and 'Unidade Solicitante'
+        const isRestrictedProfile = ['Gestor Local', 'Unidade Solicitante'].includes(selectedProfile);
+
+        // Rule 1: Approval Screen
+        if (permissionKey === 'aprovacao') {
+            if (isApproverStrategic || isApproverSede) return true;
+            if (isRestrictedProfile) return false;
+        }
+
+        // Rule 2: Open Request Screens 
+        const hasGranularRequesterFlags = isRequesterStrategic || isRequesterSede;
+
+        if (hasGranularRequesterFlags) {
+            if (permissionKey === 'nova_estrategica') return !!isRequesterStrategic;
+            if (permissionKey === 'nova_sede') return !!isRequesterSede;
+        } else {
+             if (permissionKey === 'nova_estrategica' && isRequesterStrategic) return true;
+             if (permissionKey === 'nova_sede' && isRequesterSede) return true;
+        }
+
+        if (isRestrictedProfile) {
+            if (permissionKey === 'nova_estrategica' || permissionKey === 'nova_sede') return false; 
+            if (permissionKey === 'nova_unidade') return true; 
+        }
+
+        const permissionMap: Record<string, string[]> = {
+          'home': ['Home'],
+          'solicitacoes': ['Menu Solicitações:Gerais', 'Menu Solicitações:Gerais (PDF)', 'Menu Solicitações:Gerais (PDF + Ciência)'],
+          'solicitacoes_reclassificacao': ['Menu Solicitações:Reclassificação'],
+          'aprovacao': ['Menu Solicitações:Aprovação'],
+          'manutencao': ['Menu Solicitações:Manutenção'],
+          'nova_estrategica': ['Abrir Solicitações:Estratégica'],
+          'nova_sede': ['Abrir Solicitações:Sede'],
+          'nova_unidade': ['Abrir Solicitações:Unidade'],
+          'gerenciamento': ['Gerenciamento:Planejamento', 'Gerenciamento:Plurianual'],
+          'planejamento': ['Gerenciamento:Planejamento'],
+          'plurianual': ['Gerenciamento:Plurianual'],
+          'configuracoes': ['Configurações:Gestão de acesso', 'Configurações:Unidades'],
+          'gestao_acesso': ['Configurações:Gestão de acesso'],
+          'perfil_acesso': ['Configurações:Perfil Acesso'],
+          'gerenciador_arquivos': ['Configurações:Arquivos'],
+          'painel_criticidade': ['Configurações:Criticidade'],
+          'avisos_globais': ['Configurações:Gerenciamento de Avisos'],
+          'notificacoes_requisitos': ['Configurações:Notificações'],
+          'cadastro_periodos': ['Configurações:Periodo de solicitação'],
+          'cadastro_tipo_local': ['Configurações:Tipolocal'],
+          'tipologias': ['Configurações:Tipologia'],
+          'cadastro_unidades': ['Configurações:Unidades'],
+          'politica_investimento': ['Configurações:PoliticaInvestimento'] // Assuming permission exists or defaults
+        };
+
+        const requiredPermissions = permissionMap[permissionKey];
+
+        if (requiredPermissions) {
+          return requiredPermissions.some(p => userPermissions.includes(p));
+        }
+
+        // Fallback checks
+        if (permissionKey === 'politica_investimento') return true; // Default visible if not restricted
+
+        return userPermissions.includes(permissionKey);
+    };
+
     const actions = [
         {
             title: 'Nova Solicitação Sede',
@@ -65,16 +152,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
             buttonColor: 'blue',
             icon: PlusIcon,
             buttonIcon: PlusIcon,
-            view: 'nova_sede'
+            view: 'nova_sede',
+            permission: 'nova_sede'
         },
         {
-            title: 'Nova Solicitação',
-            description: 'Crie uma nova solicitação de demanda',
+            title: 'Nova Solicitação Estratégica',
+            description: 'Crie uma nova solicitação de demanda estratégica',
             buttonText: 'Abrir Solicitação Estratégica',
             buttonColor: 'blue',
             icon: PlusIcon,
             buttonIcon: PlusIcon,
-            view: 'nova_estrategica'
+            view: 'nova_estrategica',
+            permission: 'nova_estrategica'
         },
         {
             title: 'Solicitações',
@@ -83,7 +172,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
             buttonColor: 'gray',
             icon: ListIcon,
             buttonIcon: EyeIcon,
-            view: 'solicitacoes'
+            view: 'solicitacoes',
+            permission: 'solicitacoes'
         },
         {
             title: 'Solicitações para Reclassificação',
@@ -92,7 +182,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
             buttonColor: 'green',
             icon: CheckCircleIcon,
             buttonIcon: CheckCircleIcon,
-            view: 'solicitacoes_reclassificacao'
+            view: 'solicitacoes_reclassificacao',
+            permission: 'solicitacoes_reclassificacao'
         },
         {
             title: 'Solicitações para Ciência',
@@ -101,7 +192,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
             buttonColor: 'gray',
             icon: InformationCircleIcon,
             buttonIcon: InformationCircleIcon,
-            view: 'ciencia'
+            view: 'ciencia',
+            permission: 'solicitacoes' // Reusing general view permission or map to specific
         },
         {
             title: 'Solicitações para Aprovação',
@@ -110,7 +202,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
             buttonColor: 'green',
             icon: CheckCircleIcon,
             buttonIcon: CheckCircleIcon,
-            view: 'aprovacao'
+            view: 'aprovacao',
+            permission: 'aprovacao'
         },
          {
             title: 'Tipologias',
@@ -119,7 +212,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
             buttonColor: 'gray',
             icon: InformationCircleIcon,
             buttonIcon: InformationCircleIcon,
-            view: 'tipologias'
+            view: 'tipologias',
+            permission: 'tipologias'
         },
          {
             title: 'Planejamento',
@@ -128,7 +222,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
             buttonColor: 'gray',
             icon: ShareIcon,
             buttonIcon: EyeIcon,
-            view: 'planejamento'
+            view: 'planejamento',
+            permission: 'planejamento'
         },
          {
             title: 'Plurianual',
@@ -137,7 +232,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
             buttonColor: 'gray',
             icon: ClipboardDocumentListIcon,
             buttonIcon: EyeIcon,
-            view: 'plurianual'
+            view: 'plurianual',
+            permission: 'plurianual'
         },
         {
             title: 'Política de Investimento',
@@ -146,9 +242,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
             buttonColor: 'gray',
             icon: BanknotesIcon,
             buttonIcon: EyeIcon,
-            view: 'politica_investimento'
+            view: 'politica_investimento',
+            permission: 'politica_investimento'
         }
     ];
+
+    const visibleActions = actions.filter(action => hasPermission(action.permission));
 
     return (
         <div className="space-y-6">
@@ -158,7 +257,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setCurrentView }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {actions.map((action, index) => (
+                {visibleActions.map((action, index) => (
                     <ActionCard 
                         key={index}
                         title={action.title}
