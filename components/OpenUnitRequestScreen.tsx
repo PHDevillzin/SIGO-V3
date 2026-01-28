@@ -87,48 +87,32 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
     });
 
     // Filter Units based on Profile
-    // Filter Units based on Profile and Selected Entity
+    // Filter Units
     const filteredUnits = React.useMemo(() => {
-        // Check identifying Corporate profile (not restricted to SESI/SENAI)
-        const isCorporate = !['SESI', 'SENAI'].includes(userCategory);
-
-        // If Corporate, show ALL units regardless of Entity or Linked Units
-        if (isCorporate) {
-            return units.sort((a, b) => (a.unidadeResumida || a.unidade).localeCompare(b.unidadeResumida || b.unidade));
-        }
-
-        // For Specific Profiles (SESI/SENAI)
         let filtered = units;
+
+        // 1. Filter by Entity
+        // If formData.entidade is selected, filter by it.
+        // If not selected, and user is NOT Corporate (is restricted), filter by userCategory.
+        const isCorporate = !['SESI', 'SENAI'].includes(userCategory);
         
-        // 1. Filter by Entity (Form selection or User Category)
         if (formData.entidade) {
             filtered = filtered.filter(u => u.entidade === formData.entidade);
-        } else if (userCategory) {
+        } else if (!isCorporate && userCategory) {
              filtered = filtered.filter(u => u.entidade === userCategory);
         }
 
-        // 2. Filter by Access Profile / Linked Units
+        // 2. Filter by Linked Units (Prioritized)
         if (userLinkedUnits && userLinkedUnits.length > 0) {
-             const userProfileNames = profiles
-                .filter(p => currentUser.sigoProfiles?.includes(p.id))
-                .map(p => p.name);
-             
-             // If Admin, show all (subject to Entity filter)
-             const isAdmin = userProfileNames.includes('Administrador');
-             
-             if (!isAdmin) {
-                 filtered = filtered.filter(u => 
-                     userLinkedUnits.includes(u.unidadeResumida) || 
-                     userLinkedUnits.includes(u.unidade)
-                 );
-             }
+             filtered = filtered.filter(u => 
+                 userLinkedUnits.includes(u.unidadeResumida) || 
+                 userLinkedUnits.includes(u.unidade)
+             );
         }
         
         return filtered.sort((a, b) => (a.unidadeResumida || a.unidade).localeCompare(b.unidadeResumida || b.unidade));
-    }, [units, formData.entidade, userLinkedUnits, currentUser, profiles, userCategory]);
+    }, [units, formData.entidade, userLinkedUnits, userCategory]);
 
-    // Mock data for auto-filling Local and Atividade
-    // TODO: Use real data from Unit object if available
     // Mock data for auto-filling Local and Atividade
     // TODO: Use real data from Unit object if available
     useEffect(() => {
