@@ -5,11 +5,11 @@ import { XMarkIcon, CheckIcon } from './Icons';
 interface AssignAreaModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (area: string) => void;
+    onSave: (areas: string[]) => void;
 }
 
 const AssignAreaModal: React.FC<AssignAreaModalProps> = ({ isOpen, onClose, onSave }) => {
-    const [selectedArea, setSelectedArea] = useState('');
+    const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
 
     const areas = [
         'GSO',
@@ -22,10 +22,18 @@ const AssignAreaModal: React.FC<AssignAreaModalProps> = ({ isOpen, onClose, onSa
         'Outros'
     ];
 
+    const toggleArea = (area: string) => {
+        setSelectedAreas(prev => 
+            prev.includes(area) 
+                ? prev.filter(a => a !== area) 
+                : [...prev, area]
+        );
+    };
+
     const handleSave = () => {
-        if (selectedArea) {
-            onSave(selectedArea);
-            setSelectedArea('');
+        if (selectedAreas.length > 0) {
+            onSave(selectedAreas as any); // Type cast until we update parent prop type
+            setSelectedAreas([]);
         }
     };
 
@@ -35,23 +43,26 @@ const AssignAreaModal: React.FC<AssignAreaModalProps> = ({ isOpen, onClose, onSa
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[70] flex justify-center items-center p-4">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
                 <div className="flex justify-between items-center p-4 border-b border-gray-200">
-                    <h3 className="text-lg font-bold text-gray-800">Indicar Área Fim</h3>
+                    <h3 className="text-lg font-bold text-gray-800">Indicar Áreas para Manifestação</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <XMarkIcon className="w-5 h-5" />
                     </button>
                 </div>
                 <div className="p-6">
-                    <p className="mb-4 text-sm text-gray-600">Selecione a área responsável para validação desta demanda:</p>
-                    <select
-                        value={selectedArea}
-                        onChange={(e) => setSelectedArea(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 mb-6"
-                    >
-                        <option value="">Selecione uma área...</option>
+                    <p className="mb-4 text-sm text-gray-600">Selecione as áreas responsáveis para manifestação desta demanda:</p>
+                    <div className="space-y-2 mb-6 max-h-60 overflow-y-auto">
                         {areas.map(area => (
-                            <option key={area} value={area}>{area}</option>
+                            <label key={area} className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedAreas.includes(area)}
+                                    onChange={() => toggleArea(area)}
+                                    className="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
+                                />
+                                <span className="text-gray-700">{area}</span>
+                            </label>
                         ))}
-                    </select>
+                    </div>
                     <div className="flex justify-end space-x-3">
                         <button
                             onClick={onClose}
@@ -61,7 +72,7 @@ const AssignAreaModal: React.FC<AssignAreaModalProps> = ({ isOpen, onClose, onSa
                         </button>
                         <button
                             onClick={handleSave}
-                            disabled={!selectedArea}
+                            disabled={selectedAreas.length === 0}
                             className="px-4 py-2 bg-[#0EA5E9] text-white rounded-md hover:bg-sky-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                         >
                             <CheckIcon className="w-4 h-4 mr-2" />

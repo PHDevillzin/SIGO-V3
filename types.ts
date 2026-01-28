@@ -8,6 +8,13 @@ export enum Criticality {
   MINIMA = 'Mínima',
 }
 
+export interface Manifestation {
+  area: string;
+  text: string;
+  user: string;
+  date: string;
+}
+
 export interface Request {
   id: number;
   criticality: Criticality;
@@ -15,6 +22,7 @@ export interface Request {
   description: string;
   status: string;
   currentLocation: string;
+  gestorLocal?: string;
   expectedStartDate: string;
   hasInfo: boolean;
   expectedValue: string;
@@ -30,8 +38,7 @@ export interface Request {
   inicioObra?: string;
   saldoObraPrazo?: number;
   saldoObraValor?: string;
-  // New field for Approval view
-  gestorLocal?: string;
+
   // New creation fields
   solicitante?: string;
   gerencia?: string;
@@ -51,7 +58,7 @@ export interface Request {
   realizouConsulta?: string;
   houveNotificacao?: string;
   referencia?: string;
-  areaResponsavel?: string;
+  areaResponsavel?: string; // Kept for backward compat or single select fallback
   areasEnvolvidas?: string;
   programaNecessidades?: string;
   instalacoesSesiSenai?: string;
@@ -83,6 +90,10 @@ export interface Request {
   // Sede Request Files
   arquivoPlantaBaixa?: string; // URL
   arquivoFotos?: string; // URL
+  
+  // Manifestation Workflow
+  manifestationTargets?: string[]; // Areas selected for manifestation
+  manifestations?: Manifestation[]; // Collected manifestations
 }
 
 export interface User {

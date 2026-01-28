@@ -130,5 +130,7 @@ CREATE TABLE IF NOT EXISTS requests (
     problemas_nao_atendida VARCHAR(255),
     prazo_acao VARCHAR(50),
     probabilidade_evolucao VARCHAR(50),
-    observacao TEXT
+    observacao TEXT,
+    manifestation_targets TEXT, -- JSON Array
+    manifestations TEXT -- JSON Array
 );

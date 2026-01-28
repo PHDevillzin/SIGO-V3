@@ -63,7 +63,9 @@ function mapToDb(body: any) {
         problemas_nao_atendida: body.problemasNaoAtendida,
         prazo_acao: body.prazoAcao,
         probabilidade_evolucao: body.probabilidadeEvolucao,
-        observacao: body.observacao
+        observacao: body.observacao,
+        manifestation_targets: body.manifestationTargets ? JSON.stringify(body.manifestationTargets) : null,
+        manifestations: body.manifestations ? JSON.stringify(body.manifestations) : null
     };
 }
 
@@ -122,7 +124,9 @@ function mapFromDb(row: any) {
         problemasNaoAtendida: row.problemas_nao_atendida || '',
         prazoAcao: row.prazo_acao || '',
         probabilidadeEvolucao: row.probabilidade_evolucao || '',
-        observacao: row.observacao || ''
+        observacao: row.observacao || '',
+        manifestationTargets: row.manifestation_targets ? (typeof row.manifestation_targets === 'string' ? JSON.parse(row.manifestation_targets) : row.manifestation_targets) : [],
+        manifestations: row.manifestations ? (typeof row.manifestations === 'string' ? JSON.parse(row.manifestations) : row.manifestations) : []
     };
 }
 

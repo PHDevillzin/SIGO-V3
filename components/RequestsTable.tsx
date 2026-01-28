@@ -14,6 +14,8 @@ import EditRequestModal from './EditRequestModal';
 import MaintenanceEditModal from './MaintenanceEditModal';
 import AssignAreaModal from './AssignAreaModal';
 import AssignUnitModal from './AssignUnitModal';
+import ManifestationModal from './ManifestationModal';
+import type { Manifestation } from '../types';
 
 export const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Cubatão (Par...', description: 'reforma do balneá...', status: 'Análise da Solicit...', currentLocation: 'Gestão Local', gestorLocal: 'MARIO SERGIO ALVES QUAR...', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P', situacaoProjeto: 'Em Andamento', situacaoObra: 'Não Iniciada', inicioObra: '05/01/2030', saldoObraPrazo: 12, saldoObraValor: 'R$ 3.500.000,00' },
@@ -101,6 +103,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
     const [isAssignUnitModalOpen, setIsAssignUnitModalOpen] = useState(false);
     const [requestToAssignUnit, setRequestToAssignUnit] = useState<Request | null>(null);
+
+    const [isManifestationModalOpen, setIsManifestationModalOpen] = useState(false);
+    const [requestToManifest, setRequestToManifest] = useState<Request | null>(null);
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [requestToDelete, setRequestToDelete] = useState<Request | null>(null);
@@ -275,36 +280,48 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         handleUpdateRequestStatus(request, action);
     };
 
-    const handleSaveAssignArea = (area: string) => {
+    const handleSaveAssignArea = (areas: string[]) => {
         if (!requestToAssignArea) return;
 
         // Determine next status based on Entity
         // SENAI -> Valida Entidade -> Area Fim Valida (Aguardando Validação Área Fim)
-        // SESI -> Valida Entidade -> Area fim visualiza (Automatic?) -> Envia para validação da Alta ADM (Aguardando Validação Alta ADM)
+        // SESI -> Valida Entidade -> Indica Areas para Manifestação -> Aguardando Validação Alta ADM (BUT pending manifestation)
         
         let nextStatus = '';
+        let additionalUpdates: Partial<Request> = {};
+
         if (requestToAssignArea.entidade === 'SESI') {
+            // Updated Flow:
+            // Gestor Local approves -> Indicates Areas (Manifestation Targets)
+            // Status goes to "Aguardando Validação Alta ADM" (as per original flow), 
+            // BUT it also becomes visible in "Solicitações manifestação/ciência" UNTIL all manifestations are done.
+            // We store the targets.
+            
             nextStatus = 'Aguardando Validação Alta ADM';
+            additionalUpdates = {
+                manifestationTargets: areas,
+                manifestations: [] // Initialize empty
+            };
         } else {
-            // Default SENAI or others
+            // Default SENAI or others - Logic remains single area (primary responsibility)
+            // For SENAI, usually we pick one responsible area.
+            // If the modal now returns an array, we take the first one?
+            // "AssignAreaModal" is now generic for multiple. 
+            // If SENAI flow only supports one, we might assume the user selects one, or we take the first.
+            // Or we assume for SENAI "Validação Àrea Fim" only needs one.
             nextStatus = 'Aguardando Validação Área Fim';
+            additionalUpdates = {
+                areaResponsavel: areas[0] // Take the first as the responsible one
+            };
         }
 
-        handleUpdateRequestStatus(requestToAssignArea, nextStatus, { areaResponsavel: area });
+        handleUpdateRequestStatus(requestToAssignArea, nextStatus, additionalUpdates);
         setIsAssignAreaModalOpen(false);
         setRequestToAssignArea(null);
     };
 
     const handleSaveAssignUnit = (unit: Unit) => {
         if (!requestToAssignUnit) return;
-
-        // Strategic: Gestor Área Fim -> Indica Gestão Local -> Gestão Local Valida
-        // Update Unit, Gestor Local (Responsavel), and Status
-        // Assumes Unit has 'responsavelRA' or a generic manager field?
-        // Using 'responsavelRA' (Responsável Regional Administrativo) or 'gerenteRegional'?
-        // The type definition has 'unidade', 'gerenteRegional', etc.
-        // I will use 'gerenteRegional' or fallback to unit name as manager placeholder for now if user specific field isn't clear.
-        // Actually, db schema might have gestor_local column. I'll put the name there.
 
         const newGestor = unit.gerenteRegional || unit.responsavelRA || 'Gestor da Unidade';
 
@@ -316,6 +333,25 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         
         setIsAssignUnitModalOpen(false);
         setRequestToAssignUnit(null);
+    };
+
+    const handleOpenManifestation = (request: Request) => {
+        setRequestToManifest(request);
+        setIsManifestationModalOpen(true);
+    };
+
+    const handleSaveManifestation = (manifestations: Manifestation[]) => {
+        if (!requestToManifest) return;
+
+        // Update the request with the new manifestations
+        // If all targets have text, we treat it as done?
+        // Requirement: "Após todos se manifestarem a demanda some da lista... e continua aparecendo para aprovação da alta administração"
+        
+        // We just update the 'manifestations' field. The filter logic in useMemo will handle visibility.
+        
+        handleUpdateRequestStatus(requestToManifest, requestToManifest.status, { manifestations });
+        setIsManifestationModalOpen(false);
+        setRequestToManifest(null);
     };
 
 
@@ -352,7 +388,31 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                  const loc = request.currentLocation;
 
                  // SESI: Approved by 'Gestor Local' -> Not in 'Gestão Local'
+                 // NEW LOGIC: Show if it has manifestation targets AND not all have manifested
                  if (isSesi) {
+                     // Legacy logic: return loc !== 'Gestão Local';
+                     
+                     // New Logic: Check manifestation status
+                     if (request.manifestationTargets && request.manifestationTargets.length > 0) {
+                         const manifestCount = request.manifestations?.filter(m => m.text && m.text.trim().length > 0).length || 0;
+                         const targetCount = request.manifestationTargets.length;
+                         
+                         // Show if NOT complete
+                         if (manifestCount < targetCount) {
+                             return true;
+                         } else {
+                             // If complete, hide from Ciencia view
+                             return false;
+                         }
+                     }
+                     
+                     // Fallback for old requests without targets?
+                     // If no targets, maybe fallback to previous logic or hide?
+                     // Previous logic: "Approved by Gestor Local" -> (status 'Aguardando Validação Alta ADM')
+                     // If status is 'Aguardando Validação Alta ADM' and NO targets, do we show it here?
+                     // Constraint: "Para a manifestação... que ao ser clicado abre um modal"
+                     // If no targets, no mechanism to manifest. So maybe hide.
+                     // But let's keep the legacy safety:
                      return loc !== 'Gestão Local';
                  }
 
@@ -1026,6 +1086,15 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                     </button>
                                                 </>
                                             )}
+                                            {(isCienciaView && request.entidade === 'SESI' && request.manifestationTargets && request.manifestationTargets.length > 0) && (
+                                                <button
+                                                    onClick={() => handleOpenManifestation(request)}
+                                                    className="bg-purple-500 text-white p-2 rounded-md hover:bg-purple-600 transition-colors"
+                                                    title="Manifestação"
+                                                >
+                                                    <PencilIcon className="w-5 h-5" />
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
@@ -1137,6 +1206,13 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 onClose={() => setIsAssignUnitModalOpen(false)}
                 onSave={handleSaveAssignUnit}
                 units={units}
+            />
+            <ManifestationModal
+                isOpen={isManifestationModalOpen}
+                onClose={() => setIsManifestationModalOpen(false)}
+                onSave={handleSaveManifestation}
+                request={requestToManifest}
+                currentUser={userName || selectedProfile}
             />
         </>
     );

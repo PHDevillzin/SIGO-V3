@@ -117,6 +117,7 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
             {activeTab === 'detalhes' ? (
+                <div className="flex flex-col gap-6">
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Left Column: Form Data */}
                     <div className="flex-1 bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-fit">
@@ -199,6 +200,29 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
                             <div className="text-sm text-gray-500 italic">Nenhum anexo disponível.</div>
                         </div>
                     </div>
+                </div>
+                
+                {/* Manifestations Section */}
+                {request.manifestations && request.manifestations.length > 0 && (
+                        <div className="mt-6 border-t pt-4 w-full">
+                        <h4 className="font-bold text-gray-800 mb-4 bg-sky-50 p-2 rounded">Manifestações Realizadas</h4>
+                        <div className="space-y-4">
+                            {request.manifestations.map((m, idx) => (
+                                <div key={idx} className="bg-white border border-l-4 border-l-sky-500 border-gray-200 rounded-r-lg p-4 shadow-sm">
+                                    <div className="flex justify-between items-center mb-2 border-b pb-2">
+                                        <span className="font-bold text-sky-800 text-base">{m.area}</span>
+                                        <div className="text-xs text-gray-500 flex flex-col items-end">
+                                            <span className="font-semibold">{m.user}</span>
+                                            <span>{new Date(m.date).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                    <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">{m.text}</p>
+                                </div>
+                            ))}
+                        </div>
+                        </div>
+
+                )}
                 </div>
             ) : (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
