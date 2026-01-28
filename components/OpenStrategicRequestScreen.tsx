@@ -211,11 +211,12 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
         }
 
         try {
-            const payload = {
-                ...formData,
-                criticality: Criticality.MEDIA,
-                unit: 'Nova Unidade', // As per previous default
-                description: formData.titulo || 'Solicitação Estratégica',
+            const payload: any = {
+                priority: 'Normal',
+                requesterName: currentUser.name,
+                requesterNif: currentUser.nif,
+                unit: formData.unidade || 'Nova Unidade', 
+                description: formData.justificativa, // Using justificativa as main description
                 status: 'Aguardando Validação Gestor Área Fim',
                 currentLocation: 'GSO',
                 gestorLocal: 'GSO',
@@ -249,8 +250,32 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                 arquivoLaudo: formData.arquivoLaudo,
                 arquivoAutorizacao: formData.arquivoAutorizacao,
                 arquivoConsulta: formData.arquivoConsulta,
-                arquivoNotificacao: formData.arquivoNotificacao
+                arquivoNotificacao: formData.arquivoNotificacao,
+                
+                // Form fields
+                objetivo: formData.titulo,
+                solicitante: currentUser.name,
+                gerencia: '', // To be filled?
+                resumoServicos: formData.resumoServicos,
+                aumento: formData.aumento,
+                necessidades: formData.necessidades,
+                areaIntervencao: formData.areaIntervencao,
+                dataUtilizacao: formData.dataUtilizacao,
+                possuiProjeto: formData.possuiProjeto,
+                possuiLaudo: formData.possuiLaudo,
+                temAutorizacao: formData.temAutorizacao,
+                realizouConsulta: formData.realizouConsulta,
+                houveNotificacao: formData.houveNotificacao,
+                referencia: formData.referencia,
+                areasEnvolvidas: formData.areasEnvolvidas,
+                observacao: ''
             };
+
+            // Inject extra info for New Unit
+            if (formData.referencia === 'Construção de nova unidade') {
+                 const extraInfo = `[Nova Unidade] Cidade: ${formData.cidade}, Atividade Principal: ${formData.atividadePrincipal}`;
+                 payload.observacao = extraInfo;
+            }
 
             const response = await fetch('/api/requests', {
                 method: 'POST',
