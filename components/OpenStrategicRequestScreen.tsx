@@ -15,6 +15,21 @@ interface OpenStrategicRequestScreenProps {
     userLinkedUnits: string[];
 }
 
+const SENAI_AREAS = [
+    'Gerência de Educação (GED)',
+    'Gerência de Infraestrutura e Suprimentos (GIS)',
+    'Gerência de Inovação e Tecnologia (GIT)',
+    'Gerência de Planejamento e Avaliação (GPA)',
+    'Gerência de Relações com o Mercado (GRM)'
+];
+
+const SESI_AREAS = [
+    'Gerência de Esporte e Lazer',
+    'Gerência de Saúde e Segurança na Indústria',
+    'Gerência Executiva da Cultura',
+    'Gerência Executiva da Educação'
+];
+
 const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({ onClose, onSave, userCategory, currentUser, profiles, units, userLinkedUnits }) => {
     const [showOrientation, setShowOrientation] = useState(true);
     const [alertMessage, setAlertMessage] = useState('');
@@ -164,6 +179,21 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
     const handleRadioChange = (name: string, value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
+
+    const toggleAreaEnvolvida = (area: string) => {
+        setFormData(prev => {
+            const currentAreas = prev.areasEnvolvidas ? prev.areasEnvolvidas.split(',').map(s => s.trim()).filter(Boolean) : [];
+            let newAreas;
+            if (currentAreas.includes(area)) {
+                newAreas = currentAreas.filter(a => a !== area);
+            } else {
+                newAreas = [...currentAreas, area];
+            }
+            return { ...prev, areasEnvolvidas: newAreas.join(', ') };
+        });
+    };
+
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -474,14 +504,20 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Áreas Fim a serem envolvidas: <span className="text-red-500">*</span></label>
-                            <input
-                                type="text"
-                                name="areasEnvolvidas"
-                                value={formData.areasEnvolvidas}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            />
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Áreas Fim a serem envolvidas: <span className="text-red-500">*</span></label>
+                            <div className="space-y-2 border border-gray-200 p-4 rounded-md bg-gray-50">
+                                {(formData.entidade === 'SESI' ? SESI_AREAS : (formData.entidade === 'SENAI' ? SENAI_AREAS : [...SESI_AREAS, ...SENAI_AREAS])).map(area => (
+                                    <label key={area} className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.areasEnvolvidas.includes(area)}
+                                            onChange={() => toggleAreaEnvolvida(area)}
+                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                        />
+                                        <span className="text-sm text-gray-600">{area}</span>
+                                    </label>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
