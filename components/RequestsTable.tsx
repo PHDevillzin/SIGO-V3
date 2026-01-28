@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Request, PlanningData, Unit } from '../types';
+import type { Request, PlanningData, Unit, User } from '../types';
 import { Criticality } from '../types';
 import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon, PaperAirplaneIcon, CheckCircleIcon, XMarkIcon, CheckIcon, ArrowDownTrayIcon, TrashIcon } from './Icons';
 import AdvancedFilters, { AdvancedFiltersState } from './AdvancedFilters';
@@ -70,6 +70,7 @@ interface RequestsTableProps {
     setRequests: React.Dispatch<React.SetStateAction<Request[]>>;
     userName?: string;
     units?: Unit[];
+    currentUser?: User; // Added currentUser
 }
 
 type Toast = {
@@ -78,7 +79,7 @@ type Toast = {
     isVisible: boolean;
 };
 
-const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentView, requests, setRequests, userName, units = [] }) => {
+const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentView, requests, setRequests, userName, units = [], currentUser }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isReclassificationModalOpen, setIsReclassificationModalOpen] = useState(false);
     const [selectedRequestForReclassification, setSelectedRequestForReclassification] = useState<Request | null>(null);
@@ -212,44 +213,6 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             return;
         }
 
-        if (currentStatus === 'Aguardando Validação Gestor Local') {
-            // Strategic Flow Step 2: Gestor Local Aprova -> Alta ADM
-            // Or Operational Flow: Gestor Local -> Area Fim
-            // How to distinguish? Entity/Category?
-            // Operational (SESI/SENAI): 'Aguardando Validação Gestor Local'
-            // Strategic: 'Aguardando Validação Gestão Local' (NOTE: Slight difference in wording in my plan vs diagram vs string)
-            
-            // My previous step for Operational used 'Aguardando Validação Gestor Local'.
-            // The Strategic diagram says "Gestão local visualiza" -> Status?
-            // "Indica Gestão Local" -> Transition to "Aguardando Validação Gestão Local"?
-            
-            // Let's stick to the strings I used in handleSaveAssignUnit for Operational:
-            // "Aguardando Validação Área Fim" (SENAI) or "Aguardando Validação Alta ADM" (SESI).
-            
-            // For Strategic:
-            // "Aguardando Validação Gestor Área Fim" -> (Assign Unit) -> "Aguardando Validação Gestão Local"
-             
-             // Wait, allow for the newly assigned Unit's Manager to validate.
-             // If status is "Aguardando Validação Gestão Local", approval goes to "Aguardando Validação Alta ADM".
-             
-             // BUT, what if the status string is different?
-             // Let's ensure handleSaveAssignUnit sets "Aguardando Validação Gestão Local" for Strategic.
-             
-             // EXISTING LOGIC for 'Aguardando Validação Gestor Local' (Operational) requires Assign Area.
-             // So if status is exactly 'Aguardando Validação Gestor Local', it hits ONLY Operational block.
-             // If Strategic uses 'Aguardando Validação Gestão Local' (different string), I need a new block.
-             
-             // Operational: 'Aguardando Validação Gestor Local'
-             // Strategic: 'Aguardando Validação Gestão Local'
-             
-             // Check my Plan: "Aguardando Validação Gestão Local"
-             // Check my Code for Operational: 
-             // "if (currentStatus === 'Aguardando Validação Gestor Local') { setRequestToAssignArea(request); ... }"
-             
-             // Correct. The strings are different.
-             return;
-        }
-
         if (currentStatus === 'Aguardando Validação Gestão Local') {
              // Strategic Flow
              handleUpdateRequestStatus(request, 'Aguardando Validação Alta ADM');
@@ -370,16 +333,50 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const filteredRequests = useMemo(() => {
         let sourceRequests = requests;
 
-        // Filter by View Mode
+        // 1. First, Apply Visibility/Security Filter
+        // If user is Admin, GSO, or similar "Global" profile, they see everything (subject to other filters).
+        // If user is "Gestor Local" or "Unidade Solicitante", they see:
+        //    a) Requests linked to their units (unit in linkedUnits)
+        
+        // Define Global Profiles (that see all)
+        const globalProfiles = [
+            'Administrador do sistema', 
+            'Administração do sistema',
+            'Administrador GSO', 
+            'Planejamento e Orçamento', 
+            'Suprimentos', 
+            'Corporativo', 
+            'Diretoria',
+            'Sede'
+        ];
+
+        // We check if the *Selected Profile* has global access OR if the current user has super license.
+        const isGlobalProfile = globalProfiles.some(gp => selectedProfile.includes(gp)) || selectedProfile === 'Administrador';
+        
+        if (!isGlobalProfile && currentUser) {
+             const linkedUnits = currentUser.linkedUnits || [];
+             
+             sourceRequests = sourceRequests.filter(req => {
+                 // Match unit name against linked units. 
+                 const isLinkedUnit = linkedUnits.includes(req.unit);
+                 
+                 // Note: Requester match (isCreator) skipped as we lack unique ID on request. 
+                 // Unit-based filtering covers the "Gestor Local/Unidade" requirement.
+                 
+                 return isLinkedUnit;
+             });
+        }
+
+        // 2. Filter by View Mode
         if (isReclassificationView) {
-            sourceRequests = requests.filter(request => request.categoriaInvestimento !== 'Manutenção');
+            sourceRequests = sourceRequests.filter(request => request.categoriaInvestimento !== 'Manutenção');
         } else if (isManutencaoView) {
-            sourceRequests = requests.filter(request => request.categoriaInvestimento === 'Manutenção');
+            sourceRequests = sourceRequests.filter(request => request.categoriaInvestimento === 'Manutenção');
         } else if (isAprovacaoView) {
-            // For approval, we might want to filter by status, but for now we'll just show all non-maintenance for the sake of the prototype or filter a subset
-            sourceRequests = requests.filter(request => request.categoriaInvestimento !== 'Manutenção');
+            // For approval, sourceRequests is already filtered by Security above.
+            sourceRequests = sourceRequests.filter(request => request.categoriaInvestimento !== 'Manutenção');
         } else if (isCienciaView) {
-             sourceRequests = requests.filter(request => {
+             sourceRequests = sourceRequests.filter(request => {
                  if (request.categoriaInvestimento === 'Manutenção') return false; 
                  if (request.status === 'Concluído' || request.status === 'Recusada' || request.currentLocation === 'Planejamento') return false;
 
@@ -390,9 +387,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                  // SESI: Approved by 'Gestor Local' -> Not in 'Gestão Local'
                  // NEW LOGIC: Show if it has manifestation targets AND not all have manifested
                  if (isSesi) {
-                     // Legacy logic: return loc !== 'Gestão Local';
-                     
-                     // New Logic: Check manifestation status
+                     // Check manifestation status
                      if (request.manifestationTargets && request.manifestationTargets.length > 0) {
                          const manifestCount = request.manifestations?.filter(m => m.text && m.text.trim().length > 0).length || 0;
                          const targetCount = request.manifestationTargets.length;
@@ -406,13 +401,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                          }
                      }
                      
-                     // Fallback for old requests without targets?
-                     // If no targets, maybe fallback to previous logic or hide?
-                     // Previous logic: "Approved by Gestor Local" -> (status 'Aguardando Validação Alta ADM')
-                     // If status is 'Aguardando Validação Alta ADM' and NO targets, do we show it here?
-                     // Constraint: "Para a manifestação... que ao ser clicado abre um modal"
-                     // If no targets, no mechanism to manifest. So maybe hide.
-                     // But let's keep the legacy safety:
+                     // Fallback legacy safety:
                      return loc !== 'Gestão Local';
                  }
 

@@ -377,6 +377,7 @@ const App: React.FC = () => {
                             setRequests={setRequests}
                             userName={currentUser?.name || 'Usuário'}
                             units={units}
+                            currentUser={currentUser}
                         />
                     </>
                 )}
