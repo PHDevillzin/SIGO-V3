@@ -132,19 +132,13 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
         atividadePrincipal: ''
     });
 
-    // Filter Units based on Profile
+    // Filter Units based on Linked Units
     const filteredUnits = React.useMemo(() => {
-        const userProfileNames = profiles
-            .filter(p => currentUser.sigoProfiles?.includes(p.id))
-            .map(p => p.name);
-
-        const isRestrictedProfile = userProfileNames.includes('Gestor Local') || userProfileNames.includes('Unidade Solicitante');
-
-        if (isRestrictedProfile && userLinkedUnits.length > 0) {
+        if (userLinkedUnits.length > 0) {
              return units.filter(u => userLinkedUnits.includes(u.unidadeResumida) || userLinkedUnits.includes(u.unidade));
         }
         return units;
-    }, [units, currentUser, profiles, userLinkedUnits]);
+    }, [units, userLinkedUnits]);
 
     // Update entidade if userCategory changes or Unit selected
     useEffect(() => {
