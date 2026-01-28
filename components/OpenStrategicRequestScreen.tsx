@@ -214,6 +214,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                 status: 'Aguardando Validação Gestor Área Fim',
                 currentLocation: 'GSO',
                 gestorLocal: 'GSO',
+                solicitante: currentUser.name, // Add Creator Name for visibility filter
                 expectedStartDate: formData.inicioExecucao,
                 hasInfo: true,
                 expectedValue: formData.valorExecucao,
@@ -248,7 +249,6 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                 
                 // Form fields
                 objetivo: formData.titulo,
-                solicitante: currentUser.name,
                 gerencia: '', // To be filled?
                 resumoServicos: formData.resumoServicos,
                 aumento: formData.aumento,

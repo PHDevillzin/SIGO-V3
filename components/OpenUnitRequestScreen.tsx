@@ -170,7 +170,8 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                 description: formData.titulo,
                 status: 'Aguardando Validação Gestor Local',
                 currentLocation: 'GSO',
-                gestorLocal: 'Gestor da Unidade', // Default?
+                gestorLocal: currentUser?.name || 'Gestor da Unidade',
+                solicitante: currentUser?.name, // Add Creator Name for visibility filter
                 expectedStartDate: formData.inicioExecucao,
                 hasInfo: true,
                 expectedValue: formData.valorExecucao,
