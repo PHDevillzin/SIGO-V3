@@ -184,7 +184,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                 criticality: Criticality.MEDIA,
                 unit: formData.unidade || 'Unidade',
                 description: formData.titulo,
-                status: 'Solicitação criada',
+                status: 'Aguardando Validação Gestor Local',
                 currentLocation: 'GSO',
                 gestorLocal: 'Gestor da Unidade', // Default?
                 expectedStartDate: formData.inicioExecucao,

@@ -12,6 +12,7 @@ import RequestDetailsModal from './RequestDetailsModal';
 
 import EditRequestModal from './EditRequestModal';
 import MaintenanceEditModal from './MaintenanceEditModal';
+import AssignAreaModal from './AssignAreaModal';
 
 export const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Cubatão (Par...', description: 'reforma do balneá...', status: 'Análise da Solicit...', currentLocation: 'Gestão Local', gestorLocal: 'MARIO SERGIO ALVES QUAR...', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P', situacaoProjeto: 'Em Andamento', situacaoObra: 'Não Iniciada', inicioObra: '05/01/2030', saldoObraPrazo: 12, saldoObraValor: 'R$ 3.500.000,00' },
@@ -92,6 +93,10 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
     const [selectedRequestForMaintenance, setSelectedRequestForMaintenance] = useState<Request | null>(null);
 
+    // Workflow State
+    const [isAssignAreaModalOpen, setIsAssignAreaModalOpen] = useState(false);
+    const [requestToAssignArea, setRequestToAssignArea] = useState<Request | null>(null);
+
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [requestToDelete, setRequestToDelete] = useState<Request | null>(null);
 
@@ -134,24 +139,43 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         }
     };
 
-    const handleUpdateRequestStatus = async (request: Request, newStatus: string) => {
+    const handleUpdateRequestStatus = async (request: Request, newStatus: string, additionalUpdates: Partial<Request> = {}) => {
         try {
-            const response = await fetch('/api/update_request_status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    requestId: request.id,
-                    status: newStatus,
-                    user: userName || selectedProfile,
-                    department: selectedProfile
-                }),
-            });
+            // Use PUT /api/requests if there are additional updates or just to be safe with full updates
+            // But api/update_request_status is dedicated.
+            // If we have additionalUpdates, we MUST use PUT /api/requests
+            
+            let response;
+            if (Object.keys(additionalUpdates).length > 0) {
+                 response = await fetch('/api/requests', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: request.id,
+                        status: newStatus,
+                        ...additionalUpdates,
+                        userName: userName || selectedProfile,
+                        userDepartment: selectedProfile
+                    })
+                });
+            } else {
+                 response = await fetch('/api/update_request_status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        requestId: request.id,
+                        status: newStatus,
+                        user: userName || selectedProfile,
+                        department: selectedProfile
+                    }),
+                });
+            }
 
             if (response.ok) {
                 showToast(`Solicitação ${newStatus.toLowerCase()} com sucesso!`, 'success');
-                setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: newStatus } : r));
+                setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: newStatus, ...additionalUpdates } : r));
             } else {
                 console.error('Failed to update status');
                 showToast('Erro ao atualizar status da solicitação.', 'error');
@@ -160,6 +184,58 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             console.error('Error updating status:', error);
             showToast('Erro de conexão ao atualizar status.', 'error');
         }
+    };
+
+    const handleApprovalAction = (request: Request, action: 'Aprovado' | 'Reprovado') => {
+        const currentStatus = request.status;
+
+        if (action === 'Reprovado') {
+             handleUpdateRequestStatus(request, 'Recusada');
+             return;
+        }
+
+        // Approval Logic Flow
+        if (currentStatus === 'Aguardando Validação Gestor Local') {
+            // Require Area Fim assignment
+            setRequestToAssignArea(request);
+            setIsAssignAreaModalOpen(true);
+            return;
+        }
+
+        if (currentStatus === 'Aguardando Validação Área Fim') {
+             // SENAI flow: Area Fim approved -> Alta ADM
+             handleUpdateRequestStatus(request, 'Aguardando Validação Alta ADM');
+             return;
+        }
+
+        if (currentStatus === 'Aguardando Validação Alta ADM') {
+            // Alta ADM approved -> GSO
+            handleUpdateRequestStatus(request, 'Em Análise GSO');
+            return;
+        }
+
+        // Fallback for other statuses or legacy
+        handleUpdateRequestStatus(request, action);
+    };
+
+    const handleSaveAssignArea = (area: string) => {
+        if (!requestToAssignArea) return;
+
+        // Determine next status based on Entity
+        // SENAI -> Valida Entidade -> Area Fim Valida (Aguardando Validação Área Fim)
+        // SESI -> Valida Entidade -> Area fim visualiza (Automatic?) -> Envia para validação da Alta ADM (Aguardando Validação Alta ADM)
+        
+        let nextStatus = '';
+        if (requestToAssignArea.entidade === 'SESI') {
+            nextStatus = 'Aguardando Validação Alta ADM';
+        } else {
+            // Default SENAI or others
+            nextStatus = 'Aguardando Validação Área Fim';
+        }
+
+        handleUpdateRequestStatus(requestToAssignArea, nextStatus, { areaResponsavel: area });
+        setIsAssignAreaModalOpen(false);
+        setRequestToAssignArea(null);
     };
 
 
@@ -809,14 +885,14 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                     <button
                                                         className="bg-[#0EA5E9] text-white p-2 rounded-md hover:bg-sky-600 transition-colors"
                                                         aria-label="Aprovar"
-                                                        onClick={() => handleUpdateRequestStatus(request, 'Aprovado')}
+                                                        onClick={() => handleApprovalAction(request, 'Aprovado')}
                                                     >
                                                         <CheckIcon className="w-5 h-5" />
                                                     </button>
                                                     <button
                                                         className="bg-[#0EA5E9] text-white p-2 rounded-md hover:bg-sky-600 transition-colors"
                                                         aria-label="Reprovar"
-                                                        onClick={() => handleUpdateRequestStatus(request, 'Reprovado')}
+                                                        onClick={() => handleApprovalAction(request, 'Reprovado')}
                                                     >
                                                         <XMarkIcon className="w-5 h-5" />
                                                     </button>
@@ -970,6 +1046,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 isOpen={isRequestDetailsModalOpen}
                 onClose={() => setIsRequestDetailsModalOpen(false)}
                 request={selectedRequestForView}
+            />
+            <AssignAreaModal
+                isOpen={isAssignAreaModalOpen}
+                onClose={() => setIsAssignAreaModalOpen(false)}
+                onSave={handleSaveAssignArea}
             />
         </>
     );
