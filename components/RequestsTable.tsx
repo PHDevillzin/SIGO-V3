@@ -355,15 +355,17 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         
         if (!isGlobalProfile && currentUser) {
              const linkedUnits = currentUser.linkedUnits || [];
+             const userName = currentUser.name;
              
              sourceRequests = sourceRequests.filter(req => {
                  // Match unit name against linked units. 
                  const isLinkedUnit = linkedUnits.includes(req.unit);
                  
-                 // Note: Requester match (isCreator) skipped as we lack unique ID on request. 
-                 // Unit-based filtering covers the "Gestor Local/Unidade" requirement.
+                 // Restore Creator Visibility (using Name as NIF is not available on Request)
+                 // This ensures users see requests they created even if not linked to their unit (e.g. Nova Unidade)
+                 const isCreator = req.solicitante === userName;
                  
-                 return isLinkedUnit;
+                 return isLinkedUnit || isCreator;
              });
         }
 
