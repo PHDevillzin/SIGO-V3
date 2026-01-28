@@ -125,7 +125,11 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
         possuiLaudo: '',
         temAutorizacao: '',
         realizouConsulta: '',
-        houveNotificacao: ''
+        houveNotificacao: '',
+        
+        // Conditional New Unit Fields
+        cidade: '',
+        atividadePrincipal: ''
     });
 
     // Filter Units based on Profile
@@ -412,6 +416,67 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                                 ))}
                             </div>
                         </div>
+
+                        {/* Conditional Fields based on Reference */}
+                        {formData.referencia === 'Construção de nova unidade' ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-50 p-4 rounded-md border border-blue-100">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Cidade <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        name="cidade"
+                                        value={formData.cidade}
+                                        onChange={handleChange}
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Atividade principal da unidade <span className="text-red-500">*</span></label>
+                                    <select
+                                        name="atividadePrincipal"
+                                        value={formData.atividadePrincipal}
+                                        onChange={handleChange}
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                    >
+                                        <option value="">Selecione...</option>
+                                        <option value="CFP">CFP</option>
+                                        <option value="CT">CT</option>
+                                        <option value="Outros">Outros</option>
+                                    </select>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-md border border-gray-200">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Entidade <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        name="entidade"
+                                        value={formData.entidade}
+                                        disabled
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed font-medium"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Unidade <span className="text-red-500">*</span></label>
+                                    <select
+                                        name="unidade"
+                                        value={formData.unidade}
+                                        onChange={handleChange}
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                    >
+                                        <option value="">Selecione...</option>
+                                        {filteredUnits.length > 0 ? (
+                                            filteredUnits.map(u => (
+                                                <option key={u.id} value={u.unidadeResumida}>{u.unidadeResumida} - {u.unidade}</option>
+                                            ))
+                                        ) : (
+                                            <option value="" disabled>Nenhuma unidade disponível</option>
+                                        )}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Section 2: Text Fields */}
