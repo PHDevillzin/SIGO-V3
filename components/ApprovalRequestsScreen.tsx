@@ -10,7 +10,7 @@ import {
     Squares2x2Icon,
     CalculatorIcon 
 } from './Icons';
-import type { Request } from '../types';
+import type { Request, Unit } from '../types';
 
 interface ApprovalRequestsScreenProps {
     setCurrentView: (view: string) => void;
@@ -20,6 +20,7 @@ interface ApprovalRequestsScreenProps {
     userName?: string;
     isApproverStrategic?: boolean;
     isApproverSede?: boolean;
+    units?: Unit[];
 }
 
 const ApprovalRequestsScreen: React.FC<ApprovalRequestsScreenProps> = ({ 
@@ -29,7 +30,8 @@ const ApprovalRequestsScreen: React.FC<ApprovalRequestsScreenProps> = ({
     selectedProfile,
     userName,
     isApproverStrategic,
-    isApproverSede
+    isApproverSede,
+    units = []
 }) => {
     const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
 
@@ -169,6 +171,7 @@ const ApprovalRequestsScreen: React.FC<ApprovalRequestsScreenProps> = ({
                 requests={filteredRequests}
                 setRequests={setRequests}
                 userName={userName}
+                units={units}
             />
         </div>
     );

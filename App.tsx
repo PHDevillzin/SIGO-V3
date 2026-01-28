@@ -376,6 +376,7 @@ const App: React.FC = () => {
                             requests={requests}
                             setRequests={setRequests}
                             userName={currentUser?.name || 'Usuário'}
+                            units={units}
                         />
                     </>
                 )}
@@ -388,6 +389,7 @@ const App: React.FC = () => {
                         userName={currentUser?.name || 'Usuário'}
                         isApproverStrategic={currentUser?.isApproverStrategic || currentUser?.is_approver_strategic}
                         isApproverSede={currentUser?.isApproverSede || currentUser?.is_approver_sede}
+                        units={units}
                     />
                 )}
                 {currentView === 'planejamento' && <PlanningScreen />}

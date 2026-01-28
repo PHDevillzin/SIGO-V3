@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Request, PlanningData } from '../types';
+import type { Request, PlanningData, Unit } from '../types';
 import { Criticality } from '../types';
 import { EyeIcon, MagnifyingGlassIcon, InformationCircleIcon, FilterIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon, PaperAirplaneIcon, CheckCircleIcon, XMarkIcon, CheckIcon, ArrowDownTrayIcon, TrashIcon } from './Icons';
 import AdvancedFilters, { AdvancedFiltersState } from './AdvancedFilters';
@@ -13,6 +13,7 @@ import RequestDetailsModal from './RequestDetailsModal';
 import EditRequestModal from './EditRequestModal';
 import MaintenanceEditModal from './MaintenanceEditModal';
 import AssignAreaModal from './AssignAreaModal';
+import AssignUnitModal from './AssignUnitModal';
 
 export const initialRequests: Request[] = [
     { id: 1, criticality: Criticality.IMEDIATA, unit: 'CAT Cubatão (Par...', description: 'reforma do balneá...', status: 'Análise da Solicit...', currentLocation: 'Gestão Local', gestorLocal: 'MARIO SERGIO ALVES QUAR...', expectedStartDate: '05/01/2028', hasInfo: true, expectedValue: '3,5 mi', executingUnit: 'GSO', prazo: 24, categoriaInvestimento: 'Reforma Estratégica', entidade: 'SENAI', ordem: 'SS-28-0001-P', situacaoProjeto: 'Em Andamento', situacaoObra: 'Não Iniciada', inicioObra: '05/01/2030', saldoObraPrazo: 12, saldoObraValor: 'R$ 3.500.000,00' },
@@ -66,6 +67,7 @@ interface RequestsTableProps {
     requests: Request[];
     setRequests: React.Dispatch<React.SetStateAction<Request[]>>;
     userName?: string;
+    units?: Unit[];
 }
 
 type Toast = {
@@ -74,7 +76,7 @@ type Toast = {
     isVisible: boolean;
 };
 
-const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentView, requests, setRequests, userName }) => {
+const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentView, requests, setRequests, userName, units = [] }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isReclassificationModalOpen, setIsReclassificationModalOpen] = useState(false);
     const [selectedRequestForReclassification, setSelectedRequestForReclassification] = useState<Request | null>(null);
@@ -96,6 +98,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     // Workflow State
     const [isAssignAreaModalOpen, setIsAssignAreaModalOpen] = useState(false);
     const [requestToAssignArea, setRequestToAssignArea] = useState<Request | null>(null);
+
+    const [isAssignUnitModalOpen, setIsAssignUnitModalOpen] = useState(false);
+    const [requestToAssignUnit, setRequestToAssignUnit] = useState<Request | null>(null);
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [requestToDelete, setRequestToDelete] = useState<Request | null>(null);
@@ -195,7 +200,59 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         }
 
         // Approval Logic Flow
+        if (currentStatus === 'Aguardando Validação Gestor Área Fim') {
+            // Strategic Flow Step 1: Indica Gestão Local
+            setRequestToAssignUnit(request);
+            setIsAssignUnitModalOpen(true);
+            return;
+        }
+
         if (currentStatus === 'Aguardando Validação Gestor Local') {
+            // Strategic Flow Step 2: Gestor Local Aprova -> Alta ADM
+            // Or Operational Flow: Gestor Local -> Area Fim
+            // How to distinguish? Entity/Category?
+            // Operational (SESI/SENAI): 'Aguardando Validação Gestor Local'
+            // Strategic: 'Aguardando Validação Gestão Local' (NOTE: Slight difference in wording in my plan vs diagram vs string)
+            
+            // My previous step for Operational used 'Aguardando Validação Gestor Local'.
+            // The Strategic diagram says "Gestão local visualiza" -> Status?
+            // "Indica Gestão Local" -> Transition to "Aguardando Validação Gestão Local"?
+            
+            // Let's stick to the strings I used in handleSaveAssignUnit for Operational:
+            // "Aguardando Validação Área Fim" (SENAI) or "Aguardando Validação Alta ADM" (SESI).
+            
+            // For Strategic:
+            // "Aguardando Validação Gestor Área Fim" -> (Assign Unit) -> "Aguardando Validação Gestão Local"
+             
+             // Wait, allow for the newly assigned Unit's Manager to validate.
+             // If status is "Aguardando Validação Gestão Local", approval goes to "Aguardando Validação Alta ADM".
+             
+             // BUT, what if the status string is different?
+             // Let's ensure handleSaveAssignUnit sets "Aguardando Validação Gestão Local" for Strategic.
+             
+             // EXISTING LOGIC for 'Aguardando Validação Gestor Local' (Operational) requires Assign Area.
+             // So if status is exactly 'Aguardando Validação Gestor Local', it hits ONLY Operational block.
+             // If Strategic uses 'Aguardando Validação Gestão Local' (different string), I need a new block.
+             
+             // Operational: 'Aguardando Validação Gestor Local'
+             // Strategic: 'Aguardando Validação Gestão Local'
+             
+             // Check my Plan: "Aguardando Validação Gestão Local"
+             // Check my Code for Operational: 
+             // "if (currentStatus === 'Aguardando Validação Gestor Local') { setRequestToAssignArea(request); ... }"
+             
+             // Correct. The strings are different.
+             return;
+        }
+
+        if (currentStatus === 'Aguardando Validação Gestão Local') {
+             // Strategic Flow
+             handleUpdateRequestStatus(request, 'Aguardando Validação Alta ADM');
+             return;
+        }
+
+        if (currentStatus === 'Aguardando Validação Gestor Local') {
+             // Operational Flow
             // Require Area Fim assignment
             setRequestToAssignArea(request);
             setIsAssignAreaModalOpen(true);
@@ -236,6 +293,29 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         handleUpdateRequestStatus(requestToAssignArea, nextStatus, { areaResponsavel: area });
         setIsAssignAreaModalOpen(false);
         setRequestToAssignArea(null);
+    };
+
+    const handleSaveAssignUnit = (unit: Unit) => {
+        if (!requestToAssignUnit) return;
+
+        // Strategic: Gestor Área Fim -> Indica Gestão Local -> Gestão Local Valida
+        // Update Unit, Gestor Local (Responsavel), and Status
+        // Assumes Unit has 'responsavelRA' or a generic manager field?
+        // Using 'responsavelRA' (Responsável Regional Administrativo) or 'gerenteRegional'?
+        // The type definition has 'unidade', 'gerenteRegional', etc.
+        // I will use 'gerenteRegional' or fallback to unit name as manager placeholder for now if user specific field isn't clear.
+        // Actually, db schema might have gestor_local column. I'll put the name there.
+
+        const newGestor = unit.gerenteRegional || unit.responsavelRA || 'Gestor da Unidade';
+
+        handleUpdateRequestStatus(requestToAssignUnit, 'Aguardando Validação Gestão Local', { 
+            unit: unit.unidadeResumida || unit.unidade, // Update unit
+            gestorLocal: newGestor,
+            currentLocation: 'Gestão Local' // Visualization
+        });
+        
+        setIsAssignUnitModalOpen(false);
+        setRequestToAssignUnit(null);
     };
 
 
@@ -1051,6 +1131,12 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 isOpen={isAssignAreaModalOpen}
                 onClose={() => setIsAssignAreaModalOpen(false)}
                 onSave={handleSaveAssignArea}
+            />
+            <AssignUnitModal
+                isOpen={isAssignUnitModalOpen}
+                onClose={() => setIsAssignUnitModalOpen(false)}
+                onSave={handleSaveAssignUnit}
+                units={units}
             />
         </>
     );

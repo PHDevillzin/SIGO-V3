@@ -182,7 +182,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                 criticality: Criticality.MEDIA,
                 unit: 'Nova Unidade', // As per previous default
                 description: formData.titulo || 'Solicitação Estratégica',
-                status: 'Solicitação criada',
+                status: 'Aguardando Validação Gestor Área Fim',
                 currentLocation: 'GSO',
                 gestorLocal: 'GSO',
                 expectedStartDate: formData.inicioExecucao,
