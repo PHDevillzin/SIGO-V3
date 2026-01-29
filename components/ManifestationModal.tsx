@@ -10,7 +10,6 @@ interface ManifestationModalProps {
     request: Request | null;
     currentUser: string;
     userProfile?: string;
-    isApprover?: boolean;
 }
 
 const ManifestationModal: React.FC<ManifestationModalProps> = ({
@@ -19,8 +18,7 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
     onSave,
     request,
     currentUser,
-    userProfile = '',
-    isApprover = false
+    userProfile = ''
 }) => {
     const [manifestations, setManifestations] = useState<Manifestation[]>([]);
 
@@ -78,11 +76,12 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                 <div className="p-4 overflow-y-auto flex-grow space-y-6">
                     {manifestations.map((manif, index) => {
                         // Permission Check
-                        // "Aberto apenas para a pessoa com perfil aprovador e que pertença a área fim respectiva"
+                        // "Aberto para a pessoa que pertença a área fim respectiva"
                         // Match area name with userProfile?
                         // Assuming tight coupling or checking if profile contains the area name.
                         const isAreaMatch = userProfile === manif.area || (userProfile && userProfile.includes(manif.area));
-                        const canEdit = isApprover && isAreaMatch;
+                        // Allow admin override or explicit match
+                        const canEdit = isAreaMatch || (userProfile === 'Administrador do sistema');
 
                         return (
                             <div key={manif.area} className={`border rounded-lg p-4 ${canEdit ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
@@ -103,7 +102,7 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                                     maxLength={3000}
                                     rows={4}
                                     disabled={!canEdit}
-                                    placeholder={canEdit ? `Insira a manifestação da área ${manif.area}...` : `Aguardando manifestação da área ${manif.area} (Apenas aprovadores da área podem editar)`}
+                                    placeholder={canEdit ? `Insira a manifestação da área ${manif.area}...` : `Aguardando manifestação da área ${manif.area} (Somente usuários desta área podem editar)`}
                                     className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none ${!canEdit ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-300'}`}
                                 />
                                 <div className="flex justify-between mt-2 text-xs text-gray-400">

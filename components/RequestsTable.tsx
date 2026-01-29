@@ -1223,7 +1223,6 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 request={requestToManifest}
                 currentUser={userName || selectedProfile}
                 userProfile={selectedProfile}
-                isApprover={currentUser?.isApprover || false}
             />
         </>
     );
