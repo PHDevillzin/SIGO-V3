@@ -155,10 +155,10 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             // Use PUT /api/requests if there are additional updates or just to be safe with full updates
             // But api/update_request_status is dedicated.
             // If we have additionalUpdates, we MUST use PUT /api/requests
-            
+
             let response;
             if (Object.keys(additionalUpdates).length > 0) {
-                 response = await fetch('/api/requests', {
+                response = await fetch('/api/requests', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -170,7 +170,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     })
                 });
             } else {
-                 response = await fetch('/api/update_request_status', {
+                response = await fetch('/api/update_request_status', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -201,8 +201,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         const currentStatus = request.status;
 
         if (action === 'Reprovado') {
-             handleUpdateRequestStatus(request, 'Recusada');
-             return;
+            handleUpdateRequestStatus(request, 'Recusada');
+            return;
         }
 
         // Approval Logic Flow
@@ -214,13 +214,13 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         }
 
         if (currentStatus === 'Aguardando Validação Gestão Local') {
-             // Strategic Flow
-             handleUpdateRequestStatus(request, 'Aguardando Validação Alta ADM');
-             return;
+            // Strategic Flow
+            handleUpdateRequestStatus(request, 'Aguardando Validação Alta ADM');
+            return;
         }
 
         if (currentStatus === 'Aguardando Validação Gestor Local') {
-             // Operational Flow
+            // Operational Flow
             // Require Area Fim assignment
             setRequestToAssignArea(request);
             setIsAssignAreaModalOpen(true);
@@ -228,9 +228,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         }
 
         if (currentStatus === 'Aguardando Validação Área Fim') {
-             // SENAI flow: Area Fim approved -> Alta ADM
-             handleUpdateRequestStatus(request, 'Aguardando Validação Alta ADM');
-             return;
+            // SENAI flow: Area Fim approved -> Alta ADM
+            handleUpdateRequestStatus(request, 'Aguardando Validação Alta ADM');
+            return;
         }
 
         if (currentStatus === 'Aguardando Validação Alta ADM') {
@@ -249,7 +249,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         // Determine next status based on Entity
         // SENAI -> Valida Entidade -> Area Fim Valida (Aguardando Validação Área Fim)
         // SESI -> Valida Entidade -> Indica Areas para Manifestação -> Aguardando Validação Alta ADM (BUT pending manifestation)
-        
+
         let nextStatus = '';
         let additionalUpdates: Partial<Request> = {};
 
@@ -259,7 +259,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             // Status goes to "Aguardando Validação Alta ADM" (as per original flow), 
             // BUT it also becomes visible in "Solicitações manifestação/ciência" UNTIL all manifestations are done.
             // We store the targets.
-            
+
             nextStatus = 'Aguardando Validação Alta ADM';
             additionalUpdates = {
                 manifestationTargets: areas,
@@ -288,12 +288,12 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
         const newGestor = unit.gerenteRegional || unit.responsavelRA || 'Gestor da Unidade';
 
-        handleUpdateRequestStatus(requestToAssignUnit, 'Aguardando Validação Gestão Local', { 
+        handleUpdateRequestStatus(requestToAssignUnit, 'Aguardando Validação Gestão Local', {
             unit: unit.unidadeResumida || unit.unidade, // Update unit
             gestorLocal: newGestor,
             currentLocation: 'Gestão Local' // Visualization
         });
-        
+
         setIsAssignUnitModalOpen(false);
         setRequestToAssignUnit(null);
     };
@@ -309,9 +309,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         // Update the request with the new manifestations
         // If all targets have text, we treat it as done?
         // Requirement: "Após todos se manifestarem a demanda some da lista... e continua aparecendo para aprovação da alta administração"
-        
+
         // We just update the 'manifestations' field. The filter logic in useMemo will handle visibility.
-        
+
         handleUpdateRequestStatus(requestToManifest, requestToManifest.status, { manifestations });
         setIsManifestationModalOpen(false);
         setRequestToManifest(null);
@@ -337,36 +337,36 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         // If user is Admin, GSO, or similar "Global" profile, they see everything (subject to other filters).
         // If user is "Gestor Local" or "Unidade Solicitante", they see:
         //    a) Requests linked to their units (unit in linkedUnits)
-        
+
         // Define Global Profiles (that see all)
         const globalProfiles = [
-            'Administrador do sistema', 
+            'Administrador do sistema',
             'Administração do sistema',
-            'Administrador GSO', 
-            'Planejamento e Orçamento', 
-            'Suprimentos', 
-            'Corporativo', 
+            'Administrador GSO',
+            'Planejamento e Orçamento',
+            'Suprimentos',
+            'Corporativo',
             'Diretoria',
             'Sede'
         ];
 
         // We check if the *Selected Profile* has global access OR if the current user has super license.
         const isGlobalProfile = globalProfiles.some(gp => selectedProfile.includes(gp)) || selectedProfile === 'Administrador';
-        
+
         if (!isGlobalProfile && currentUser) {
-             const linkedUnits = currentUser.linkedUnits || [];
-             const userName = currentUser.name;
-             
-             sourceRequests = sourceRequests.filter(req => {
-                 // Match unit name against linked units. 
-                 const isLinkedUnit = linkedUnits.includes(req.unit);
-                 
-                 // Restore Creator Visibility (using Name as NIF is not available on Request)
-                 // This ensures users see requests they created even if not linked to their unit (e.g. Nova Unidade)
-                 const isCreator = req.solicitante === userName;
-                 
-                 return isLinkedUnit || isCreator;
-             });
+            const linkedUnits = currentUser.linkedUnits || [];
+            const userName = currentUser.name;
+
+            sourceRequests = sourceRequests.filter(req => {
+                // Match unit name against linked units. 
+                const isLinkedUnit = linkedUnits.includes(req.unit);
+
+                // Restore Creator Visibility (using Name as NIF is not available on Request)
+                // This ensures users see requests they created even if not linked to their unit (e.g. Nova Unidade)
+                const isCreator = req.solicitante === userName;
+
+                return isLinkedUnit || isCreator;
+            });
         }
 
         // 2. Filter by View Mode
@@ -378,42 +378,47 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
             // For approval, sourceRequests is already filtered by Security above.
             sourceRequests = sourceRequests.filter(request => request.categoriaInvestimento !== 'Manutenção');
         } else if (isCienciaView) {
-             sourceRequests = sourceRequests.filter(request => {
-                 if (request.categoriaInvestimento === 'Manutenção') return false; 
-                 if (request.status === 'Concluído' || request.status === 'Recusada' || request.currentLocation === 'Planejamento') return false;
+            sourceRequests = sourceRequests.filter(request => {
+                if (request.categoriaInvestimento === 'Manutenção') return false;
+                if (request.status === 'Concluído' || request.status === 'Recusada' || request.currentLocation === 'Planejamento') return false;
 
-                 const isSesi = request.entidade === 'SESI';
-                 const isSenai = request.entidade === 'SENAI';
-                 const loc = request.currentLocation;
+                const isSesi = request.entidade === 'SESI';
+                const isSenai = request.entidade === 'SENAI';
+                const loc = request.currentLocation;
 
-                 // SESI: Approved by 'Gestor Local' -> Not in 'Gestão Local'
-                 // NEW LOGIC: Show if it has manifestation targets AND not all have manifested
-                 if (isSesi) {
-                     // Check manifestation status
-                     if (request.manifestationTargets && request.manifestationTargets.length > 0) {
-                         const manifestCount = request.manifestations?.filter(m => m.text && m.text.trim().length > 0).length || 0;
-                         const targetCount = request.manifestationTargets.length;
-                         
-                         // Show if NOT complete
-                         if (manifestCount < targetCount) {
-                             return true;
-                         } else {
-                             // If complete, hide from Ciencia view
-                             return false;
-                         }
-                     }
-                     
-                     // Fallback legacy safety:
-                     return loc !== 'Gestão Local';
-                 }
+                // SESI: Approved by 'Gestor Local' -> Not in 'Gestão Local'
+                // NEW LOGIC: Show if it has manifestation targets AND not all have manifested
+                if (isSesi) {
+                    // Check manifestation status
+                    if (request.manifestationTargets && request.manifestationTargets.length > 0) {
+                        const manifestCount = request.manifestations?.filter(m => m.text && m.text.trim().length > 0).length || 0;
+                        const targetCount = request.manifestationTargets.length;
 
-                 // SENAI: Approved by 'Gestor Local' AND 'GIS' -> Not in 'Gestão Local' AND Not in 'GSO'
-                 if (isSenai) {
-                     return loc !== 'Gestão Local' && loc !== 'GSO';
-                 }
+                        // "ou até a alta administração aprovar"
+                        if (request.status === 'Em Análise GSO' || request.status === 'Concluído' || request.status === 'Recusada') {
+                            return false;
+                        }
 
-                 return false;
-             });
+                        // Show if NOT complete
+                        if (manifestCount < targetCount) {
+                            return true;
+                        } else {
+                            // If complete, hide from Ciencia view
+                            return false;
+                        }
+                    }
+
+                    // Fallback legacy safety:
+                    return loc !== 'Gestão Local';
+                }
+
+                // SENAI: Approved by 'Gestor Local' AND 'GIS' -> Not in 'Gestão Local' AND Not in 'GSO'
+                if (isSenai) {
+                    return loc !== 'Gestão Local' && loc !== 'GSO';
+                }
+
+                return false;
+            });
         }
 
         // Filter by Search Term
@@ -1040,12 +1045,12 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                         handleOpenRequestDetails(request);
                                                     }
                                                 }}
-                                                className={`${isAprovacaoView ? 'bg-[#0EA5E9]' : 'bg-sky-500'} text-white p-2 rounded-md hover:bg-sky-600 transition-colors`}
+                                                className={`${isAprovacaoView ? 'bg-[#0EA5E9]' : 'bg-sky-500'} text-white p-2 rounded-md hover:bg-sky-600 transition-colors ${isCienciaView && request.entidade === 'SESI' ? 'hidden' : ''}`}
                                                 aria-label="Visualizar"
                                             >
                                                 <EyeIcon className="w-5 h-5" />
                                             </button>
-                                            {(isAprovacaoView || (!isReclassificationView && !isManutencaoView)) && (
+                                            {(isAprovacaoView || (!isReclassificationView && !isManutencaoView && !(isCienciaView && request.entidade === 'SESI'))) && (
                                                 <button
                                                     onClick={() => handleDownload(request.id)}
                                                     className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
@@ -1204,6 +1209,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 onSave={handleSaveManifestation}
                 request={requestToManifest}
                 currentUser={userName || selectedProfile}
+                userProfile={selectedProfile}
+                isApprover={currentUser?.isApprover || false}
             />
         </>
     );

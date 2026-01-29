@@ -9,17 +9,21 @@ interface ManifestationModalProps {
     onSave: (manifestations: Manifestation[]) => void;
     request: Request | null;
     currentUser: string;
+    userProfile?: string;
+    isApprover?: boolean;
 }
 
-const ManifestationModal: React.FC<ManifestationModalProps> = ({ 
-    isOpen, 
-    onClose, 
-    onSave, 
-    request, 
-    currentUser 
+const ManifestationModal: React.FC<ManifestationModalProps> = ({
+    isOpen,
+    onClose,
+    onSave,
+    request,
+    currentUser,
+    userProfile = '',
+    isApprover = false
 }) => {
     const [manifestations, setManifestations] = useState<Manifestation[]>([]);
-    
+
     // Initialize state when request changes
     useEffect(() => {
         if (request && request.manifestationTargets) {
@@ -32,7 +36,7 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                 return {
                     area: targetArea,
                     text: '',
-                    user: currentUser,
+                    user: '', // Empty initially if not filled
                     date: new Date().toISOString()
                 };
             });
@@ -41,7 +45,7 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
     }, [request, currentUser]);
 
     const handleTextChange = (area: string, text: string) => {
-        setManifestations(prev => prev.map(m => 
+        setManifestations(prev => prev.map(m =>
             m.area === area ? { ...m, text, user: currentUser, date: new Date().toISOString() } : m
         ));
     };
@@ -65,40 +69,50 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                         <XMarkIcon className="w-5 h-5" />
                     </button>
                 </div>
-                
+
                 <div className="p-4 bg-gray-50 border-b border-gray-100">
                     <h4 className="font-semibold text-gray-700">{request.description}</h4>
                     <p className="text-sm text-gray-500">{request.unit} - {request.entidade}</p>
                 </div>
 
                 <div className="p-4 overflow-y-auto flex-grow space-y-6">
-                    {manifestations.map((manif, index) => (
-                        <div key={manif.area} className="border border-gray-200 rounded-lg p-4">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded text-sm">
-                                    {manif.area}
-                                </span>
-                                {manif.text && (
-                                    <span className="text-xs text-green-600 flex items-center">
-                                        <CheckIcon className="w-3 h-3 mr-1" />
-                                        Preenchido
+                    {manifestations.map((manif, index) => {
+                        // Permission Check
+                        // "Aberto apenas para a pessoa com perfil aprovador e que pertença a área fim respectiva"
+                        // Match area name with userProfile?
+                        // Assuming tight coupling or checking if profile contains the area name.
+                        const isAreaMatch = userProfile === manif.area || (userProfile && userProfile.includes(manif.area));
+                        const canEdit = isApprover && isAreaMatch;
+
+                        return (
+                            <div key={manif.area} className={`border rounded-lg p-4 ${canEdit ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="font-bold text-gray-800 bg-white border border-gray-200 px-2 py-1 rounded text-sm shadow-sm">
+                                        {manif.area}
                                     </span>
-                                )}
+                                    {manif.text && (
+                                        <span className="text-xs text-green-600 flex items-center bg-green-50 px-2 py-1 rounded-full border border-green-200">
+                                            <CheckIcon className="w-3 h-3 mr-1" />
+                                            Preenchido por {manif.user}
+                                        </span>
+                                    )}
+                                </div>
+                                <textarea
+                                    value={manif.text}
+                                    onChange={(e) => handleTextChange(manif.area, e.target.value)}
+                                    maxLength={3000}
+                                    rows={4}
+                                    disabled={!canEdit}
+                                    placeholder={canEdit ? `Insira a manifestação da área ${manif.area}...` : `Aguardando manifestação da área ${manif.area} (Apenas aprovadores da área podem editar)`}
+                                    className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none ${!canEdit ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-300'}`}
+                                />
+                                <div className="flex justify-between mt-2 text-xs text-gray-400">
+                                    <span>{manif.user && manif.date ? `${manif.user} - ${new Date(manif.date).toLocaleDateString()}` : ''}</span>
+                                    <span>{manif.text.length}/3000</span>
+                                </div>
                             </div>
-                            <textarea
-                                value={manif.text}
-                                onChange={(e) => handleTextChange(manif.area, e.target.value)}
-                                maxLength={3000}
-                                rows={4}
-                                placeholder={`Insira a manifestação da área ${manif.area}...`}
-                                className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                            />
-                            <div className="flex justify-between mt-2 text-xs text-gray-400">
-                                <span>{manif.user} - {new Date(manif.date).toLocaleDateString()}</span>
-                                <span>{manif.text.length}/3000</span>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
@@ -106,7 +120,7 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                         {completedCount} de {totalCount} áreas manifestadas
                     </div>
                     <div className="flex space-x-3">
-                         <button
+                        <button
                             onClick={onClose}
                             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium"
                         >
