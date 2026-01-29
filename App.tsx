@@ -182,11 +182,23 @@ const App: React.FC = () => {
                     setProfiles(data);
 
                     // Context Switching Logic: Update Effective Permissions based on Selected Profile
-                    const currentProfileObj = data.find((p: any) => p.name === selectedProfile);
-                    if (currentProfileObj && currentProfileObj.permissions) {
-                        // User requested: "Menus displayed... will change"
-                        // So we update the permissions state to match the selected profile
-                        setUserPermissions(currentProfileObj.permissions);
+                    if (selectedProfile === 'Administrador do sistema') {
+                        setUserPermissions(['*']);
+                    } else {
+                        const currentProfileObj = data.find((p: any) => p.name === selectedProfile);
+                        if (currentProfileObj) {
+                            let perms = currentProfileObj.permissions;
+                            // Handle potential stringified JSON from DB
+                            if (typeof perms === 'string') {
+                                try {
+                                    perms = JSON.parse(perms);
+                                } catch (e) {
+                                    console.error('Error parsing permissions:', e);
+                                    perms = [];
+                                }
+                            }
+                            setUserPermissions(Array.isArray(perms) ? perms : []);
+                        }
                     }
                 }
 
