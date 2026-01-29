@@ -369,7 +369,17 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 // "Caso selecione um perfil de area fim, passara a se comportar como um perfil de area fim"
                 const isAreaMatch = req.areaResponsavel === selectedProfile || (req.areasEnvolvidas && req.areasEnvolvidas.includes(selectedProfile));
 
-                return isLinkedUnit || isCreator || isAreaMatch;
+                // Corporate Visibility (SENAI): "GED" and others see ALL SENAI requests
+                const senaiCorporateProfiles = [
+                    'Gerência de Educação',
+                    'Gerência de Tecnologia',
+                    'Gerência de Infraestrutura',
+                    'Gerência de Saúde'
+                ];
+                // Check if selected profile is one of these (matching substring like "Gerência de Educação (GED)")
+                const isSenaiCorporate = senaiCorporateProfiles.some(p => selectedProfile.includes(p)) && req.entidade === 'SENAI';
+
+                return isLinkedUnit || isCreator || isAreaMatch || isSenaiCorporate;
             });
         }
 
