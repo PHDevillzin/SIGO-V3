@@ -102,10 +102,50 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                         // Assuming tight coupling or checking if profile contains the area name.
                         const isAreaMatch = userProfile === manif.area || (userProfile && userProfile.includes(manif.area));
                         // Allow admin override or explicit match
+                        // Allow admin override or explicit match
                         const canEdit = isAreaMatch || (userProfile === 'Administrador do sistema');
+                        const isFilled = !!manif.text && manif.text.trim().length > 0;
+
+                        const isSenai = request.entidade === 'SENAI';
+
+                        if (isSenai) {
+                            return (
+                                <div key={manif.area} className={`border rounded-lg p-4 flex justify-between items-center ${isFilled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                                    <div>
+                                        <span className="font-bold text-gray-800 text-sm block">
+                                            {manif.area}
+                                        </span>
+                                        {isFilled ? (
+                                            <div className="text-sm text-green-700 font-medium flex items-center mt-1">
+                                                <CheckIcon className="w-4 h-4 mr-1" />
+                                                {manif.area} está ciente da demanda
+                                            </div>
+                                        ) : (
+                                            <div className="text-sm text-gray-500 mt-1">
+                                                Aguardando ciência
+                                            </div>
+                                        )}
+                                        {isFilled && (
+                                            <div className="text-xs text-gray-400 mt-1">
+                                                Registrado por {manif.user} em {new Date(manif.date).toLocaleDateString()} às {new Date(manif.date).toLocaleTimeString()}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {!isFilled && canEdit && (
+                                        <button
+                                            onClick={() => handleTextChange(manif.area, 'Ciente')}
+                                            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                                        >
+                                            Ciente
+                                        </button>
+                                    )}
+                                </div>
+                            );
+                        }
 
                         return (
-                            <div key={manif.area} className={`border rounded-lg p-4 ${canEdit ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
+                            <div key={manif.area} className={`border rounded-lg p-4 ${canEdit && !isFilled ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="font-bold text-gray-800 bg-white border border-gray-200 px-2 py-1 rounded text-sm shadow-sm">
                                         {manif.area}
@@ -122,9 +162,15 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                                     onChange={(e) => handleTextChange(manif.area, e.target.value)}
                                     maxLength={3000}
                                     rows={4}
-                                    disabled={!canEdit}
-                                    placeholder={canEdit ? `Insira a manifestação da área ${manif.area}...` : `Aguardando manifestação da área ${manif.area} (Somente usuários desta área podem editar)`}
-                                    className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none ${!canEdit ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-300'}`}
+                                    disabled={!canEdit || isFilled}
+                                    placeholder={
+                                        isFilled
+                                            ? `Manifestação registrada por ${manif.user}.`
+                                            : canEdit
+                                                ? `Insira a manifestação da área ${manif.area}...`
+                                                : `Aguardando manifestação da área ${manif.area}`
+                                    }
+                                    className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none ${(!canEdit || isFilled) ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-300'}`}
                                 />
                                 <div className="flex justify-between mt-2 text-xs text-gray-400">
                                     <span>{manif.user && manif.date ? `${manif.user} - ${new Date(manif.date).toLocaleDateString()}` : ''}</span>
@@ -151,7 +197,7 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                             className="px-4 py-2 bg-[#0EA5E9] text-white rounded-md hover:bg-sky-600 font-medium flex items-center"
                         >
                             <CheckIcon className="w-4 h-4 mr-2" />
-                            Salvar Manifestação
+                            {request.entidade === 'SENAI' ? 'Confirmar Ciência' : 'Salvar Manifestação'}
                         </button>
                     </div>
                 </div>
