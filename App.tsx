@@ -130,7 +130,7 @@ const App: React.FC = () => {
 
                     if (!isSuperView && userLinkedUnits.length > 0) {
                         mappedRequests = mappedRequests.filter((r: Request) =>
-                            userLinkedUnits.includes(r.executingUnit)
+                            userLinkedUnits.includes(r.unit)
                         );
                     } else if (!isSuperView && userLinkedUnits.length === 0) {
                         mappedRequests = [];
