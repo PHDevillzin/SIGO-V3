@@ -23,14 +23,14 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
     // Determine Entity restriction
     // Variable used for rendering (reactive)
     // Existing logic: const isEntityRestricted = ['SESI', 'SENAI'].includes(userCategory);
-    
+
     // NIF-based Logic for 'Gestor Local' and 'Unidade Solicitante'
     const userProfileNames = profiles
         .filter(p => currentUser.sigoProfiles?.includes(p.id))
         .map(p => p.name);
-    
+
     const isTargetProfile = userProfileNames.includes('Gestor Local') || userProfileNames.includes('Unidade Solicitante');
-    
+
     const nifPrefix = currentUser?.nif?.substring(0, 2).toUpperCase();
     const nifEntidade = nifPrefix === 'SN' ? 'SENAI' : (nifPrefix === 'SS' ? 'SESI' : '');
 
@@ -95,21 +95,21 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
         // If formData.entidade is selected, filter by it.
         // If not selected, and user is NOT Corporate (is restricted), filter by userCategory.
         const isCorporate = !['SESI', 'SENAI'].includes(userCategory);
-        
+
         if (formData.entidade) {
             filtered = filtered.filter(u => u.entidade === formData.entidade);
         } else if (!isCorporate && userCategory) {
-             filtered = filtered.filter(u => u.entidade === userCategory);
+            filtered = filtered.filter(u => u.entidade === userCategory);
         }
 
         // 2. Filter by Linked Units (Prioritized)
         if (userLinkedUnits && userLinkedUnits.length > 0) {
-             filtered = filtered.filter(u => 
-                 userLinkedUnits.includes(u.unidadeResumida) || 
-                 userLinkedUnits.includes(u.unidade)
-             );
+            filtered = filtered.filter(u =>
+                userLinkedUnits.includes(u.unidadeResumida) ||
+                userLinkedUnits.includes(u.unidade)
+            );
         }
-        
+
         return filtered.sort((a, b) => (a.unidadeResumida || a.unidade).localeCompare(b.unidadeResumida || b.unidade));
     }, [units, formData.entidade, userLinkedUnits, userCategory]);
 
@@ -163,9 +163,14 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
         }
 
         try {
+            const prazo = parseInt(formData.prazoExecucao) || 0;
+            let criticality = Criticality.MINIMA;
+            if (prazo > 10) criticality = Criticality.CRITICA;
+            else if (prazo >= 4) criticality = Criticality.MEDIA;
+
             const payload = {
                 ...formData,
-                criticality: Criticality.MEDIA,
+                criticality,
                 unit: formData.unidade || 'Unidade',
                 description: formData.titulo,
                 status: 'Aguardando Validação Gestor Local',
@@ -176,7 +181,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                 hasInfo: true,
                 expectedValue: formData.valorExecucao,
                 executingUnit: 'Unidade',
-                prazo: parseInt(formData.prazoExecucao) || 0,
+                prazo,
                 categoriaInvestimento: 'Reforma Operacional',
                 entidade: formData.entidade,
                 ordem: `SS-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)}`,
@@ -286,10 +291,10 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
             <div className="flex w-full border border-gray-300 rounded-md overflow-hidden bg-white">
                 <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm font-medium transition-colors">
                     Escolher Arquivo
-                    <input 
-                        type="file" 
-                        className="hidden" 
-                        accept={accept} 
+                    <input
+                        type="file"
+                        className="hidden"
+                        accept={accept}
                         onChange={(e) => {
                             // Mocking file upload by setting a fake URL
                             if (e.target.files && e.target.files[0]) {
@@ -299,7 +304,7 @@ const OpenUnitRequestScreen: React.FC<OpenUnitRequestScreenProps> = ({ onClose, 
                     />
                 </label>
                 <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">
-                     {formData[name as keyof typeof formData] ? 'Arquivo selecionado' : 'Nenhum arquivo escolhido'}
+                    {formData[name as keyof typeof formData] ? 'Arquivo selecionado' : 'Nenhum arquivo escolhido'}
                 </span>
             </div>
             <div className="mt-1">

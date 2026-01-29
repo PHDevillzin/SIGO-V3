@@ -43,9 +43,9 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
     const userProfileNames = profiles
         .filter(p => currentUser.sigoProfiles?.includes(p.id))
         .map(p => p.name);
-    
+
     const isTargetProfile = userProfileNames.includes('Gestor Local') || userProfileNames.includes('Unidade Solicitante');
-    
+
     const nifPrefix = currentUser?.nif?.substring(0, 2).toUpperCase();
     const nifEntidade = nifPrefix === 'SN' ? 'SENAI' : (nifPrefix === 'SS' ? 'SESI' : '');
 
@@ -126,7 +126,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
         temAutorizacao: '',
         realizouConsulta: '',
         houveNotificacao: '',
-        
+
         // Conditional New Unit Fields
         cidade: '',
         atividadePrincipal: ''
@@ -135,7 +135,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
     // Filter Units based on Linked Units
     const filteredUnits = React.useMemo(() => {
         if (userLinkedUnits.length > 0) {
-             return units.filter(u => userLinkedUnits.includes(u.unidadeResumida) || userLinkedUnits.includes(u.unidade));
+            return units.filter(u => userLinkedUnits.includes(u.unidadeResumida) || userLinkedUnits.includes(u.unidade));
         }
         return units;
     }, [units, userLinkedUnits]);
@@ -205,11 +205,17 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
         }
 
         try {
+            const prazo = parseInt(formData.prazoExecucao) || 0;
+            let criticality = Criticality.MINIMA;
+            if (prazo > 10) criticality = Criticality.CRITICA;
+            else if (prazo >= 4) criticality = Criticality.MEDIA;
+
             const payload: any = {
                 priority: 'Normal',
+                criticality,
                 requesterName: currentUser.name,
                 requesterNif: currentUser.nif,
-                unit: formData.unidade || 'Nova Unidade', 
+                unit: formData.unidade || 'Nova Unidade',
                 description: formData.justificativa, // Using justificativa as main description
                 status: 'Aguardando Validação Gestor Área Fim',
                 currentLocation: 'GSO',
@@ -219,7 +225,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                 hasInfo: true,
                 expectedValue: formData.valorExecucao,
                 executingUnit: 'GSO',
-                prazo: parseInt(formData.prazoExecucao) || 0,
+                prazo,
                 categoriaInvestimento: 'Intervenção Estratégica',
                 entidade: formData.entidade,
                 ordem: `SS-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)}`,
@@ -246,7 +252,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                 arquivoAutorizacao: formData.arquivoAutorizacao,
                 arquivoConsulta: formData.arquivoConsulta,
                 arquivoNotificacao: formData.arquivoNotificacao,
-                
+
                 // Form fields
                 objetivo: formData.titulo,
                 gerencia: '', // To be filled?
@@ -267,8 +273,8 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
 
             // Inject extra info for New Unit
             if (formData.referencia === 'Construção de nova unidade') {
-                 const extraInfo = `[Nova Unidade] Cidade: ${formData.cidade}, Atividade Principal: ${formData.atividadePrincipal}`;
-                 payload.observacao = extraInfo;
+                const extraInfo = `[Nova Unidade] Cidade: ${formData.cidade}, Atividade Principal: ${formData.atividadePrincipal}`;
+                payload.observacao = extraInfo;
             }
 
             const response = await fetch('/api/requests', {
@@ -326,10 +332,10 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
             <div className="flex w-full border border-gray-300 rounded-md overflow-hidden bg-white">
                 <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm font-medium transition-colors">
                     Escolher Arquivo
-                    <input 
-                        type="file" 
-                        className="hidden" 
-                        accept={accept} 
+                    <input
+                        type="file"
+                        className="hidden"
+                        accept={accept}
                         onChange={(e) => {
                             // Mocking file upload by setting a fake URL
                             if (e.target.files && e.target.files[0]) {
@@ -350,30 +356,30 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
 
     const renderNovoTerrenoFields = () => (
         <div className="space-y-6 bg-gray-50 p-6 rounded-md border border-gray-200">
-             {renderRadioGroup('Existe Lei de Doação publicada?', 'existeLeiDoacao', [
-                 { label: 'Sim', value: 'Sim' },
-                 { label: 'Não', value: 'Nao' }
-             ])}
+            {renderRadioGroup('Existe Lei de Doação publicada?', 'existeLeiDoacao', [
+                { label: 'Sim', value: 'Sim' },
+                { label: 'Não', value: 'Nao' }
+            ])}
 
-             {(formData.existeLeiDoacao === 'Sim' || formData.existeLeiDoacao === 'Nao') && (
-                 <div className="space-y-6 pt-4 border-t border-gray-200">
-                     {formData.existeLeiDoacao === 'Sim' && renderFileUpload('Anexar Arquivo', '.pdf', 'arquivoLeiDoacao')}
-                     
-                     {renderFileUpload('Certidão de Registro (Matrícula)', '.pdf', 'certidaoMatricula')}
-                     {renderFileUpload('IPTU atualizado', '.pdf', 'iptuAtualizado')}
-                     {renderFileUpload('Certidão Negativa de Débitos do terreno', '.pdf', 'certidaoNegativaDebitos')}
-                     
-                     {renderRadioGroup('Entidade doadora', 'entidadeDoadora', [
-                         { label: 'Privada', value: 'Privada' },
-                         { label: 'Pública', value: 'Publica' }
-                     ])}
+            {(formData.existeLeiDoacao === 'Sim' || formData.existeLeiDoacao === 'Nao') && (
+                <div className="space-y-6 pt-4 border-t border-gray-200">
+                    {formData.existeLeiDoacao === 'Sim' && renderFileUpload('Anexar Arquivo', '.pdf', 'arquivoLeiDoacao')}
 
-                     {renderFileUpload('Certidão Negativa de Tributos Municipais da doadora', '.pdf', 'certidaoNegativaTributosMunicipais')}
-                     {renderFileUpload('Certidão de Débitos Trabalhistas da Entidade doadora', '.pdf', 'certidaoDebitosTrabalhistas')}
-                     {renderFileUpload('Certidão de Tributos Federais da Entidade doadora', '.pdf', 'certidaoTributosFederais')}
-                     {renderFileUpload('Documentos e Licenças emitidas com os órgãos ambientais competentes', '.pdf', 'licencasAmbientais')}
-                 </div>
-             )}
+                    {renderFileUpload('Certidão de Registro (Matrícula)', '.pdf', 'certidaoMatricula')}
+                    {renderFileUpload('IPTU atualizado', '.pdf', 'iptuAtualizado')}
+                    {renderFileUpload('Certidão Negativa de Débitos do terreno', '.pdf', 'certidaoNegativaDebitos')}
+
+                    {renderRadioGroup('Entidade doadora', 'entidadeDoadora', [
+                        { label: 'Privada', value: 'Privada' },
+                        { label: 'Pública', value: 'Publica' }
+                    ])}
+
+                    {renderFileUpload('Certidão Negativa de Tributos Municipais da doadora', '.pdf', 'certidaoNegativaTributosMunicipais')}
+                    {renderFileUpload('Certidão de Débitos Trabalhistas da Entidade doadora', '.pdf', 'certidaoDebitosTrabalhistas')}
+                    {renderFileUpload('Certidão de Tributos Federais da Entidade doadora', '.pdf', 'certidaoTributosFederais')}
+                    {renderFileUpload('Documentos e Licenças emitidas com os órgãos ambientais competentes', '.pdf', 'licencasAmbientais')}
+                </div>
+            )}
         </div>
     );
 

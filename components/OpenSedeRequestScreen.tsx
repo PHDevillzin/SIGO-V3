@@ -23,7 +23,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
     // Select options: SESI, SENAI, Corporativo
     let normalizedCategory = userCategory;
     if (userCategory === 'CORPORATIVO') normalizedCategory = 'Corporativo';
-    
+
     // Lock if SESI, SENAI, or Corporativo
     const isEntityRestricted = ['SESI', 'SENAI', 'Corporativo'].includes(normalizedCategory);
     const defaultSolicitante = isEntityRestricted ? normalizedCategory : '';
@@ -111,10 +111,15 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
             // Format date helpers if needed, but API handles ISO string or YYYY-MM-DD usually if PG.
             // Screen uses YYYY-MM-DD from input type="date". PG accepts this.
 
+            const prazo = parseInt(formData.prazoExecucao) || 0;
+            let criticality = Criticality.MINIMA;
+            if (prazo > 10) criticality = Criticality.CRITICA;
+            else if (prazo >= 4) criticality = Criticality.MEDIA;
+
             const payload = {
                 ...formData,
                 // Defaults for Sede Request
-                criticality: Criticality.MEDIA,
+                criticality,
                 unit: 'Sede',
                 description: formData.titulo, // Map titulo to description for core field
                 status: 'Solicitação criada', // Initial status
@@ -124,7 +129,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                 hasInfo: true,
                 expectedValue: formData.valorExecucao,
                 executingUnit: 'Sede',
-                prazo: parseInt(formData.prazoExecucao) || 0,
+                prazo,
                 categoriaInvestimento: 'Baixa Complexidade', // Default
                 entidade: formData.solicitante || 'Corporativo', // Map solicitante to entidade
                 ordem: `SS-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)}`, // Generate or let DB handle? DB doesn't generate yet. Keep random for now.
@@ -209,10 +214,10 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
             <div className="flex w-full border border-gray-300 rounded-md overflow-hidden bg-white">
                 <label className="bg-gray-100 text-gray-700 px-4 py-2 cursor-pointer border-r border-gray-300 hover:bg-gray-200 text-sm font-medium transition-colors">
                     Escolher Arquivo
-                    <input 
-                        type="file" 
-                        className="hidden" 
-                        accept={accept} 
+                    <input
+                        type="file"
+                        className="hidden"
+                        accept={accept}
                         onChange={(e) => {
                             // Mocking file upload by setting a fake URL
                             if (e.target.files && e.target.files[0]) {
@@ -222,7 +227,7 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                     />
                 </label>
                 <span className="px-4 py-2 text-gray-500 text-sm flex items-center flex-grow">
-                     {formData[name as keyof typeof formData] ? 'Arquivo selecionado' : 'Nenhum arquivo escolhido'}
+                    {formData[name as keyof typeof formData] ? 'Arquivo selecionado' : 'Nenhum arquivo escolhido'}
                 </span>
             </div>
             <div className="mt-1">
