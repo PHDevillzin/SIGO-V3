@@ -393,6 +393,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 // SESI: Approved by 'Gestor Local' -> Not in 'Gestão Local'
                 // NEW LOGIC: Show if it has manifestation targets AND not all have manifested
                 if (isSesi) {
+                    // Gestor Local Visibility Override: Always show if linked to unit (filtered above) and not concluded/refused (filtered above)
+                    if (selectedProfile === 'Gestor Local') {
+                        return true;
+                    }
+
                     // Check manifestation status
                     if (request.manifestationTargets && request.manifestationTargets.length > 0) {
                         const manifestCount = request.manifestations?.filter(m => m.text && m.text.trim().length > 0).length || 0;
@@ -418,6 +423,10 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
                 // SENAI: Approved by 'Gestor Local' AND 'GIS' -> Not in 'Gestão Local' AND Not in 'GSO'
                 if (isSenai) {
+                    // Gestor Local Visibility Override
+                    if (selectedProfile === 'Gestor Local') {
+                        return true;
+                    }
                     return loc !== 'Gestão Local' && loc !== 'GSO';
                 }
 
