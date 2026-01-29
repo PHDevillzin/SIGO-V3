@@ -268,6 +268,7 @@ const OpenStrategicRequestScreen: React.FC<OpenStrategicRequestScreenProps> = ({
                 houveNotificacao: formData.houveNotificacao,
                 referencia: formData.referencia,
                 areasEnvolvidas: formData.areasEnvolvidas,
+                areaResponsavel: formData.areaResponsavel,
                 observacao: ''
             };
 

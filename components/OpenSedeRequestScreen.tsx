@@ -145,7 +145,8 @@ const OpenSedeRequestScreen: React.FC<OpenSedeRequestScreenProps> = ({ onClose, 
                 arquivoLaudo: formData.arquivoLaudo,
                 arquivoAutorizacao: formData.arquivoAutorizacao,
                 arquivoConsulta: formData.arquivoConsulta,
-                arquivoNotificacao: formData.arquivoNotificacao
+                arquivoNotificacao: formData.arquivoNotificacao,
+                areaResponsavel: formData.gerencia
             };
 
             const response = await fetch('/api/requests', {

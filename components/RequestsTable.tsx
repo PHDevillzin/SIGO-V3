@@ -1095,7 +1095,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                     </button>
                                                 </>
                                             )}
-                                            {(isCienciaView && request.entidade === 'SESI' && request.manifestationTargets && request.manifestationTargets.length > 0) && (
+                                            {(isCienciaView && request.entidade === 'SESI') && (
                                                 <button
                                                     onClick={() => handleOpenManifestation(request)}
                                                     className="bg-purple-500 text-white p-2 rounded-md hover:bg-purple-600 transition-colors"
