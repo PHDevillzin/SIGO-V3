@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
   const hasPermission = (permissionKey: string) => {
     // BLOCK: "Gestor (GSO)" cannot see Reclassification (Explicit Restriction)
     if (selectedProfile === 'Gestor (GSO)' && permissionKey === 'solicitacoes_reclassificacao') {
-        return false;
+      return false;
     }
 
     // 1. Check for Admin wildcard
@@ -47,10 +47,10 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     // Rule 1: Approval Screen
     // Grant access if explicit flags are set
     if (permissionKey === 'aprovacao') {
-        if (isApproverStrategic || isApproverSede) return true;
-        
-        // If profile is Restricted (Gestor Local/Unidade Solicitante) and NOT an approver, deny access.
-        if (isRestrictedProfile) return false;
+      if (isApproverStrategic || isApproverSede) return true;
+
+      // If profile is Restricted (Gestor Local/Unidade Solicitante) and NOT an approver, deny access.
+      if (isRestrictedProfile) return false;
     }
 
     // Rule 2: Open Request Screens 
@@ -60,29 +60,29 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     const hasGranularRequesterFlags = isRequesterStrategic || isRequesterSede;
 
     if (hasGranularRequesterFlags) {
-        if (permissionKey === 'nova_estrategica') return !!isRequesterStrategic;
-        if (permissionKey === 'nova_sede') return !!isRequesterSede;
-        // Proceed for other keys (like nova_unidade)
+      if (permissionKey === 'nova_estrategica') return !!isRequesterStrategic;
+      if (permissionKey === 'nova_sede') return !!isRequesterSede;
+      // Proceed for other keys (like nova_unidade)
     } else {
-        // Fallback: Default flags grant access if present (Universal Grant for non-strict cases or if logic changes)
-         if (permissionKey === 'nova_estrategica' && isRequesterStrategic) return true;
-         if (permissionKey === 'nova_sede' && isRequesterSede) return true;
+      // Fallback: Default flags grant access if present (Universal Grant for non-strict cases or if logic changes)
+      if (permissionKey === 'nova_estrategica' && isRequesterStrategic) return true;
+      if (permissionKey === 'nova_sede' && isRequesterSede) return true;
     }
 
     if (isRestrictedProfile) {
-        // If restricted and didn't match above (flags false or strict mode processed), deny.
-        // Note: if hasGranularRequesterFlags was true, we already returned based on the flag value.
-        // If we are here, either flags were false (strict denied) OR flags were absent.
-        // If absent, we deny for restricted users.
-        if (permissionKey === 'nova_estrategica' || permissionKey === 'nova_sede') return false; 
-        
-        // For 'nova_unidade', restricted usually have access, but check flag?
-        // Requirements didn't specify nova_unidade flag, so leave default or check isRequester?
-        // Legacy: if (permissionKey === 'nova_unidade' && !isRequester) return false;
-        // But we are moving away from isRequester? 
-        // Let's assume nova_unidade relies on base permissions or 'isRequester' (if we still pass it).
-        // For now, let's strictly handle the new flags.
-        if (permissionKey === 'nova_unidade') return true; 
+      // If restricted and didn't match above (flags false or strict mode processed), deny.
+      // Note: if hasGranularRequesterFlags was true, we already returned based on the flag value.
+      // If we are here, either flags were false (strict denied) OR flags were absent.
+      // If absent, we deny for restricted users.
+      if (permissionKey === 'nova_estrategica' || permissionKey === 'nova_sede') return false;
+
+      // For 'nova_unidade', restricted usually have access, but check flag?
+      // Requirements didn't specify nova_unidade flag, so leave default or check isRequester?
+      // Legacy: if (permissionKey === 'nova_unidade' && !isRequester) return false;
+      // But we are moving away from isRequester? 
+      // Let's assume nova_unidade relies on base permissions or 'isRequester' (if we still pass it).
+      // For now, let's strictly handle the new flags.
+      if (permissionKey === 'nova_unidade') return true;
     }
 
     // 2. Map Frontend Keys to Backend Permission Strings
@@ -107,9 +107,20 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
       'plurianual': ['Gerenciamento:Plurianual'],
 
       // Configurações
-      'configuracoes': ['Configurações:Gestão de acesso', 'Configurações:Unidades'], // Check if has ANY config access?
+      'configuracoes': [
+        'Configurações:Gestão de acesso',
+        'Configurações:Unidades',
+        'Configurações:Perfil Acesso',
+        'Configurações:Arquivos',
+        'Configurações:Criticidade',
+        'Configurações:Gerenciamento de Avisos',
+        'Configurações:Notificações',
+        'Configurações:Periodo de solicitação',
+        'Configurações:Tipolocal',
+        'Configurações:Tipologia'
+      ],
       'gestao_acesso': ['Configurações:Gestão de acesso'],
-      'perfil_acesso': ['Configurações:Perfil Acesso'], // Note: Not in seed list explicitely for all, but Admin has *
+      'perfil_acesso': ['Configurações:Perfil Acesso'],
       'gerenciador_arquivos': ['Configurações:Arquivos'],
       'painel_criticidade': ['Configurações:Criticidade'],
       'avisos_globais': ['Configurações:Gerenciamento de Avisos'],
@@ -125,7 +136,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
 
     // EXCEPTION: "Administrador GSO" always sees "Perfil Acesso"
     if (selectedProfile === 'Administrador GSO' && permissionKey === 'perfil_acesso') {
-       return true;
+      return true;
     }
 
     if (requiredPermissions) {
@@ -215,14 +226,14 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                   />
                 )}
                 {hasPermission('ciencia') && (
-                   <NavItem
+                  <NavItem
                     icon={InformationCircleIcon}
                     label="Solicitações manifestação/ciência"
                     active={currentView === 'ciencia'}
                     onClick={() => setCurrentView('ciencia')}
-                   />
+                  />
                 )}
-                 {hasPermission('solicitacoes_reclassificacao') && (
+                {hasPermission('solicitacoes_reclassificacao') && (
                   <NavItem
                     icon={DocumentDuplicateIcon}
                     label="Solicitações para reclassificação"
