@@ -1089,12 +1089,12 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                         handleOpenRequestDetails(request);
                                                     }
                                                 }}
-                                                className={`${isAprovacaoView ? 'bg-[#0EA5E9]' : 'bg-sky-500'} text-white p-2 rounded-md hover:bg-sky-600 transition-colors ${isCienciaView && request.entidade === 'SESI' ? 'hidden' : ''}`}
+                                                className={`${isAprovacaoView ? 'bg-[#0EA5E9]' : 'bg-sky-500'} text-white p-2 rounded-md hover:bg-sky-600 transition-colors ${isCienciaView ? 'hidden' : ''}`}
                                                 aria-label="Visualizar"
                                             >
                                                 <EyeIcon className="w-5 h-5" />
                                             </button>
-                                            {(isAprovacaoView || (!isReclassificationView && !isManutencaoView && !(isCienciaView && request.entidade === 'SESI'))) && (
+                                            {(isAprovacaoView || (!isReclassificationView && !isManutencaoView && !isCienciaView)) && (
                                                 <button
                                                     onClick={() => handleDownload(request.id)}
                                                     className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
