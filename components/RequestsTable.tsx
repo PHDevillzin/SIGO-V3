@@ -422,12 +422,33 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 }
 
                 // SENAI: Approved by 'Gestor Local' AND 'GIS' -> Not in 'Gestão Local' AND Not in 'GSO'
+                // SENAI: Approved by 'Gestor Local' AND 'GIS' -> Not in 'Gestão Local' AND Not in 'GSO'
                 if (isSenai) {
                     // Gestor Local Visibility Override
                     if (selectedProfile === 'Gestor Local') {
                         return true;
                     }
-                    return loc !== 'Gestão Local' && loc !== 'GSO';
+
+                    // Check manifestation status - Apply Logic from SESI
+                    if (request.manifestationTargets && request.manifestationTargets.length > 0) {
+                        const manifestCount = request.manifestations?.filter(m => m.text && m.text.trim().length > 0).length || 0;
+                        const targetCount = request.manifestationTargets.length;
+
+                        // "ou até a alta administração aprovar"
+                        if (request.status === 'Em Análise GSO' || request.status === 'Concluído' || request.status === 'Recusada') {
+                            return false;
+                        }
+
+                        // Show if NOT complete
+                        if (manifestCount < targetCount) {
+                            return true;
+                        } else {
+                            // If complete, hide from Ciencia view
+                            return false;
+                        }
+                    }
+
+                    return loc !== 'Gestão Local';
                 }
 
                 return false;
@@ -1095,7 +1116,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                     </button>
                                                 </>
                                             )}
-                                            {(isCienciaView && request.entidade === 'SESI') && (
+                                            {(isCienciaView && (request.entidade === 'SESI' || request.entidade === 'SENAI')) && (
                                                 <button
                                                     onClick={() => handleOpenManifestation(request)}
                                                     className="bg-purple-500 text-white p-2 rounded-md hover:bg-purple-600 transition-colors"
