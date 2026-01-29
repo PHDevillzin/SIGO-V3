@@ -134,7 +134,11 @@ const App: React.FC = () => {
 
                     if (!isSuperView && userLinkedUnits.length > 0) {
                         mappedRequests = mappedRequests.filter((r: Request) =>
-                            userLinkedUnits.includes(r.unit)
+                            userLinkedUnits.some(u =>
+                                u.trim() === r.unit.trim() ||
+                                u.includes(r.unit) ||
+                                r.unit.includes(u)
+                            )
                         );
                     } else if (!isSuperView && userLinkedUnits.length === 0) {
                         mappedRequests = [];
