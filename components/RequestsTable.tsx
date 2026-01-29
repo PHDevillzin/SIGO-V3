@@ -359,7 +359,12 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
 
             sourceRequests = sourceRequests.filter(req => {
                 // Match unit name against linked units. 
-                const isLinkedUnit = linkedUnits.includes(req.unit);
+                // Using flexible match to handle potential whitespace discrepancies
+                const isLinkedUnit = linkedUnits.some(u =>
+                    u.trim() === req.unit.trim() ||
+                    u.includes(req.unit) ||
+                    req.unit.includes(u)
+                );
 
                 // Restore Creator Visibility (using Name as NIF is not available on Request)
                 // This ensures users see requests they created even if not linked to their unit (e.g. Nova Unidade)

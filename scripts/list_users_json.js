@@ -1,0 +1,27 @@
+
+import pg from 'pg';
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+
+const { Pool } = pg;
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+});
+
+async function run() {
+    const client = await pool.connect();
+    try {
+        const res = await client.query(`SELECT id, name, nif FROM users ORDER BY id DESC LIMIT 50`);
+        console.log(JSON.stringify(res.rows, null, 2));
+    } catch (err) {
+        console.error(err);
+    } finally {
+        client.release();
+        await pool.end();
+    }
+}
+
+run();
