@@ -365,7 +365,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                 // This ensures users see requests they created even if not linked to their unit (e.g. Nova Unidade)
                 const isCreator = req.solicitante === userName;
 
-                return isLinkedUnit || isCreator;
+                // Context Switching: Allow view if Selected Profile matches Request's Responsible Area or Involved Areas
+                // "Caso selecione um perfil de area fim, passara a se comportar como um perfil de area fim"
+                const isAreaMatch = req.areaResponsavel === selectedProfile || (req.areasEnvolvidas && req.areasEnvolvidas.includes(selectedProfile));
+
+                return isLinkedUnit || isCreator || isAreaMatch;
             });
         }
 

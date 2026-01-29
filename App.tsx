@@ -179,8 +179,15 @@ const App: React.FC = () => {
 
                 if (profilesRes.ok) {
                     const data = await profilesRes.json();
-                    // Map to ensure compatibility if needed, currently API returns exact matches
                     setProfiles(data);
+
+                    // Context Switching Logic: Update Effective Permissions based on Selected Profile
+                    const currentProfileObj = data.find((p: any) => p.name === selectedProfile);
+                    if (currentProfileObj && currentProfileObj.permissions) {
+                        // User requested: "Menus displayed... will change"
+                        // So we update the permissions state to match the selected profile
+                        setUserPermissions(currentProfileObj.permissions);
+                    }
                 }
 
             } catch (error) {
@@ -189,7 +196,7 @@ const App: React.FC = () => {
         };
 
         fetchData();
-    }, [isAuthenticated, currentUser, userPermissions, selectedProfile]);
+    }, [isAuthenticated, currentUser, selectedProfile]); // Removed userPermissions from dependency to prevent loop if we update it inside
 
     // Helper to parse currency strings like "3,5 mi", "300 mil", "R$ 3.500.000,00"
     const parseCurrency = (str: string) => {
@@ -207,22 +214,22 @@ const App: React.FC = () => {
                 multiplier = 1000;
                 cleanStr = cleanStr.toLowerCase().replace('mil', '').trim();
             } else {
-                 multiplier = 1000000;
-                 cleanStr = cleanStr.toLowerCase().replace('mi', '').trim();
+                multiplier = 1000000;
+                cleanStr = cleanStr.toLowerCase().replace('mi', '').trim();
             }
         } else if (cleanStr.toLowerCase().includes('mil')) {
-             multiplier = 1000;
-             cleanStr = cleanStr.toLowerCase().replace('mil', '').trim();
+            multiplier = 1000;
+            cleanStr = cleanStr.toLowerCase().replace('mil', '').trim();
         }
 
         // Handle separators
         if (cleanStr.includes('.') && cleanStr.includes(',')) {
-             cleanStr = cleanStr.replace(/\./g, '').replace(',', '.');
+            cleanStr = cleanStr.replace(/\./g, '').replace(',', '.');
         } else if (cleanStr.includes(',')) {
             // Assume comma is decimal if no dots present, OR comma is decimal (Brazilian standard)
             cleanStr = cleanStr.replace(',', '.');
         }
-        
+
         const val = parseFloat(cleanStr);
         return isNaN(val) ? 0 : val * multiplier;
     };
@@ -252,7 +259,7 @@ const App: React.FC = () => {
         requests.forEach(req => {
             const cat = req.categoriaInvestimento || 'Outros';
             const val = parseCurrency(req.expectedValue);
-            
+
             if (!categoryMap.has(cat)) {
                 categoryMap.set(cat, { count: 0, value: 0 });
             }
@@ -270,12 +277,12 @@ const App: React.FC = () => {
         // 4. Baixa Complexidade
         // 5. Manutenção
         // 6. Outros
-        
+
         const validCategories = [
-            'Nova Unidade', 
-            'Intervenção Estratégica', 
-            'Reforma Operacional', 
-            'Baixa Complexidade', 
+            'Nova Unidade',
+            'Intervenção Estratégica',
+            'Reforma Operacional',
+            'Baixa Complexidade',
             'Manutenção'
         ];
 
@@ -295,7 +302,7 @@ const App: React.FC = () => {
         // Add Total Geral
         const totalCount = requests.length;
         const totalValue = requests.reduce((acc, r) => acc + parseCurrency(r.expectedValue), 0);
-        
+
         newSummary.push({
             title: 'Total Geral',
             count: totalCount,
@@ -348,7 +355,7 @@ const App: React.FC = () => {
             />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 {currentView === 'home' && (
-                    <HomeScreen 
+                    <HomeScreen
                         setCurrentView={setCurrentView}
                         userPermissions={userPermissions}
                         selectedProfile={selectedProfile}
@@ -414,7 +421,7 @@ const App: React.FC = () => {
                             setUsers(prev => {
                                 const updates = Array.isArray(updatedResult) ? updatedResult : [updatedResult];
                                 let newList = [...prev];
-                                
+
                                 updates.forEach(updatedUser => {
                                     const existsIndex = newList.findIndex(u => u.nif === updatedUser.nif);
                                     if (existsIndex >= 0) {
@@ -422,7 +429,7 @@ const App: React.FC = () => {
                                         newList[existsIndex] = updatedUser;
                                     } else {
                                         // Add new
-                                        newList = [updatedUser, ...newList]; 
+                                        newList = [updatedUser, ...newList];
                                     }
                                 });
                                 return newList;
@@ -453,10 +460,10 @@ const App: React.FC = () => {
                 )}
                 {currentView === 'perfil_acesso' && (
                     (userPermissions.includes('Configurações:Perfil Acesso') || userPermissions.includes('*') || userPermissions.includes('all') || selectedProfile === 'Administrador GSO') ? (
-                        <AccessProfileScreen 
-                            profiles={profiles} 
-                            setProfiles={setProfiles} 
-                            userPermissions={userPermissions} 
+                        <AccessProfileScreen
+                            profiles={profiles}
+                            setProfiles={setProfiles}
+                            userPermissions={userPermissions}
                             currentUser={currentUser}
                             currentProfileName={selectedProfile}
                         />
