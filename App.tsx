@@ -182,10 +182,12 @@ const App: React.FC = () => {
                     setProfiles(data);
 
                     // Context Switching Logic: Update Effective Permissions based on Selected Profile
-                    if (selectedProfile === 'Administrador do sistema') {
+                    const targetProfileName = selectedProfile?.trim();
+
+                    if (targetProfileName === 'Administrador do sistema') {
                         setUserPermissions(['*']);
                     } else {
-                        const currentProfileObj = data.find((p: any) => p.name === selectedProfile);
+                        const currentProfileObj = data.find((p: any) => p.name?.trim() === targetProfileName);
                         if (currentProfileObj) {
                             let perms = currentProfileObj.permissions;
                             // Handle potential stringified JSON from DB
@@ -198,6 +200,10 @@ const App: React.FC = () => {
                                 }
                             }
                             setUserPermissions(Array.isArray(perms) ? perms : []);
+                        } else {
+                            // Profile not found -> Clear permissions
+                            console.warn(`Profile '${targetProfileName}' not found in fetched profiles.`);
+                            setUserPermissions([]);
                         }
                     }
                 }
