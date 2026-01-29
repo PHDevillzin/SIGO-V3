@@ -24,9 +24,25 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
 
     // Initialize state when request changes
     useEffect(() => {
-        if (request && request.manifestationTargets) {
+        if (request) {
+            let targets = request.manifestationTargets || [];
+
+            // Fallback: If no targets defined (legacy or ad-hoc), infer from existing manifestations or current user
+            if (targets.length === 0) {
+                const existingAreas = request.manifestations?.map(m => m.area) || [];
+                if (existingAreas.length > 0) {
+                    targets = Array.from(new Set(existingAreas));
+                } else if (userProfile && userProfile !== 'Administrador do sistema' && !userProfile.includes('Administrador')) {
+                    // Suggest current user's area if they are not admin
+                    targets = [userProfile];
+                } else {
+                    // Ultimate fallback
+                    targets = ['Geral'];
+                }
+            }
+
             // Load existing OR create templates for targets
-            const initialManifestations: Manifestation[] = request.manifestationTargets.map(targetArea => {
+            const initialManifestations: Manifestation[] = targets.map(targetArea => {
                 // Find existing
                 const existing = request.manifestations?.find(m => m.area === targetArea);
                 if (existing) return existing;
@@ -40,7 +56,7 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
             });
             setManifestations(initialManifestations);
         }
-    }, [request, currentUser]);
+    }, [request, currentUser, userProfile]);
 
     const handleTextChange = (area: string, text: string) => {
         setManifestations(prev => prev.map(m =>
