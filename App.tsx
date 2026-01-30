@@ -6,6 +6,7 @@ import SummaryCard from './components/SummaryCard';
 import RequestsTable from './components/RequestsTable';
 import PlanningScreen from './components/PlanningScreen';
 import PlurianualScreen from './components/PlurianualScreen';
+import PlurianualDashboard from './components/PlurianualDashboard';
 import HomeScreen from './components/HomeScreen';
 import TipologiaScreen from './components/TipologiaScreen';
 import UnitsScreen from './components/UnitsScreen';
@@ -427,7 +428,8 @@ const App: React.FC = () => {
                     />
                 )}
                 {currentView === 'planejamento' && <PlanningScreen />}
-                {currentView === 'plurianual' && <PlurianualScreen />}
+                {currentView === 'plurianual' && <PlurianualScreen setCurrentView={setCurrentView} />}
+                {currentView === 'plurianual_dashboard' && <PlurianualDashboard setCurrentView={setCurrentView} />}
                 {currentView === 'tipologias' && <TipologiaScreen tipologias={tipologias} setTipologias={setTipologias} />}
                 {currentView === 'cadastro_unidades' && <UnitsScreen units={units} setUnits={setUnits} />}
                 {currentView === 'cadastro_tipo_local' && <TipoLocalScreen tipoLocais={tipoLocais} setTipoLocais={setTipoLocais} />}

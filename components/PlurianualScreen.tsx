@@ -48,7 +48,7 @@ const getStatusClass = (status: string) => {
 };
 
 const PlurianualSummaryCard: React.FC<{ year: number, demand: number, value: string, onClick: () => void, isSelected: boolean }> = ({ year, demand, value, onClick, isSelected }) => (
-    <div 
+    <div
         onClick={onClick}
         className={`bg-white rounded-md shadow p-4 flex flex-col items-center justify-center text-center border border-gray-200 cursor-pointer transition-all ${isSelected ? 'ring-2 ring-blue-500' : 'hover:ring-2 hover:ring-blue-300'}`}
     >
@@ -62,7 +62,12 @@ const PlurianualSummaryCard: React.FC<{ year: number, demand: number, value: str
 );
 
 
-const PlurianualScreen: React.FC = () => {
+
+interface PlurianualScreenProps {
+    setCurrentView?: (view: string) => void;
+}
+
+const PlurianualScreen: React.FC<PlurianualScreenProps> = ({ setCurrentView }) => {
     const [allData, setAllData] = useState<PlanningData[]>(planningData);
     const [selectedYear, setSelectedYear] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -91,7 +96,7 @@ const PlurianualScreen: React.FC = () => {
             setToast(prev => ({ ...prev, isVisible: false }));
         }, 3000);
     };
-    
+
     const summaryData = [
         { year: 2026, demand: 28, value: 'R$ 15.000,00' },
         { year: 2027, demand: 35, value: 'R$ 21.000,00' },
@@ -100,7 +105,7 @@ const PlurianualScreen: React.FC = () => {
         { year: 2030, demand: 15, value: 'R$ 5.000,00' },
         { year: 2031, demand: 10, value: 'R$ 3.000,00' },
     ];
-    
+
     const filteredData = useMemo(() => {
         let data = allData.filter(item =>
             item.unidade.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -111,40 +116,40 @@ const PlurianualScreen: React.FC = () => {
         if (activeFilters) {
             // Reclassified
             if (activeFilters.reclassified && activeFilters.reclassified !== 'all') {
-                 const isReclassified = activeFilters.reclassified === 'yes';
-                 data = data.filter(item => !!item.reclassified === isReclassified);
+                const isReclassified = activeFilters.reclassified === 'yes';
+                data = data.filter(item => !!item.reclassified === isReclassified);
             }
-            
+
             // Unidades
             if (activeFilters.unidades && activeFilters.unidades.length > 0) {
                 data = data.filter(item => activeFilters.unidades?.includes(item.unidade));
             }
-            
+
             // Situacoes
             if (activeFilters.situacoes && activeFilters.situacoes.length > 0) {
-                 // Check both project and work situation, or generic status
-                 data = data.filter(item => 
-                     activeFilters.situacoes?.includes(item.situacaoProjeto) ||
-                     activeFilters.situacoes?.includes(item.situacaoObra) ||
-                     activeFilters.situacoes?.includes(item.status)
-                 );
+                // Check both project and work situation, or generic status
+                data = data.filter(item =>
+                    activeFilters.situacoes?.includes(item.situacaoProjeto) ||
+                    activeFilters.situacoes?.includes(item.situacaoObra) ||
+                    activeFilters.situacoes?.includes(item.status)
+                );
             }
-            
+
             // Entidades
             if (activeFilters.entidades && activeFilters.entidades.length > 0) {
                 data = data.filter(item => item.entidade && activeFilters.entidades!.includes(item.entidade));
             }
-            
+
             // Categorias
             if (activeFilters.categorias && activeFilters.categorias.length > 0) {
-                 data = data.filter(item => item.categoria && activeFilters.categorias!.includes(item.categoria));
+                data = data.filter(item => item.categoria && activeFilters.categorias!.includes(item.categoria));
             }
 
             // Tipologias
             if (activeFilters.tipologias && activeFilters.tipologias.length > 0) {
-                 data = data.filter(item => item.tipologia && activeFilters.tipologias!.includes(item.tipologia));
+                data = data.filter(item => item.tipologia && activeFilters.tipologias!.includes(item.tipologia));
             }
-            
+
             // Origens (Year from inicioProjeto)
             if (activeFilters.origens && activeFilters.origens.length > 0) {
                 data = data.filter(item => {
@@ -194,13 +199,13 @@ const PlurianualScreen: React.FC = () => {
             sortableItems.sort((a, b) => {
                 const aValue = a[sortConfig.key!];
                 const bValue = b[sortConfig.key!];
-    
+
                 if (aValue === 'N/A' || aValue == null) return 1;
                 if (bValue === 'N/A' || bValue == null) return -1;
-    
+
                 const parsedA = parseValueForSort(aValue);
                 const parsedB = parseValueForSort(bValue);
-    
+
                 if (parsedA < parsedB) {
                     return sortConfig.direction === 'ascending' ? -1 : 1;
                 }
@@ -233,10 +238,10 @@ const PlurianualScreen: React.FC = () => {
     const handleCloseModal = () => {
         setIsModalOpen(false);
     };
-    
+
     const handleEditSelected = () => {
         if (selectedIds.length === 0) return;
-        
+
         const selectedItems = allData.filter(item => selectedIds.includes(item.id));
 
         const hasReclassified = selectedItems.some(item => item.reclassified === true);
@@ -275,7 +280,7 @@ const PlurianualScreen: React.FC = () => {
         handleCloseProjectWorkModal();
         showToast("Demanda(s) atualizada(s) com sucesso.", "success");
     };
-    
+
     const handleViewDetails = (item: PlanningData) => {
         setSelectedItemForDetails(item);
         setDetailsModalInitialTab('details');
@@ -287,7 +292,7 @@ const PlurianualScreen: React.FC = () => {
         setDetailsModalInitialTab('financial');
         setIsDetailsModalOpen(true);
     };
-    
+
     const handleSelectRow = (id: number) => {
         setSelectedIds(prev => {
             if (prev.includes(id)) {
@@ -308,7 +313,7 @@ const PlurianualScreen: React.FC = () => {
             setSelectedIds(prev => [...new Set([...prev, ...paginatedIds])]);
         }
     };
-    
+
     const SortableHeader: React.FC<{
         columnKey: keyof PlanningData;
         title: string;
@@ -330,22 +335,28 @@ const PlurianualScreen: React.FC = () => {
 
     return (
         <>
-            <div 
-              className={`fixed top-6 left-6 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-transform duration-500 ease-in-out ${toast.isVisible ? 'translate-x-0' : '-translate-x-[150%]'} ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}
-              role="alert"
+            <div
+                className={`fixed top-6 left-6 text-white py-3 px-5 rounded-lg shadow-xl z-[100] transition-transform duration-500 ease-in-out ${toast.isVisible ? 'translate-x-0' : '-translate-x-[150%]'} ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}
+                role="alert"
             >
                 <p className="font-semibold">{toast.message}</p>
             </div>
             <div className="space-y-6">
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="bg-white rounded-lg shadow p-6 flex justify-between items-center">
                     <h1 className="text-2xl font-semibold text-gray-800">Tela Plurianual</h1>
+                    <button
+                        className="bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 transition-colors"
+                        onClick={() => setCurrentView && setCurrentView('plurianual_dashboard')}
+                    >
+                        Detalhes
+                    </button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                     {summaryData.map(data => (
-                        <PlurianualSummaryCard 
-                            key={data.year} 
-                            {...data} 
+                        <PlurianualSummaryCard
+                            key={data.year}
+                            {...data}
                             onClick={() => handleYearSelect(data.year)}
                             isSelected={selectedYear === data.year && isModalOpen}
                         />
@@ -370,7 +381,7 @@ const PlurianualScreen: React.FC = () => {
                             />
                         </div>
                         <div className="flex items-center space-x-2">
-                             <button
+                            <button
                                 onClick={handleEditSelected}
                                 disabled={selectedIds.length === 0}
                                 className="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
@@ -378,7 +389,7 @@ const PlurianualScreen: React.FC = () => {
                                 <PencilIcon className="w-5 h-5" />
                                 <span>Editar</span>
                             </button>
-                             <button
+                            <button
                                 onClick={() => setIsExportAlertOpen(true)}
                                 className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 transition-colors"
                             >
@@ -394,10 +405,10 @@ const PlurianualScreen: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                    
+
                     {showAdvancedFilters && (
-                        <AdvancedFilters 
-                            showReclassified 
+                        <AdvancedFilters
+                            showReclassified
                             onFilter={handleApplyFilters}
                             activeFilters={activeFilters}
                         />
@@ -408,8 +419,8 @@ const PlurianualScreen: React.FC = () => {
                             <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
                                 <tr>
                                     <th scope="col" className="p-4">
-                                        <input 
-                                            type="checkbox" 
+                                        <input
+                                            type="checkbox"
                                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                                             checked={paginatedData.length > 0 && paginatedData.every(item => selectedIds.includes(item.id))}
                                             onChange={handleSelectAll}
@@ -435,11 +446,11 @@ const PlurianualScreen: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                               {paginatedData.length > 0 ? paginatedData.map(item => (
+                                {paginatedData.length > 0 ? paginatedData.map(item => (
                                     <tr key={item.id} className="bg-white border-b hover:bg-gray-50 align-middle">
                                         <td className="p-4">
-                                            <input 
-                                                type="checkbox" 
+                                            <input
+                                                type="checkbox"
                                                 className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                                                 checked={selectedIds.includes(item.id)}
                                                 onChange={() => handleSelectRow(item.id)}
@@ -484,17 +495,17 @@ const PlurianualScreen: React.FC = () => {
                                             </div>
                                         </td>
                                     </tr>
-                               )) : (
-                                   <tr>
+                                )) : (
+                                    <tr>
                                         <td colSpan={17} className="text-center py-10 text-gray-500">
                                             Nenhum dado disponível.
                                         </td>
-                                   </tr>
-                               )}
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
-                     <div className="flex items-center justify-between p-4 border-t">
+                    <div className="flex items-center justify-between p-4 border-t">
                         <div className="flex items-center space-x-2">
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
@@ -513,7 +524,7 @@ const PlurianualScreen: React.FC = () => {
                             >
                                 <ChevronRightIcon className="w-6 h-6 text-gray-400" />
                             </button>
-                             <span className="text-sm text-gray-600">Página {currentPage} de {totalPages > 0 ? totalPages : 1}</span>
+                            <span className="text-sm text-gray-600">Página {currentPage} de {totalPages > 0 ? totalPages : 1}</span>
                         </div>
                         <div>
                             <select
@@ -537,7 +548,7 @@ const PlurianualScreen: React.FC = () => {
                 onClose={handleCloseModal}
                 year={selectedYear}
             />
-             <ProjectWorkDataModal
+            <ProjectWorkDataModal
                 isOpen={isProjectWorkModalOpen}
                 onClose={handleCloseProjectWorkModal}
                 data={selectedItemsForEdit}
