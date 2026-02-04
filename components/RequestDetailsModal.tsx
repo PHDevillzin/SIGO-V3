@@ -42,7 +42,7 @@ const AttachmentItem: React.FC<{ name: string; type: 'pdf' | 'image' }> = ({ nam
 );
 
 const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClose, request }) => {
-  const [activeTab, setActiveTab] = React.useState<'detalhes' | 'movimentos'>('detalhes');
+  const [activeTab, setActiveTab] = React.useState<'detalhes' | 'movimentos' | 'ciencia'>('detalhes');
 
   const [movements, setMovements] = React.useState<any[]>([]);
   const [loadingMovements, setLoadingMovements] = React.useState(false);
@@ -111,12 +111,22 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
                 >
                     Movimentos de solicitação
                 </button>
+                <button 
+                    onClick={() => setActiveTab('ciencia')}
+                    className={`pb-3 border-b-2 font-medium text-sm transition-colors ${
+                        activeTab === 'ciencia' 
+                        ? 'border-[#0EA5E9] text-[#0EA5E9]' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                   Manifestação/Ciência
+                </button>
             </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
-            {activeTab === 'detalhes' ? (
+            {activeTab === 'detalhes' && (
                 <div className="flex flex-col gap-6">
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Left Column: Form Data */}
@@ -201,30 +211,10 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
                         </div>
                     </div>
                 </div>
-                
-                {/* Manifestations Section */}
-                {request.manifestations && request.manifestations.length > 0 && (
-                        <div className="mt-6 border-t pt-4 w-full">
-                        <h4 className="font-bold text-gray-800 mb-4 bg-sky-50 p-2 rounded">Manifestações Realizadas</h4>
-                        <div className="space-y-4">
-                            {request.manifestations.map((m, idx) => (
-                                <div key={idx} className="bg-white border border-l-4 border-l-sky-500 border-gray-200 rounded-r-lg p-4 shadow-sm">
-                                    <div className="flex justify-between items-center mb-2 border-b pb-2">
-                                        <span className="font-bold text-sky-800 text-base">{m.area}</span>
-                                        <div className="text-xs text-gray-500 flex flex-col items-end">
-                                            <span className="font-semibold">{m.user}</span>
-                                            <span>{new Date(m.date).toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">{m.text}</p>
-                                </div>
-                            ))}
-                        </div>
-                        </div>
-
-                )}
                 </div>
-            ) : (
+            )}
+
+            {activeTab === 'movimentos' && (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                     {loadingMovements ? (
                         <div className="p-10 text-center text-gray-500">Carregando movimentos...</div>
@@ -260,6 +250,60 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
                             </tbody>
                         </table>
                     )}
+                </div>
+            )}
+
+            {activeTab === 'ciencia' && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                     <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data/Hora</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuário</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {request.manifestations && request.manifestations.length > 0 ? request.manifestations.map((manif, idx) => {
+                                const isFilled = manif.text && manif.text.length > 0;
+                                if (!isFilled) return null; // Don't show empty pending manifestations in the log? Or show as pending?
+                                // Requirement: "Data/Hora - Mostrará quando a ciência ou manifestação foi feita."
+                                // If not done, it has no date/user usually in our logic, so we skip pending or show them?
+                                // The requirement says "esse registro deverá ser feito nesta aba". implying the record of the ACTION.
+                                // So we only show completed ones.
+
+                                return (
+                                <tr key={idx}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {manif.date ? new Date(manif.date).toLocaleString('pt-BR') : '-'}
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-gray-900">
+                                        {/* Status: Ciente or Comment */}
+                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${manif.text === 'Ciente' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                                            {manif.text === 'Ciente' ? 'Ciente' : (manif.text.length > 50 ? manif.text.substring(0,50) + '...' : manif.text)}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{manif.user || '-'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{manif.area || '-'}</td>
+                                </tr>
+                            )}) : (
+                                <tr>
+                                    <td colSpan={4} className="px-6 py-4 text-center text-gray-500">Nenhuma manifestação/ciência registrada.</td>
+                                </tr>
+                            )}
+                            
+                            {/* Filter out nulls from map if we decided to hide pending */}
+                             {request.manifestations && request.manifestations.filter(m => m.text && m.text.length > 0).length === 0 && (
+                                 !request.manifestations || request.manifestations.length === 0 ? null : (
+                                      <tr>
+                                        <td colSpan={4} className="px-6 py-4 text-center text-gray-500">Nenhuma manifestação/ciência registrada.</td>
+                                    </tr>
+                                 )
+                             )}
+
+                        </tbody>
+                    </table>
                 </div>
             )}
         </div>
