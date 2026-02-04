@@ -198,7 +198,7 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                                     }
                                     className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none ${!canEdit ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-300'}`}
                                 />
-                                {canEdit && !isFilled && (
+                                {canEdit && (
                                     <button
                                         onClick={() => {
                                             const newItem = { ...manif, user: currentUser, date: new Date().toISOString() };
@@ -213,13 +213,14 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                                             onSave(newList);
                                         }}
                                         disabled={!hasChanges || manif.text.length === 0}
-                                        className={`self-end px-4 py-2 text-white text-sm font-medium rounded-md shadow-sm transition-colors ${
+                                        className={`self-end px-4 py-2 text-white text-sm font-bold rounded-md shadow-sm transition-colors flex items-center ${
                                             hasChanges && manif.text.length > 0 
                                             ? 'bg-[#0EA5E9] hover:bg-sky-600' 
                                             : 'bg-gray-300 cursor-not-allowed'
                                         }`}
                                     >
-                                        <CheckIcon className="w-5 h-5 block mx-auto" />
+                                        <CheckIcon className="w-4 h-4 mr-2" />
+                                        Salvar
                                     </button>
                                 )}
                                 </div>
