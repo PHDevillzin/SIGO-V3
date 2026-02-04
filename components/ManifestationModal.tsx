@@ -175,7 +175,7 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                                     <span className="font-bold text-gray-800 bg-white border border-gray-200 px-2 py-1 rounded text-sm shadow-sm">
                                         {manif.area}
                                     </span>
-                                    {manif.text && isFilled && (
+                                    {manif.text && savedText === manif.text && savedText.length > 0 && (
                                         <span className="text-xs text-green-600 flex items-center bg-green-50 px-2 py-1 rounded-full border border-green-200">
                                             <CheckIcon className="w-3 h-3 mr-1" />
                                             Preenchido por {manif.user}
@@ -188,15 +188,15 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                                     onChange={(e) => handleTextChange(manif.area, e.target.value)}
                                     maxLength={3000}
                                     rows={4}
-                                    disabled={!canEdit || isFilled}
+                                    disabled={!canEdit}
                                     placeholder={
-                                        isFilled
+                                        savedText && savedText.length > 0
                                             ? `Manifestação registrada por ${manif.user}.`
                                             : canEdit
                                                 ? `Insira a manifestação da área ${manif.area}...`
                                                 : `Aguardando manifestação da área ${manif.area}`
                                     }
-                                    className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none ${(!canEdit || isFilled) ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-300'}`}
+                                    className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none ${!canEdit ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-300'}`}
                                 />
                                 {canEdit && !isFilled && (
                                     <button

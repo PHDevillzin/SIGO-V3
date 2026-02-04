@@ -313,8 +313,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         // We just update the 'manifestations' field. The filter logic in useMemo will handle visibility.
 
         handleUpdateRequestStatus(requestToManifest, requestToManifest.status, { manifestations });
-        setIsManifestationModalOpen(false);
-        setRequestToManifest(null);
+        // Update local state for the modal to reflect changes immediately (e.g. disabling the save button)
+        setRequestToManifest(prev => prev ? { ...prev, manifestations } : null);
+        // Do NOT close the modal to allow multiple edits
+        // setIsManifestationModalOpen(false);
+        // setRequestToManifest(null);
     };
 
 
