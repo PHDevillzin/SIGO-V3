@@ -278,11 +278,16 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({ isOpen, onClo
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {manif.date ? new Date(manif.date).toLocaleString('pt-BR') : '-'}
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-900">
-                                        {/* Status: Ciente or Comment */}
-                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${manif.text === 'Ciente' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-                                            {manif.text === 'Ciente' ? 'Ciente' : (manif.text.length > 50 ? manif.text.substring(0,50) + '...' : manif.text)}
-                                        </span>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 max-w-xs relative group">
+                                        {manif.text === 'Ciente' ? (
+                                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium border border-green-200" title="Ciente">
+                                                Ciente
+                                            </span>
+                                        ) : (
+                                            <div title={manif.text} className="truncate cursor-help">
+                                                {manif.text.length > 50 ? `${manif.text.substring(0, 50)}...` : manif.text}
+                                            </div>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{manif.user || '-'}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{manif.area || '-'}</td>
