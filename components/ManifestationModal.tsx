@@ -97,14 +97,16 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                 <div className="p-4 overflow-y-auto flex-grow space-y-6">
                     {manifestations.map((manif, index) => {
                         // Permission Check
-                        // "Aberto para a pessoa que pertença a área fim respectiva"
-                        // Match area name with userProfile?
-                        // Assuming tight coupling or checking if profile contains the area name.
                         const isAreaMatch = userProfile === manif.area || (userProfile && userProfile.includes(manif.area));
-                        // Allow admin override or explicit match
                         // Allow admin override or explicit match
                         const canEdit = isAreaMatch || (userProfile === 'Administrador do sistema');
                         const isFilled = !!manif.text && manif.text.trim().length > 0;
+                        
+                        // Check if current text differs from saved text (to enable Save button)
+                        // saved text is in request.manifestations
+                        const savedManif = request.manifestations?.find(m => m.area === manif.area);
+                        const savedText = savedManif ? savedManif.text : '';
+                        const hasChanges = manif.text !== savedText;
 
                         const isSenai = request.entidade === 'SENAI';
 
@@ -134,7 +136,30 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
 
                                     {!isFilled && canEdit && (
                                         <button
-                                            onClick={() => handleTextChange(manif.area, 'Ciente')}
+                                            onClick={() => {
+                                                // Create a single-item list or update the specific item in the FULL list from DB?
+                                                // Strategy: Take current DB list, update this item, save.
+                                                const currentDBList = request.manifestations || [];
+                                                const newItem = { ...manif, text: 'Ciente', user: currentUser, date: new Date().toISOString() };
+                                                
+                                                // If item exists in DB, update it. If not, add it?
+                                                // Actually we should map existing list + new.
+                                                // But we want to IGNORE other local changes.
+                                                // So we reconstruct the list from request.manifestations + this change.
+                                                
+                                                // Actually, onSave expects the FULL list to replace the 'manifestations' column.
+                                                // So we must provide the full list.
+                                                // We should use request.manifestations as base.
+                                                
+                                                let newList = [...(request.manifestations || [])];
+                                                const existingIndex = newList.findIndex(m => m.area === manif.area);
+                                                if (existingIndex >= 0) {
+                                                    newList[existingIndex] = newItem;
+                                                } else {
+                                                    newList.push(newItem);
+                                                }
+                                                onSave(newList);
+                                            }}
                                             className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm"
                                         >
                                             Ciente
@@ -150,13 +175,14 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                                     <span className="font-bold text-gray-800 bg-white border border-gray-200 px-2 py-1 rounded text-sm shadow-sm">
                                         {manif.area}
                                     </span>
-                                    {manif.text && (
+                                    {manif.text && isFilled && (
                                         <span className="text-xs text-green-600 flex items-center bg-green-50 px-2 py-1 rounded-full border border-green-200">
                                             <CheckIcon className="w-3 h-3 mr-1" />
                                             Preenchido por {manif.user}
                                         </span>
                                     )}
                                 </div>
+                                <div className="flex gap-2">
                                 <textarea
                                     value={manif.text}
                                     onChange={(e) => handleTextChange(manif.area, e.target.value)}
@@ -172,6 +198,31 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                                     }
                                     className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none ${(!canEdit || isFilled) ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white border-gray-300'}`}
                                 />
+                                {canEdit && !isFilled && (
+                                    <button
+                                        onClick={() => {
+                                            const newItem = { ...manif, user: currentUser, date: new Date().toISOString() };
+                                            let newList = [...(request.manifestations || [])];
+                                            const existingIndex = newList.findIndex(m => m.area === manif.area);
+                                            // Handle case where it's not in DB yet (empty list)
+                                            if (existingIndex >= 0) {
+                                                newList[existingIndex] = newItem;
+                                            } else {
+                                                newList.push(newItem);
+                                            }
+                                            onSave(newList);
+                                        }}
+                                        disabled={!hasChanges || manif.text.length === 0}
+                                        className={`self-end px-4 py-2 text-white text-sm font-medium rounded-md shadow-sm transition-colors ${
+                                            hasChanges && manif.text.length > 0 
+                                            ? 'bg-[#0EA5E9] hover:bg-sky-600' 
+                                            : 'bg-gray-300 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        <CheckIcon className="w-5 h-5 block mx-auto" />
+                                    </button>
+                                )}
+                                </div>
                                 <div className="flex justify-between mt-2 text-xs text-gray-400">
                                     <span>{manif.user && manif.date ? `${manif.user} - ${new Date(manif.date).toLocaleDateString()}` : ''}</span>
                                     <span>{manif.text.length}/3000</span>
@@ -190,17 +241,11 @@ const ManifestationModal: React.FC<ManifestationModalProps> = ({
                             onClick={onClose}
                             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium"
                         >
-                            Cancelar
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className="px-4 py-2 bg-[#0EA5E9] text-white rounded-md hover:bg-sky-600 font-medium flex items-center"
-                        >
-                            <CheckIcon className="w-4 h-4 mr-2" />
-                            {request.entidade === 'SENAI' ? 'Confirmar Ciência' : 'Salvar Manifestação'}
+                            Fechar
                         </button>
                     </div>
                 </div>
+
             </div>
         </div>
     );
