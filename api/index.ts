@@ -1,19 +1,32 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Map endpoints to dynamic import functions
-const handlers: Record<string, (req: VercelRequest, res: VercelResponse) => Promise<any>> = {
-    'auth': async (req, res) => (await import('../handlers/auth')).default(req, res),
-    'avisos': async (req, res) => (await import('../handlers/avisos')).default(req, res),
-    'health-db': async (req, res) => (await import('../handlers/health-db')).default(req, res),
-    'health': async (req, res) => (await import('../handlers/health')).default(req, res),
-    'movements': async (req, res) => (await import('../handlers/movements')).default(req, res),
-    'profiles': async (req, res) => (await import('../handlers/profiles')).default(req, res),
-    'requests': async (req, res) => (await import('../handlers/requests')).default(req, res),
-    'tipo-locais': async (req, res) => (await import('../handlers/tipo-locais')).default(req, res),
-    'tipologias': async (req, res) => (await import('../handlers/tipologias')).default(req, res),
-    'units': async (req, res) => (await import('../handlers/units')).default(req, res),
-    'update-request-status': async (req, res) => (await import('../handlers/update_request_status')).default(req, res),
-    'users': async (req, res) => (await import('../handlers/users')).default(req, res)
+// Static Imports to ensure Vercel bundles them
+import auth from '../handlers/auth';
+import avisos from '../handlers/avisos';
+import healthDb from '../handlers/health-db';
+import health from '../handlers/health';
+import movements from '../handlers/movements';
+import profiles from '../handlers/profiles';
+import requests from '../handlers/requests';
+import tipoLocais from '../handlers/tipo-locais';
+import tipologias from '../handlers/tipologias';
+import units from '../handlers/units';
+import updateRequestStatus from '../handlers/update_request_status';
+import users from '../handlers/users';
+
+const handlers: Record<string, (req: VercelRequest, res: VercelResponse) => void | Promise<any>> = {
+    'auth': auth,
+    'avisos': avisos,
+    'health-db': healthDb,
+    'health': health,
+    'movements': movements,
+    'profiles': profiles,
+    'requests': requests,
+    'tipo-locais': tipoLocais,
+    'tipologias': tipologias,
+    'units': units,
+    'update-request-status': updateRequestStatus,
+    'users': users
 };
 
 export default async function (req: VercelRequest, res: VercelResponse) {
