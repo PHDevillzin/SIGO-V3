@@ -25,18 +25,18 @@ export default defineConfig(({ mode }) => {
             console.log(`[API Middleware] Incoming request: ${req.method} /api/${endpoint}`);
 
             const endpointFileMap: Record<string, string> = {
-              'users': 'api/users.ts',
-              'units': 'api/units.ts',
-              'requests': 'api/requests.ts',
-              'tipologias': 'api/tipologias.ts',
-              'tipo-locais': 'api/tipo-locais.ts',
-              'profiles': 'api/profiles.ts',
-              'auth': 'api/auth.ts',
-              'health': 'api/health.ts',
-              'health-db': 'api/health-db.ts',
-              'movements': 'api/movements.ts',
-              'update-request-status': 'api/update_request_status.ts',
-              'avisos': 'api/avisos.ts'
+              'users': 'handlers/users.ts',
+              'units': 'handlers/units.ts',
+              'requests': 'handlers/requests.ts',
+              'tipologias': 'handlers/tipologias.ts',
+              'tipo-locais': 'handlers/tipo-locais.ts',
+              'profiles': 'handlers/profiles.ts',
+              'auth': 'handlers/auth.ts',
+              'health': 'handlers/health.ts',
+              'health-db': 'handlers/health-db.ts',
+              'movements': 'handlers/movements.ts',
+              'update-request-status': 'handlers/update_request_status.ts',
+              'avisos': 'handlers/avisos.ts'
             };
 
             const relativePath = endpointFileMap[endpoint];
