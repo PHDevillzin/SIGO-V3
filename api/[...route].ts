@@ -30,16 +30,23 @@ const handlers: Record<string, (req: VercelRequest, res: VercelResponse) => any>
 export default async function (req: VercelRequest, res: VercelResponse) {
     const { route } = req.query;
 
+    console.log('[API Dispatcher] Request URL:', req.url);
+    console.log('[API Dispatcher] Query Params:', JSON.stringify(req.query));
+    console.log('[API Dispatcher] Body:', typeof req.body === 'object' ? JSON.stringify(req.body) : req.body);
+
     // route is an array of path segments, e.g. ['users'] or ['users', '123']
     // For our flat API structure, the first segment is the endpoint.
     // E.g. /api/users -> route: ['users']
     
     if (!route || !Array.isArray(route) || route.length === 0) {
+        console.error('[API Dispatcher] 404 - No route parameter found or empty');
         return res.status(404).json({ error: 'Endpoint not found' });
     }
 
     const endpoint = route[0];
     const handler = handlers[endpoint];
+
+    console.log(`[API Dispatcher] Routing to endpoint: ${endpoint}`);
 
     if (handler) {
         // Forward the request to the specific handler
