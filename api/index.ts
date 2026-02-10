@@ -17,9 +17,17 @@ const handlers: Record<string, (req: VercelRequest, res: VercelResponse) => Prom
 };
 
 export default async function (req: VercelRequest, res: VercelResponse) {
-    const { route } = req.query;
+    // Manually parse route from URL
+    // URL format: /api/auth?foo=bar -> path: /auth
+    const url = new URL(req.url || '', `http://${req.headers.host}`);
+    const pathname = url.pathname;
+    
+    // Remove /api prefix if present
+    const routePath = pathname.replace(/^\/api\/?/, '');
+    const segments = routePath.split('/').filter(Boolean);
 
     console.log('[API Dispatcher] Request URL:', req.url);
+    console.log('[API Dispatcher] Parsed Segments:', segments);
     console.log('[API Dispatcher] Query Params:', JSON.stringify(req.query));
     // Verify body exists before logging to avoid errors if body is undefined
     console.log('[API Dispatcher] Body Type:', typeof req.body);
@@ -38,12 +46,12 @@ export default async function (req: VercelRequest, res: VercelResponse) {
     }
 
     // Fallback for root /api/ request
-    if (!route || !Array.isArray(route) || route.length === 0) {
+    if (segments.length === 0) {
         console.log('[API Dispatcher] Root request, returning health check.');
         return res.status(200).json({ status: 'API Dispatcher Online', handlers: Object.keys(handlers) });
     }
 
-    const endpoint = route[0];
+    const endpoint = segments[0];
     
     // DEBUG: Test endpoint to verify dispatcher works without DB
     if (endpoint === 'test') {
