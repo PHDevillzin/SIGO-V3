@@ -140,6 +140,11 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
       return true;
     }
 
+    // EXCEPTION: "Gestor GSO" and "Administrador GSO" see "Gerenciamento de avisos"
+    if ((selectedProfile === 'Gestor GSO' || selectedProfile === 'Administrador GSO') && permissionKey === 'avisos_globais') {
+      return true;
+    }
+
     // Auto-grant permissions for sub-items of Periodo if user has the main permission
     if (['periodo_aprovacao', 'periodo_inclusao'].includes(permissionKey)) {
         return hasPermission('cadastro_periodos');

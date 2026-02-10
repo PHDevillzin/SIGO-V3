@@ -195,3 +195,26 @@ export const ArrowLeftIcon = createIcon(
 export const ClockIcon = createIcon(
   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
 );
+
+export const PaperClipIcon = createIcon(
+  <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+);
+
+export const BoldIcon = createIcon(
+  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3.75h4.75a5.5 5.5 0 015.5 5.5c0 1.94-1.055 3.654-2.614 4.58.586.326 1.146.75 1.597 1.306 1.258 1.55 1.517 3.535.539 5.057-1.127 1.754-3.5 2.557-6.272 2.557H6.75" />
+);
+
+export const ItalicIcon = createIcon(
+  <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 20.25l6-16.5" /> // Simplified italic line
+);
+
+export const UnderlineIcon = createIcon(
+  <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.75h-12M6 3.75v8.25a6 6 0 0012 0V3.75" />
+);
+
+export const WarningTriangleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
+     <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+  </svg>
+);
+

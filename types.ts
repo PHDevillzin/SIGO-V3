@@ -241,3 +241,18 @@ export interface ApprovalPeriod {
   alteradoPor?: string;
   dataAlteracao?: string;
 }
+
+export interface AvisoGlobal {
+  id: number;
+  titulo: string;
+  descricao: string;
+  perfis: string[]; // Array of profile names or IDs
+  dataInicio: string; // ISO string including time
+  dataFim: string;
+  dataInclusao: string;
+  criadoPor: string;
+  editadoPor?: string;
+  dataAlteracao?: string;
+  responsavel?: string; // User requested 'responsável' column, might be same as criadoPor or specific field
+  status: boolean;
+}

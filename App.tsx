@@ -23,12 +23,59 @@ import LoginScreen from './components/LoginScreen';
 import PeriodoSolicitacaoScreen from './components/PeriodoSolicitacaoScreen';
 import PeriodoInclusaoScreen from './components/PeriodoInclusaoScreen';
 import PeriodoAprovacaoScreen from './components/PeriodoAprovacaoScreen';
-import { ListIcon, CalculatorIcon } from './components/Icons';
-import type { SummaryData, Request, Unit, AccessProfile, User, Tipologia, TipoLocal } from './types';
+import GerenciamentoAvisosScreen from './components/GerenciamentoAvisosScreen'; // Import new screen
+import { ListIcon, CalculatorIcon, InformationCircleIcon, WarningTriangleIcon } from './components/Icons';
+import type { SummaryData, Request, Unit, AccessProfile, User, Tipologia, TipoLocal, AvisoGlobal } from './types';
 
 
+
+// Notice Overlay Component - MacOS Style
+const NoticeOverlay: React.FC<{ avisos: AvisoGlobal[]; onClose: (id: number) => void }> = ({ avisos, onClose }) => {
+    if (avisos.length === 0) return null;
+
+    const currentAviso = avisos[0];
+
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            {/* Modal Container */}
+            <div className="bg-[#ECECEC] rounded-lg shadow-2xl w-full max-w-[520px] overflow-hidden border border-gray-300">
+                {/* Content Area */}
+                <div className="flex p-6">
+                    {/* Icon Column */}
+                    <div className="flex-shrink-0 mr-6">
+                        <WarningTriangleIcon className="w-16 h-16 text-blue-500 drop-shadow-md" />
+                    </div>
+                    
+                    {/* Text Column */}
+                    <div className="flex-1 pt-1">
+                        <h3 className="text-[15px] font-bold text-gray-900 mb-2 leading-tight">
+                            {currentAviso.titulo}
+                        </h3>
+                        <div className="text-[13px] text-gray-600 leading-normal whitespace-pre-wrap">
+                            {currentAviso.descricao}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer / Buttons */}
+                <div className="px-6 pb-5 flex justify-end">
+                    <button 
+                        onClick={() => onClose(currentAviso.id)}
+                        className="bg-blue-500 text-white px-6 py-1 rounded-[4px] text-[13px] font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 shadow-sm transition-colors min-w-[80px]"
+                    >
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ... existing code ...
 
 const App: React.FC = () => {
+    // ... existing state ...
+
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [userPermissions, setUserPermissions] = useState<string[]>([]); // New State
@@ -43,6 +90,7 @@ const App: React.FC = () => {
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [tipologias, setTipologias] = useState<Tipologia[]>([]);
     const [tipoLocais, setTipoLocais] = useState<TipoLocal[]>([]);
+    const [activeNotices, setActiveNotices] = useState<AvisoGlobal[]>([]);
 
     const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao', 'ciencia'].includes(currentView);
 
@@ -228,6 +276,29 @@ const App: React.FC = () => {
         fetchData();
     }, [isAuthenticated, currentUser, selectedProfile]); // Removed userPermissions from dependency to prevent loop if we update it inside
 
+    // Fetch Active Notices upon Login or Profile Change
+    useEffect(() => {
+        if (!isAuthenticated || !selectedProfile) return;
+
+        const fetchNotices = async () => {
+             try {
+                 const res = await fetch(`/api/avisos?active_for_profile=${encodeURIComponent(selectedProfile)}`);
+                 if (res.ok) {
+                     const data = await res.json();
+                     setActiveNotices(data);
+                 }
+             } catch (error) {
+                 console.error('Error fetching notices:', error);
+             }
+        };
+
+        fetchNotices();
+    }, [isAuthenticated, selectedProfile]);
+
+    const handleDismissNotice = (id: number) => {
+        setActiveNotices(prev => prev.filter(n => n.id !== id));
+    };
+
     // Helper to parse currency strings like "3,5 mi", "300 mil", "R$ 3.500.000,00"
     const parseCurrency = (str: string) => {
         if (!str) return 0;
@@ -364,6 +435,10 @@ const App: React.FC = () => {
 
     return (
         <div className="flex h-screen bg-[#F0F2F5] font-sans">
+            {/* Notice Overlay */}
+            {activeNotices.length > 0 && (
+                <NoticeOverlay avisos={activeNotices} onClose={handleDismissNotice} />
+            )}
             <Sidebar
                 selectedProfile={selectedProfile}
                 setSelectedProfile={setSelectedProfile}
@@ -438,6 +513,7 @@ const App: React.FC = () => {
                 {currentView === 'cadastro_periodos' && <PeriodoSolicitacaoScreen />}
                 {currentView === 'periodo_inclusao' && <PeriodoInclusaoScreen />}
                 {currentView === 'periodo_aprovacao' && <PeriodoAprovacaoScreen profiles={profiles} />}
+                {currentView === 'avisos_globais' && <GerenciamentoAvisosScreen profiles={profiles} />}
                 {currentView === 'cadastro_tipo_local' && <TipoLocalScreen tipoLocais={tipoLocais} setTipoLocais={setTipoLocais} />}
                 {currentView === 'access_registration' && (
                     <AccessRegistrationScreen

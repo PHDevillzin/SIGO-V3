@@ -35,7 +35,8 @@ export default defineConfig(({ mode }) => {
               'health': 'api/health.ts',
               'health-db': 'api/health-db.ts',
               'movements': 'api/movements.ts',
-              'update-request-status': 'api/update_request_status.ts'
+              'update-request-status': 'api/update_request_status.ts',
+              'avisos': 'api/avisos.ts'
             };
 
             const relativePath = endpointFileMap[endpoint];
