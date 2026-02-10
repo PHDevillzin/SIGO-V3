@@ -30,6 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
   const [isSolicitacoesMenuOpen, setIsSolicitacoesMenuOpen] = useState(false);
   const [isAbrirSolicitacoesMenuOpen, setIsAbrirSolicitacoesMenuOpen] = useState(false);
   const [isConfiguracoesMenuOpen, setIsConfiguracoesMenuOpen] = useState(false);
+  const [isPeriodoMenuOpen, setIsPeriodoMenuOpen] = useState(false);
 
   // Helper to check permission
   const hasPermission = (permissionKey: string) => {
@@ -139,6 +140,11 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
       return true;
     }
 
+    // Auto-grant permissions for sub-items of Periodo if user has the main permission
+    if (['periodo_aprovacao', 'periodo_inclusao'].includes(permissionKey)) {
+        return hasPermission('cadastro_periodos');
+    }
+
     if (requiredPermissions) {
       return requiredPermissions.some(p => userPermissions.includes(p));
     }
@@ -167,12 +173,18 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     const isSolicitacoes = ['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao', 'ciencia'].includes(currentView);
     const isGerenciamento = currentView === 'planejamento' || currentView === 'plurianual';
     const isAbrirSolicitacoes = ['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(currentView);
+
+
+    const isPeriodo = ['cadastro_periodos', 'periodo_aprovacao', 'periodo_inclusao'].includes(currentView);
+
     const isConfiguracoes = [
       'tipologias',
       'gestao_acesso',
       'perfil_acesso',
       'cadastro_unidades',
       'cadastro_periodos',
+      'periodo_aprovacao',
+      'periodo_inclusao',
       'cadastro_tipo_local',
       'gerenciador_arquivos',
       'avisos_globais',
@@ -184,6 +196,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     setIsManagementMenuOpen(isGerenciamento);
     setIsAbrirSolicitacoesMenuOpen(isAbrirSolicitacoes);
     setIsConfiguracoesMenuOpen(isConfiguracoes);
+    setIsPeriodoMenuOpen(isPeriodo);
 
   }, [currentView]);
 
@@ -413,12 +426,40 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                   />
                 )}
                 {hasPermission('cadastro_periodos') && (
-                  <NavItem
-                    icon={CalendarDaysIcon}
-                    label="Período Solicitação"
-                    active={currentView === 'cadastro_periodos'}
-                    onClick={() => setCurrentView('cadastro_periodos')}
-                  />
+                   <div>
+                    <button
+                      onClick={() => setIsPeriodoMenuOpen(prev => !prev)}
+                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['cadastro_periodos', 'periodo_aprovacao', 'periodo_inclusao'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <CalendarDaysIcon className="w-5 h-5 flex-shrink-0" />
+                        <span className="font-medium text-sm">Gerenciamento período</span>
+                      </div>
+                      <ChevronDownIcon className={`w-4 h-4 transition-transform ${isPeriodoMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isPeriodoMenuOpen && (
+                      <div className="pt-2 pl-6 space-y-2">
+                         <NavItem
+                          icon={CheckCircleIcon}
+                          label="Período Aprovação"
+                          active={currentView === 'periodo_aprovacao'}
+                          onClick={() => setCurrentView('periodo_aprovacao')}
+                        />
+                         <NavItem
+                          icon={CalendarDaysIcon}
+                          label="Período solicitação"
+                          active={currentView === 'cadastro_periodos'}
+                          onClick={() => setCurrentView('cadastro_periodos')}
+                        />
+                         <NavItem
+                          icon={FolderPlusIcon}
+                          label="Período inclusão"
+                          active={currentView === 'periodo_inclusao'}
+                          onClick={() => setCurrentView('periodo_inclusao')}
+                        />
+                      </div>
+                    )}
+                  </div>
                 )}
                 {hasPermission('cadastro_tipo_local') && (
                   <NavItem

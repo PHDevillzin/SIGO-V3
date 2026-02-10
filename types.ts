@@ -217,3 +217,27 @@ export interface TipoLocal {
   criadoPor: string;
   status: boolean;
 }
+
+export interface SolicitationPeriod {
+  id: number;
+  tipoServico: 'Estratégico' | 'Operacional' | 'Sede';
+  entidade: 'SESI' | 'SENAI' | 'Corporativo';
+  dataInicio: string;
+  dataFim: string;
+  criadoPor: string;
+  dataInclusao: string;
+  alteradoPor?: string;
+  dataAlteracao?: string;
+}
+
+export interface ApprovalPeriod {
+  id: number;
+  tipoAprovador: string;
+  entidade: 'SESI' | 'SENAI' | 'Corporativo';
+  dataInicio: string;
+  dataFim: string;
+  criadoPor: string;
+  dataInclusao: string;
+  alteradoPor?: string;
+  dataAlteracao?: string;
+}

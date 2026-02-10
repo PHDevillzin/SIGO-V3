@@ -20,6 +20,9 @@ import OpenStrategicRequestScreen from './components/OpenStrategicRequestScreen'
 import OpenUnitRequestScreen from './components/OpenUnitRequestScreen';
 import InvestmentPolicyScreen from './components/InvestmentPolicyScreen';
 import LoginScreen from './components/LoginScreen';
+import PeriodoSolicitacaoScreen from './components/PeriodoSolicitacaoScreen';
+import PeriodoInclusaoScreen from './components/PeriodoInclusaoScreen';
+import PeriodoAprovacaoScreen from './components/PeriodoAprovacaoScreen';
 import { ListIcon, CalculatorIcon } from './components/Icons';
 import type { SummaryData, Request, Unit, AccessProfile, User, Tipologia, TipoLocal } from './types';
 
@@ -432,6 +435,9 @@ const App: React.FC = () => {
                 {currentView === 'plurianual_dashboard' && <PlurianualDashboard setCurrentView={setCurrentView} />}
                 {currentView === 'tipologias' && <TipologiaScreen tipologias={tipologias} setTipologias={setTipologias} />}
                 {currentView === 'cadastro_unidades' && <UnitsScreen units={units} setUnits={setUnits} />}
+                {currentView === 'cadastro_periodos' && <PeriodoSolicitacaoScreen />}
+                {currentView === 'periodo_inclusao' && <PeriodoInclusaoScreen />}
+                {currentView === 'periodo_aprovacao' && <PeriodoAprovacaoScreen profiles={profiles} />}
                 {currentView === 'cadastro_tipo_local' && <TipoLocalScreen tipoLocais={tipoLocais} setTipoLocais={setTipoLocais} />}
                 {currentView === 'access_registration' && (
                     <AccessRegistrationScreen
