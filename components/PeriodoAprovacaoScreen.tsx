@@ -147,9 +147,10 @@ const PeriodoAprovacaoScreen: React.FC<PeriodoAprovacaoScreenProps> = ({ profile
                             className="w-full text-sm border-gray-300 rounded focus:ring-yellow-500 focus:border-yellow-500"
                         >
                             <option value="">Selecione...</option>
-                             {profiles.map(p => (
-                                <option key={p.id} value={p.name}>{p.name}</option>
-                            ))}
+                            <option value="Gestor Local">Gestor Local</option>
+                            <option value="Gerências">Gerências</option>
+                            <option value="Alta Administração">Alta Administração</option>
+                            <option value="Diretoria Corporativa">Diretoria Corporativa</option>
                         </select>
                     </div>
                     <div>
@@ -270,9 +271,10 @@ const PeriodoAprovacaoScreen: React.FC<PeriodoAprovacaoScreenProps> = ({ profile
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
                 >
                     <option value="">Selecione...</option>
-                    {profiles.map(p => (
-                        <option key={p.id} value={p.name}>{p.name}</option>
-                    ))}
+                    <option value="Gestor Local">Gestor Local</option>
+                    <option value="Gerências">Gerências</option>
+                    <option value="Alta Administração">Alta Administração</option>
+                    <option value="Diretoria Corporativa">Diretoria Corporativa</option>
                 </select>
             </div>
             
