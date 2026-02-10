@@ -22,7 +22,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 body: JSON.stringify({ nif, password }),
             });
 
-            const data = await response.json();
+            const textData = await response.text();
+            let data;
+            try {
+                data = JSON.parse(textData);
+            } catch (jsonError) {
+                console.error('Failed to parse JSON:', textData);
+                // Check if it's an HTML response (common with Vercel errors)
+                if (textData.trim().startsWith('<')) {
+                     // Extract title if possible
+                     const match = textData.match(/<title>(.*?)<\/title>/i);
+                     const title = match ? match[1] : 'Unknown HTML Error';
+                     throw new Error(`Server returned HTML (${response.status}): ${title}`);
+                }
+                throw new Error(`Invalid JSON response (${response.status}): ${textData.substring(0, 50)}...`);
+            }
 
             if (!response.ok) {
                 throw new Error(data.error || 'Falha no login');
@@ -31,6 +45,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             // Success
             onLogin(data);
         } catch (err: any) {
+            console.error('Login Error:', err);
             setError(err.message);
         } finally {
             setLoading(false);
