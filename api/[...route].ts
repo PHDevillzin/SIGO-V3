@@ -44,7 +44,14 @@ export default async function (req: VercelRequest, res: VercelResponse) {
     if (handler) {
         // Forward the request to the specific handler
         // The handler will see the full query parameters including 'route'
-        return await handler(req, res);
+        try {
+            return await handler(req, res);
+        } catch (error: any) {
+            console.error(`[API Dispatcher] Error in handler '${endpoint}':`, error);
+            if (!res.headersSent) {
+                return res.status(500).json({ error: 'Internal Server Error', details: error.message });
+            }
+        }
     } else {
         return res.status(404).json({ error: `Start Endpoint '${endpoint}' not found` });
     }
