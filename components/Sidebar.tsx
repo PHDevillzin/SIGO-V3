@@ -431,7 +431,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                       onClick={() => setIsPeriodoMenuOpen(prev => !prev)}
                       className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['cadastro_periodos', 'periodo_aprovacao', 'periodo_inclusao'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
                     >
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3 flex-grow text-left">
                         <CalendarDaysIcon className="w-5 h-5 flex-shrink-0" />
                         <span className="font-medium text-sm">Gerenciamento período</span>
                       </div>
