@@ -441,7 +441,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                       <div className="pt-2 pl-6 space-y-2">
                          <NavItem
                           icon={CheckCircleIcon}
-                          label="Período Aprovação"
+                          label="Período aprovação"
                           active={currentView === 'periodo_aprovacao'}
                           onClick={() => setCurrentView('periodo_aprovacao')}
                         />
