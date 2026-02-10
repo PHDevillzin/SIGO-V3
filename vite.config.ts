@@ -144,7 +144,8 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './'),
+        'api': path.resolve(__dirname, './api/handlers'),
       }
     }
   };

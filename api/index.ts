@@ -1,18 +1,18 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Static Imports to ensure Vercel bundles them
-import auth from '../handlers/auth';
-import avisos from '../handlers/avisos';
-import healthDb from '../handlers/health-db';
-import health from '../handlers/health';
-import movements from '../handlers/movements';
-import profiles from '../handlers/profiles';
-import requests from '../handlers/requests';
-import tipoLocais from '../handlers/tipo-locais';
-import tipologias from '../handlers/tipologias';
-import units from '../handlers/units';
-import updateRequestStatus from '../handlers/update_request_status';
-import users from '../handlers/users';
+import auth from './handlers/auth';
+import avisos from './handlers/avisos';
+import healthDb from './handlers/health-db';
+import health from './handlers/health';
+import movements from './handlers/movements';
+import profiles from './handlers/profiles';
+import requests from './handlers/requests';
+import tipoLocais from './handlers/tipo-locais';
+import tipologias from './handlers/tipologias';
+import units from './handlers/units';
+import updateRequestStatus from './handlers/update_request_status';
+import users from './handlers/users';
 
 const handlers: Record<string, (req: VercelRequest, res: VercelResponse) => void | Promise<any>> = {
     'auth': auth,
