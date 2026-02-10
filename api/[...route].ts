@@ -1,30 +1,19 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import authHandler from '../handlers/auth';
-import avisosHandler from '../handlers/avisos';
-import healthDbHandler from '../handlers/health-db';
-import healthHandler from '../handlers/health';
-import movementsHandler from '../handlers/movements';
-import profilesHandler from '../handlers/profiles';
-import requestsHandler from '../handlers/requests';
-import tipoLocaisHandler from '../handlers/tipo-locais';
-import tipologiasHandler from '../handlers/tipologias';
-import unitsHandler from '../handlers/units';
-import updateRequestStatusHandler from '../handlers/update_request_status';
-import usersHandler from '../handlers/users';
 
-const handlers: Record<string, (req: VercelRequest, res: VercelResponse) => any> = {
-    'auth': authHandler,
-    'avisos': avisosHandler,
-    'health-db': healthDbHandler,
-    'health': healthHandler,
-    'movements': movementsHandler,
-    'profiles': profilesHandler,
-    'requests': requestsHandler,
-    'tipo-locais': tipoLocaisHandler,
-    'tipologias': tipologiasHandler,
-    'units': unitsHandler,
-    'update-request-status': updateRequestStatusHandler,
-    'users': usersHandler
+// Map endpoints to dynamic import functions
+const handlers: Record<string, (req: VercelRequest, res: VercelResponse) => Promise<any>> = {
+    'auth': async (req, res) => (await import('../handlers/auth')).default(req, res),
+    'avisos': async (req, res) => (await import('../handlers/avisos')).default(req, res),
+    'health-db': async (req, res) => (await import('../handlers/health-db')).default(req, res),
+    'health': async (req, res) => (await import('../handlers/health')).default(req, res),
+    'movements': async (req, res) => (await import('../handlers/movements')).default(req, res),
+    'profiles': async (req, res) => (await import('../handlers/profiles')).default(req, res),
+    'requests': async (req, res) => (await import('../handlers/requests')).default(req, res),
+    'tipo-locais': async (req, res) => (await import('../handlers/tipo-locais')).default(req, res),
+    'tipologias': async (req, res) => (await import('../handlers/tipologias')).default(req, res),
+    'units': async (req, res) => (await import('../handlers/units')).default(req, res),
+    'update-request-status': async (req, res) => (await import('../handlers/update_request_status')).default(req, res),
+    'users': async (req, res) => (await import('../handlers/users')).default(req, res)
 };
 
 export default async function (req: VercelRequest, res: VercelResponse) {
@@ -32,7 +21,8 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
     console.log('[API Dispatcher] Request URL:', req.url);
     console.log('[API Dispatcher] Query Params:', JSON.stringify(req.query));
-    console.log('[API Dispatcher] Body:', typeof req.body === 'object' ? JSON.stringify(req.body) : req.body);
+    // Verify body exists before logging to avoid errors if body is undefined
+    console.log('[API Dispatcher] Body Type:', typeof req.body);
 
     // CORS - Handle OPTIONS globally
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -47,12 +37,8 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         return res.status(200).end();
     }
 
-    // route is an array of path segments, e.g. ['users'] or ['users', '123']
-    // For our flat API structure, the first segment is the endpoint.
-    // E.g. /api/users -> route: ['users']
-    
+    // Fallback for root /api/ request
     if (!route || !Array.isArray(route) || route.length === 0) {
-        // Fallback for root /api/ request -> return status
         console.log('[API Dispatcher] Root request, returning health check.');
         return res.status(200).json({ status: 'API Dispatcher Online', handlers: Object.keys(handlers) });
     }
@@ -67,20 +53,19 @@ export default async function (req: VercelRequest, res: VercelResponse) {
     const handler = handlers[endpoint];
 
     console.log(`[API Dispatcher] Routing to endpoint: ${endpoint}`);
-    console.log(`[API Dispatcher] Available handlers:`, Object.keys(handlers));
 
     if (handler) {
-        // Forward the request to the specific handler
-        // The handler will see the full query parameters including 'route'
         try {
             return await handler(req, res);
         } catch (error: any) {
             console.error(`[API Dispatcher] Error in handler '${endpoint}':`, error);
+            // Ensure we don't try to send headers if already sent
             if (!res.headersSent) {
                 return res.status(500).json({ error: 'Internal Server Error', details: error.message });
             }
         }
     } else {
+        console.error(`[API Dispatcher] Endpoint '${endpoint}' not found`);
         return res.status(404).json({ error: `Start Endpoint '${endpoint}' not found` });
     }
 }
