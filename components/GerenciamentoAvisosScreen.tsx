@@ -41,6 +41,7 @@ const GerenciamentoAvisosScreen: React.FC<{ profiles: AccessProfile[] }> = ({ pr
   const [itemsPerPage, setItemsPerPage] = useState(30);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+  const [activeStatusFilters, setActiveStatusFilters] = useState<string[]>([]);
   
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -196,16 +197,16 @@ const GerenciamentoAvisosScreen: React.FC<{ profiles: AccessProfile[] }> = ({ pr
         (item.titulo?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (item.descricao?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       
-      const matchesStatus = selectedStatus.length === 0 || 
-        (selectedStatus.includes('Ativo') && item.status) ||
-        (selectedStatus.includes('Inativo') && !item.status);
+      const matchesStatus = activeStatusFilters.length === 0 || 
+        (activeStatusFilters.includes('Ativo') && item.status) ||
+        (activeStatusFilters.includes('Inativo') && !item.status);
 
       return matchesSearch && matchesStatus;
   }).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const totalPages = Math.ceil(items.length / itemsPerPage);
 
-  const profileOptions = profiles.map(p => p.name);
+  const profileOptions = ['Todos', ...profiles.map(p => p.name)];
 
   const renderPerfis = (item: AvisoGlobal) => {
       if (!item.perfis || item.perfis.length === 0) return <span className="text-gray-400 italic">Todos</span>;
@@ -281,7 +282,48 @@ const GerenciamentoAvisosScreen: React.FC<{ profiles: AccessProfile[] }> = ({ pr
               />
             </div>
             {/* ... Advanced Filters Toggle ... */}
+            <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className={`flex items-center space-x-2 font-semibold py-2 px-4 rounded-md transition-colors ${showAdvancedFilters ? 'bg-sky-600 text-white' : 'bg-sky-500 text-white hover:bg-sky-600'}`}
+              >
+                <FilterIcon className="w-5 h-5" />
+                <span>Filtros Avançados</span>
+            </button>
           </div>
+        
+        {showAdvancedFilters && (
+          <div className="mt-6 pt-6 border-t border-gray-200 animate-in slide-in-from-top duration-300">
+            <div className="flex items-center space-x-2 mb-6">
+              <ListIcon className="w-6 h-6 text-gray-700" />
+              <h3 className="text-lg font-semibold text-gray-800">Filtros avançados</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <MultiSelectDropdown
+                label="Status:"
+                options={['Ativo', 'Inativo']}
+                selectedValues={selectedStatus}
+                onChange={setSelectedStatus}
+                placeholder="Filtre por Status"
+              />
+            </div>
+            <div className="flex justify-end items-center mt-6 space-x-4">
+              <button
+                onClick={() => { setSelectedStatus([]); setActiveStatusFilters([]); }}
+                className="flex items-center space-x-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <SparklesIcon className="w-4 h-4" />
+                <span>Limpar Filtros</span>
+              </button>
+              <button
+                onClick={() => { setActiveStatusFilters(selectedStatus); setCurrentPage(1); }}
+                className="flex items-center space-x-2 bg-sky-500 text-white font-semibold py-2 px-6 rounded-md hover:bg-sky-600 transition-colors"
+              >
+                <FilterIcon className="w-5 h-5" />
+                <span>Filtrar</span>
+              </button>
+            </div>
+          </div>
+        )}
         </div>
 
         {/* Table */}
