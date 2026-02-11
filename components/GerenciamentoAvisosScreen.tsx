@@ -310,11 +310,11 @@ const GerenciamentoAvisosScreen: React.FC<{ profiles: AccessProfile[] }> = ({ pr
                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Responsável
                 </th>
-                <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th scope="col" className="relative px-6 py-3">
-                  <span className="sr-only">Ações</span>
+                <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ações
                 </th>
               </tr>
             </thead>
@@ -351,27 +351,17 @@ const GerenciamentoAvisosScreen: React.FC<{ profiles: AccessProfile[] }> = ({ pr
                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                      {renderResponsavel(item)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      item.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {item.status ? 'Ativo' : 'Inativo'}
-                    </span>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <ToggleSwitch checked={item.status} onChange={() => handleToggleRequest(item)} />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                     <div className="flex items-center justify-end space-x-3">
-                        <ToggleSwitch 
-                            checked={item.status} 
-                            onChange={() => handleToggleRequest(item)}
-                        />
-                        <button 
-                            onClick={() => openModal(item)}
-                            className="text-indigo-600 hover:text-indigo-900 p-1 hover:bg-indigo-50 rounded"
-                            title="Editar"
-                        >
-                            <PencilIcon className="w-4 h-4" />
-                        </button>
-                     </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                     <button 
+                         onClick={() => openModal(item)}
+                         className="bg-[#0EA5E9] text-white p-2 rounded-md hover:bg-sky-600 transition-colors shadow-md"
+                         title="Editar"
+                     >
+                         <PencilIcon className="w-4 h-4" />
+                     </button>
                   </td>
                 </tr>
               ))}
@@ -572,8 +562,8 @@ const GerenciamentoAvisosScreen: React.FC<{ profiles: AccessProfile[] }> = ({ pr
         onConfirm={handleConfirmToggle}
         title={pendingToggle?.status ? 'Inativar Aviso' : 'Reativar Aviso'}
         message={`Tem certeza que deseja ${pendingToggle?.status ? 'inativar' : 'reativar'} o aviso "${pendingToggle?.titulo}"?`}
-        confirmText={pendingToggle?.status ? 'Inativar' : 'Reativar'}
-        confirmColor={pendingToggle?.status ? 'red' : 'green'}
+        confirmLabel={pendingToggle?.status ? 'Inativar' : 'Reativar'}
+        cancelLabel="Cancelar"
       />
     </div>
   );
