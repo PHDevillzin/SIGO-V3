@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon, WrenchScrewdriverIcon, TagIcon, FolderPlusIcon, Squares2x2Icon, ClipboardIcon, BuildingStorefrontIcon, CheckCircleIcon, UserIcon, CalendarDaysIcon, InformationCircleIcon, ExclamationTriangleIcon, SparklesIcon, CloudArrowUpIcon, ClipboardDocumentListIcon } from './Icons';
 
+import { SENAI_MANAGEMENT_PROFILES, SESI_MANAGEMENT_PROFILES } from './constants';
+
 interface SidebarProps {
   selectedProfile: string;
   setSelectedProfile: (profile: string) => void;
