@@ -409,9 +409,9 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                                                             (editName !== 'Administração do Sistema' && editName !== 'Administrador do sistema') ||
                                                             isAdminGSO
                                                         )) || (item.id === 'manifestacao' && (
-                                                            selectedProfile.category !== 'SESI' && selectedProfile.name !== 'Gestor Local' && selectedProfile.category !== 'GERAL' // Allow GERAL for flexibility or mixed roles
+                                                            !SESI_MANAGEMENT_PROFILES.includes(selectedProfile.name) && selectedProfile.category !== 'SESI' && selectedProfile.name !== 'Gestor Local' && selectedProfile.category !== 'GERAL'
                                                         )) || (item.id === 'ciencia' && (
-                                                            selectedProfile.category !== 'SENAI' && selectedProfile.category !== 'GERAL'
+                                                            !SENAI_MANAGEMENT_PROFILES.includes(selectedProfile.name) && selectedProfile.category !== 'SENAI' && selectedProfile.category !== 'GERAL'
                                                         ));
 
                                                         const isDisabled = !isEditingExisting || isPermissionRestricted;
