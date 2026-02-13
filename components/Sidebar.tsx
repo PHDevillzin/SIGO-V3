@@ -146,6 +146,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
 
     // Custom Logic for Split Screens
     if (permissionKey === 'manifestacao') {
+      // Check explicit permission first
+      if (userPermissions.includes('Menu Solicitações:Manifestação')) return true;
+
       // -Se perfil gerência SESI será exibido sempre menu de "Solicitações manifestação"
       // -Se perfil gestor local será exibido menu de "Solicitações manifestação"
       if (selectedProfile === 'Gestor Local') return true;
@@ -165,6 +168,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     }
 
     if (permissionKey === 'ciencia') {
+      // Check explicit permission first
+      if (userPermissions.includes('Menu Solicitações:Ciência')) return true;
+
       // -Seperfil gerência SENAI será exibido menu de "Solicitações ciência"
       const profileObj = profiles.find(p => p.name === selectedProfile);
       if (profileObj) {
