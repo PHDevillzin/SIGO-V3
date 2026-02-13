@@ -454,7 +454,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     return manifestCount < targetCount;
                 }
 
-                return false;
+                // Fallback: Show if it has left the Local Unit
+                return request.currentLocation !== 'Gestão Local';
             });
         }
 
