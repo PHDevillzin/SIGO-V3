@@ -1083,7 +1083,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                         handleOpenRequestDetails(request);
                                                     }
                                                 }}
-                                                className={`${isAprovacaoView ? 'bg-[#0EA5E9]' : 'bg-sky-500'} text-white p-2 rounded-md hover:bg-sky-600 transition-colors ${isCienciaView ? 'hidden' : ''}`}
+                                                className={`${isAprovacaoView ? 'bg-[#0EA5E9]' : 'bg-sky-500'} text-white p-2 rounded-md hover:bg-sky-600 transition-colors ${(isCienciaView || isManifestacaoView) ? 'hidden' : ''}`}
                                                 aria-label="Visualizar"
                                             >
                                                 <EyeIcon className="w-5 h-5" />
@@ -1120,7 +1120,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                                     </button>
                                                 </>
                                             )}
-                                            {(isCienciaView && (request.entidade === 'SESI' || request.entidade === 'SENAI')) && (
+                                            {((isCienciaView || isManifestacaoView) && (request.entidade === 'SESI' || request.entidade === 'SENAI')) && (
                                                 <button
                                                     onClick={() => handleOpenManifestation(request)}
                                                     className="bg-purple-500 text-white p-2 rounded-md hover:bg-purple-600 transition-colors"
