@@ -50,14 +50,18 @@ export const MENUS = [
 
 export const SENAI_MANAGEMENT_PROFILES = [
     "Gerência de Educação (GED) - SENAI",
+    "Gerência de Educação (GED)", // DB Name
     "Gerência de Infraestrutura e Suprimentos (GIS) - SENAI",
+    "Gerência de Infraestrutura e Suprimentos (GIS)", // DB Name
     "Gerência de Inovação e Tecnologia (GIT) - SENAI",
     "Gerência de Planejamento e Avaliação (GPA) - SENAI",
+    "Gerência de Planejamento e Controladoria", // Likely Match in DB
     "Gerência de Relações com o Mercado (GRM) - SENAI"
 ];
 
 export const SESI_MANAGEMENT_PROFILES = [
     "Gerência de Esporte e Lazer - SESI",
+    "Gerência de Esporte e Lazer", // DB Name
     "Gerência de Saúde e Segurança na Indústria - SESI",
     "Gerência Executiva da Cultura - SESI",
     "Gerência Executiva da Educação - SESI"
