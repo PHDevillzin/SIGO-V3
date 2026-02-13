@@ -144,19 +144,19 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
 
     const handleTogglePermission = (keys: string[]) => {
         if (!isEditingExisting) return;
-        
+
         // RESTRICTION LOGIC for toggle
         const isAdmin = editName === 'Administração do Sistema' || editName === 'Administrador do sistema';
         // Check if Admin GSO is acting
         const isAdminGSO = currentProfileName === 'Administrador GSO';
-        
+
         const isRestrictedTarget = keys.includes('Configurações:Perfil Acesso');
-        
+
         // Block if:
         // 1. Target is restricted AND not editing Admin (Legacy rule)
         // 2. Target is restricted AND active user is Admin GSO (New rule)
         if (isRestrictedTarget && (!isAdmin || isAdminGSO)) {
-             return;
+            return;
         }
 
         setEditPermissions(prev => {
@@ -402,14 +402,18 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                                                     {menu.items.map(item => {
                                                         const currentPermissions = isEditingExisting ? editPermissions : selectedProfile.permissions;
                                                         const isChecked = currentPermissions.includes('*') || item.backendKeys.some(k => currentPermissions.includes(k));
-                                                        
+
                                                         // RESTRICTION LOGIC
                                                         const isAdminGSO = currentProfileName === 'Administrador GSO';
                                                         const isPermissionRestricted = (item.id === 'perfil_acesso' && (
-                                                            (editName !== 'Administração do Sistema' && editName !== 'Administrador do sistema') || 
+                                                            (editName !== 'Administração do Sistema' && editName !== 'Administrador do sistema') ||
                                                             isAdminGSO
+                                                        )) || (item.id === 'manifestacao' && (
+                                                            selectedProfile.category !== 'SESI' && selectedProfile.name !== 'Gestor Local' && selectedProfile.category !== 'GERAL' // Allow GERAL for flexibility or mixed roles
+                                                        )) || (item.id === 'ciencia' && (
+                                                            selectedProfile.category !== 'SENAI' && selectedProfile.category !== 'GERAL'
                                                         ));
-                                                        
+
                                                         const isDisabled = !isEditingExisting || isPermissionRestricted;
 
                                                         return (

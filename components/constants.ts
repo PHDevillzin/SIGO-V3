@@ -11,7 +11,9 @@ export const MENUS = [
             { id: 'solicitacoes', label: 'Solicitações gerais', backendKeys: ['Menu Solicitações:Gerais', 'Menu Solicitações:Gerais (PDF)', 'Menu Solicitações:Gerais (PDF + Ciência)', 'Menu Solicitações:Gerais (PDF)'] },
             { id: 'solicitacoes_reclassificacao', label: 'Solicitações para reclassificação', backendKeys: ['Menu Solicitações:Reclassificação'] },
             { id: 'aprovacao', label: 'Solicitações para aprovação', backendKeys: ['Menu Solicitações:Aprovação'] },
-            { id: 'manutencao', label: 'Manutenção', backendKeys: ['Menu Solicitações:Manutenção'] }
+            { id: 'manutencao', label: 'Manutenção', backendKeys: ['Menu Solicitações:Manutenção'] },
+            { id: 'manifestacao', label: 'Solicitações Manifestação', backendKeys: ['Menu Solicitações:Manifestação'] },
+            { id: 'ciencia', label: 'Solicitações Ciência', backendKeys: ['Menu Solicitações:Ciência'] }
         ]
     },
     {
