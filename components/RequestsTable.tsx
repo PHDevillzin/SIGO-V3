@@ -429,9 +429,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     return manifestCount < targetCount;
                 }
 
-                // Fallback if no targets defined but it is SESI and not concluded? 
-                // Logic says "logic of manifestation", which implies checking targets.
-                return false;
+                // Fallback: Show if it has left the Local Unit
+                return request.currentLocation !== 'Gestão Local';
             });
         } else if (isCienciaView) {
             sourceRequests = sourceRequests.filter(request => {
