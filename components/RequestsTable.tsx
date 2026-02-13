@@ -1088,7 +1088,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                             >
                                                 <EyeIcon className="w-5 h-5" />
                                             </button>
-                                            {(isAprovacaoView || (!isReclassificationView && !isManutencaoView && !isCienciaView)) && (
+                                            {(isAprovacaoView || (!isReclassificationView && !isManutencaoView && !isCienciaView && !isManifestacaoView)) && (
                                                 <button
                                                     onClick={() => handleDownload(request.id)}
                                                     className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition-colors"
