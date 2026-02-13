@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { MagnifyingGlassIcon, TrashIcon, CheckCircleIcon, InformationCircleIcon, XMarkIcon, PaperAirplaneIcon } from './Icons';
 import type { User, AccessProfile } from '../types';
 
-import { MENUS } from './constants';
+import { MENUS, SESI_MANAGEMENT_PROFILES, SENAI_MANAGEMENT_PROFILES } from './constants';
 
 interface NewProfileModalProps {
     isOpen: boolean;

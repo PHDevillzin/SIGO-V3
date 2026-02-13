@@ -153,11 +153,13 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
       // -Se perfil gestor local será exibido menu de "Solicitações manifestação"
       if (selectedProfile === 'Gestor Local') return true;
 
+      if (SESI_MANAGEMENT_PROFILES.includes(selectedProfile)) return true;
+
       const profileObj = profiles.find(p => p.name === selectedProfile);
       if (profileObj) {
+        // Fallback for generic "Gerência" with SESI category if strictly needed, 
+        // but user detailed specific profiles. We keep this for robustness if new SESI managements appear.
         const isSesi = profileObj.category === 'SESI';
-        // Assuming "gerência" implies specific profiles or just any SESI profile that is not Unidade?
-        // "Gerência" implies headers like "Gerência de..."
         const isGerencia = selectedProfile.toLowerCase().includes('gerência');
         if (isSesi && isGerencia) return true;
       }
@@ -170,6 +172,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     if (permissionKey === 'ciencia') {
       // Check explicit permission first
       if (userPermissions.includes('Menu Solicitações:Ciência')) return true;
+
+      if (SENAI_MANAGEMENT_PROFILES.includes(selectedProfile)) return true;
 
       // -Seperfil gerência SENAI será exibido menu de "Solicitações ciência"
       const profileObj = profiles.find(p => p.name === selectedProfile);
