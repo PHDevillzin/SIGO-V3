@@ -45,7 +45,7 @@ const NoticeOverlay: React.FC<{ avisos: AvisoGlobal[]; onClose: (id: number) => 
                     <div className="flex-shrink-0 mr-6">
                         <WarningTriangleIcon className="w-16 h-16 text-blue-500 drop-shadow-md" />
                     </div>
-                    
+
                     {/* Text Column */}
                     <div className="flex-1 pt-1">
                         <h3 className="text-[15px] font-bold text-gray-900 mb-2 leading-tight">
@@ -59,7 +59,7 @@ const NoticeOverlay: React.FC<{ avisos: AvisoGlobal[]; onClose: (id: number) => 
 
                 {/* Footer / Buttons */}
                 <div className="px-6 pb-5 flex justify-end">
-                    <button 
+                    <button
                         onClick={() => onClose(currentAviso.id)}
                         className="bg-blue-500 text-white px-6 py-1 rounded-[4px] text-[13px] font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 shadow-sm transition-colors min-w-[80px]"
                     >
@@ -92,7 +92,7 @@ const App: React.FC = () => {
     const [tipoLocais, setTipoLocais] = useState<TipoLocal[]>([]);
     const [activeNotices, setActiveNotices] = useState<AvisoGlobal[]>([]);
 
-    const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao', 'ciencia'].includes(currentView);
+    const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao', 'manifestacao', 'ciencia'].includes(currentView);
 
     let solicitacoesTitle = 'Solicitações';
     if (currentView === 'nova_sede' || currentView === 'nova_estrategica' || currentView === 'nova_unidade') {
@@ -101,8 +101,10 @@ const App: React.FC = () => {
         solicitacoesTitle = 'Solicitações para Reclassificação';
     } else if (currentView === 'manutencao') {
         solicitacoesTitle = 'Manutenção';
+    } else if (currentView === 'manifestacao') {
+        solicitacoesTitle = 'Solicitações manifestação';
     } else if (currentView === 'ciencia') {
-        solicitacoesTitle = 'Solicitações manifestação/ciência';
+        solicitacoesTitle = 'Solicitações ciência';
     }
 
     const handleAddRequest = (newRequest: Request) => {
@@ -281,15 +283,15 @@ const App: React.FC = () => {
         if (!isAuthenticated || !selectedProfile) return;
 
         const fetchNotices = async () => {
-             try {
-                 const res = await fetch(`/api/avisos?active_for_profile=${encodeURIComponent(selectedProfile)}`);
-                 if (res.ok) {
-                     const data = await res.json();
-                     setActiveNotices(data);
-                 }
-             } catch (error) {
-                 console.error('Error fetching notices:', error);
-             }
+            try {
+                const res = await fetch(`/api/avisos?active_for_profile=${encodeURIComponent(selectedProfile)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setActiveNotices(data);
+                }
+            } catch (error) {
+                console.error('Error fetching notices:', error);
+            }
         };
 
         fetchNotices();
@@ -457,6 +459,7 @@ const App: React.FC = () => {
                     setUserPermissions([]);
                     setCurrentView('home');
                 }}
+                profiles={profiles}
             />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 {currentView === 'home' && (

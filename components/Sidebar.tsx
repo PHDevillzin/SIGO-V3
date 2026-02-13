@@ -14,7 +14,9 @@ interface SidebarProps {
   isApproverStrategic?: boolean;
   isApproverSede?: boolean;
   isRequesterStrategic?: boolean;
+
   isRequesterSede?: boolean;
+  profiles: any[]; // AccessProfile[] - using any to avoid type import if not strictly needed, or better import it.
 }
 
 const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boolean, onClick?: () => void }> = ({ icon: Icon, label, active = false, onClick }) => (
@@ -24,7 +26,7 @@ const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boole
   </a>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout, userPermissions, userName, availableProfiles, isApproverStrategic, isApproverSede, isRequesterStrategic, isRequesterSede }) => {
+const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout, userPermissions, userName, availableProfiles, isApproverStrategic, isApproverSede, isRequesterStrategic, isRequesterSede, profiles }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isManagementMenuOpen, setIsManagementMenuOpen] = useState(false);
   const [isSolicitacoesMenuOpen, setIsSolicitacoesMenuOpen] = useState(false);
@@ -95,7 +97,10 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
       'solicitacoes_reclassificacao': ['Menu Solicitações:Reclassificação'],
       'aprovacao': ['Menu Solicitações:Aprovação'],
       'manutencao': ['Menu Solicitações:Manutenção'],
-      'ciencia': ['Menu Solicitações:Gerais', 'Menu Solicitações:Gerais (PDF + Ciência)'], // Allow general access or specific science access
+
+      // Split Permissions Logic
+      'manifestacao': [], // Handled by dynamic logic below or mapped to specific base permission
+      'ciencia': [], // Handled by dynamic logic below
 
       // Abrir Solicitações
       'nova_estrategica': ['Abrir Solicitações:Estratégica'],
@@ -135,9 +140,41 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
     // 3. Check if user has ANY of the required permissions for this key
     const requiredPermissions = permissionMap[permissionKey];
 
-    // EXCEPTION: "Administrador GSO" always sees "Perfil Acesso"
     if (selectedProfile === 'Administrador GSO' && permissionKey === 'perfil_acesso') {
       return true;
+    }
+
+    // Custom Logic for Split Screens
+    if (permissionKey === 'manifestacao') {
+      // -Se perfil gerência SESI será exibido sempre menu de "Solicitações manifestação"
+      // -Se perfil gestor local será exibido menu de "Solicitações manifestação"
+      if (selectedProfile === 'Gestor Local') return true;
+
+      const profileObj = profiles.find(p => p.name === selectedProfile);
+      if (profileObj) {
+        const isSesi = profileObj.category === 'SESI';
+        // Assuming "gerência" implies specific profiles or just any SESI profile that is not Unidade?
+        // "Gerência" implies headers like "Gerência de..."
+        const isGerencia = selectedProfile.toLowerCase().includes('gerência');
+        if (isSesi && isGerencia) return true;
+      }
+
+      // Fallback or Admin
+      if (userPermissions.includes('*') || userPermissions.includes('all')) return true;
+      return false;
+    }
+
+    if (permissionKey === 'ciencia') {
+      // -Seperfil gerência SENAI será exibido menu de "Solicitações ciência"
+      const profileObj = profiles.find(p => p.name === selectedProfile);
+      if (profileObj) {
+        const isSenai = profileObj.category === 'SENAI';
+        const isGerencia = selectedProfile.toLowerCase().includes('gerência');
+        if (isSenai && isGerencia) return true;
+      }
+      // Fallback or Admin
+      if (userPermissions.includes('*') || userPermissions.includes('all')) return true;
+      return false;
     }
 
     // EXCEPTION: "Gestor GSO" and "Administrador GSO" see "Gerenciamento de avisos"
@@ -147,7 +184,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
 
     // Auto-grant permissions for sub-items of Periodo if user has the main permission
     if (['periodo_aprovacao', 'periodo_inclusao'].includes(permissionKey)) {
-        return hasPermission('cadastro_periodos');
+      return hasPermission('cadastro_periodos');
     }
 
     if (requiredPermissions) {
@@ -175,7 +212,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
 
 
   useEffect(() => {
-    const isSolicitacoes = ['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao', 'ciencia'].includes(currentView);
+    const isSolicitacoes = ['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao', 'manifestacao', 'ciencia'].includes(currentView);
     const isGerenciamento = currentView === 'planejamento' || currentView === 'plurianual';
     const isAbrirSolicitacoes = ['nova_estrategica', 'nova_sede', 'nova_unidade'].includes(currentView);
 
@@ -225,7 +262,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
           <div>
             <button
               onClick={() => setIsSolicitacoesMenuOpen(prev => !prev)}
-              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao', 'ciencia'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
+              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['solicitacoes', 'solicitacoes_reclassificacao', 'aprovacao', 'manutencao', 'manifestacao', 'ciencia'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
             >
               <div className="flex items-center space-x-3">
                 <ListIcon className="w-5 h-5 flex-shrink-0" />
@@ -243,10 +280,18 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                     onClick={() => setCurrentView('solicitacoes')}
                   />
                 )}
-                {hasPermission('ciencia') && (
+                {hasPermission('manifestacao') && (
                   <NavItem
                     icon={InformationCircleIcon}
-                    label="Solicitações manifestação/ciência"
+                    label="Solicitações manifestação"
+                    active={currentView === 'manifestacao'}
+                    onClick={() => setCurrentView('manifestacao')}
+                  />
+                )}
+                {hasPermission('ciencia') && (
+                  <NavItem
+                    icon={InformationCircleIcon} // You might want a different icon if available
+                    label="Solicitações ciência"
                     active={currentView === 'ciencia'}
                     onClick={() => setCurrentView('ciencia')}
                   />
@@ -431,7 +476,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                   />
                 )}
                 {hasPermission('cadastro_periodos') && (
-                   <div>
+                  <div>
                     <button
                       onClick={() => setIsPeriodoMenuOpen(prev => !prev)}
                       className={`w-full flex items-center justify-between px-4 py-2.5 rounded-md transition-colors text-gray-300 hover:bg-white/5 ${['cadastro_periodos', 'periodo_aprovacao', 'periodo_inclusao'].includes(currentView) ? 'bg-white/10 text-white' : ''}`}
@@ -444,19 +489,19 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                     </button>
                     {isPeriodoMenuOpen && (
                       <div className="pt-2 pl-6 space-y-2">
-                         <NavItem
+                        <NavItem
                           icon={CheckCircleIcon}
                           label="Período aprovação"
                           active={currentView === 'periodo_aprovacao'}
                           onClick={() => setCurrentView('periodo_aprovacao')}
                         />
-                         <NavItem
+                        <NavItem
                           icon={CalendarDaysIcon}
                           label="Período solicitação"
                           active={currentView === 'cadastro_periodos'}
                           onClick={() => setCurrentView('cadastro_periodos')}
                         />
-                         <NavItem
+                        <NavItem
                           icon={FolderPlusIcon}
                           label="Período inclusão"
                           active={currentView === 'periodo_inclusao'}

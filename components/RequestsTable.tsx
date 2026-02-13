@@ -331,6 +331,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     const isReclassificationView = currentView === 'solicitacoes_reclassificacao';
     const isManutencaoView = currentView === 'manutencao';
     const isAprovacaoView = currentView === 'aprovacao';
+
+    const isManifestacaoView = currentView === 'manifestacao';
     const isCienciaView = currentView === 'ciencia';
 
     const filteredRequests = useMemo(() => {
@@ -399,74 +401,58 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         } else if (isAprovacaoView) {
             // For approval, sourceRequests is already filtered by Security above.
             sourceRequests = sourceRequests.filter(request => request.categoriaInvestimento !== 'Manutenção');
+        } else if (isManifestacaoView) {
+            sourceRequests = sourceRequests.filter(request => {
+                if (request.categoriaInvestimento === 'Manutenção') return false;
+                if (request.status === 'Concluído' || request.status === 'Recusada' || request.currentLocation === 'Planejamento') return false;
+
+                // Manifestação = SESI
+                // Also show if Gestor Local (who sees Manifestation menu)
+                const isSesi = request.entidade === 'SESI';
+
+                if (!isSesi) return false;
+
+                // Gestor Local Visibility Override
+                if (selectedProfile === 'Gestor Local') {
+                    return true;
+                }
+
+                // Normal Manifestation Logic
+                if (request.manifestationTargets && request.manifestationTargets.length > 0) {
+                    const manifestCount = request.manifestations?.filter(m => m.text && m.text.trim().length > 0).length || 0;
+                    const targetCount = request.manifestationTargets.length;
+
+                    if (request.status === 'Em Análise GSO' || request.status === 'Concluído' || request.status === 'Recusada') {
+                        return false;
+                    }
+
+                    return manifestCount < targetCount;
+                }
+
+                // Fallback if no targets defined but it is SESI and not concluded? 
+                // Logic says "logic of manifestation", which implies checking targets.
+                return false;
+            });
         } else if (isCienciaView) {
             sourceRequests = sourceRequests.filter(request => {
                 if (request.categoriaInvestimento === 'Manutenção') return false;
                 if (request.status === 'Concluído' || request.status === 'Recusada' || request.currentLocation === 'Planejamento') return false;
 
-                const isSesi = request.entidade === 'SESI';
+                // Ciência = SENAI
                 const isSenai = request.entidade === 'SENAI';
-                const loc = request.currentLocation;
 
-                // SESI: Approved by 'Gestor Local' -> Not in 'Gestão Local'
-                // NEW LOGIC: Show if it has manifestation targets AND not all have manifested
-                if (isSesi) {
-                    // Gestor Local Visibility Override: Always show if linked to unit (filtered above) and not concluded/refused (filtered above)
-                    if (selectedProfile === 'Gestor Local') {
-                        return true;
+                if (!isSenai) return false;
+
+                // Logic similar to manifestation but for Science
+                if (request.manifestationTargets && request.manifestationTargets.length > 0) {
+                    const manifestCount = request.manifestations?.filter(m => m.text && m.text.trim().length > 0).length || 0;
+                    const targetCount = request.manifestationTargets.length;
+
+                    if (request.status === 'Em Análise GSO' || request.status === 'Concluído' || request.status === 'Recusada') {
+                        return false;
                     }
 
-                    // Check manifestation status
-                    if (request.manifestationTargets && request.manifestationTargets.length > 0) {
-                        const manifestCount = request.manifestations?.filter(m => m.text && m.text.trim().length > 0).length || 0;
-                        const targetCount = request.manifestationTargets.length;
-
-                        // "ou até a alta administração aprovar"
-                        if (request.status === 'Em Análise GSO' || request.status === 'Concluído' || request.status === 'Recusada') {
-                            return false;
-                        }
-
-                        // Show if NOT complete
-                        if (manifestCount < targetCount) {
-                            return true;
-                        } else {
-                            // If complete, hide from Ciencia view
-                            return false;
-                        }
-                    }
-
-                    // Fallback legacy safety:
-                    return loc !== 'Gestão Local';
-                }
-
-                // SENAI: Approved by 'Gestor Local' AND 'GIS' -> Not in 'Gestão Local' AND Not in 'GSO'
-                // SENAI: Approved by 'Gestor Local' AND 'GIS' -> Not in 'Gestão Local' AND Not in 'GSO'
-                if (isSenai) {
-                    // Gestor Local Visibility Override
-                    if (selectedProfile === 'Gestor Local') {
-                        return true;
-                    }
-
-                    // Check manifestation status - Apply Logic from SESI
-                    if (request.manifestationTargets && request.manifestationTargets.length > 0) {
-                        const manifestCount = request.manifestations?.filter(m => m.text && m.text.trim().length > 0).length || 0;
-                        const targetCount = request.manifestationTargets.length;
-
-                        // "ou até a alta administração aprovar"
-                        if (request.status === 'Em Análise GSO' || request.status === 'Concluído' || request.status === 'Recusada') {
-                            return false;
-                        }
-
-                        // Show if NOT complete
-                        if (manifestCount < targetCount) {
-                            return true;
-                        } else {
-                            // If complete, hide from Ciencia view
-                            return false;
-                        }
-                    }
-
-                    return loc !== 'Gestão Local';
+                    return manifestCount < targetCount;
                 }
 
                 return false;
@@ -569,7 +555,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
         }
 
         return sourceRequests;
-    }, [requests, searchTerm, isReclassificationView, isManutencaoView, isAprovacaoView, activeFilters, reclassifiedIds]);
+    }, [requests, searchTerm, isReclassificationView, isManutencaoView, isAprovacaoView, isManifestacaoView, isCienciaView, activeFilters, reclassifiedIds]);
 
     const totalPages = useMemo(() => Math.ceil(filteredRequests.length / itemsPerPage), [filteredRequests, itemsPerPage]);
 
