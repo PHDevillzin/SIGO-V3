@@ -411,7 +411,7 @@ const AccessProfileScreen: React.FC<AccessProfileScreenProps> = ({ profiles, set
                                                         )) || (item.id === 'manifestacao' && (
                                                             !SESI_MANAGEMENT_PROFILES.includes(selectedProfile.name) && selectedProfile.category !== 'SESI' && selectedProfile.name !== 'Gestor Local' && selectedProfile.category !== 'GERAL'
                                                         )) || (item.id === 'ciencia' && (
-                                                            !SENAI_MANAGEMENT_PROFILES.includes(selectedProfile.name) && selectedProfile.category !== 'SENAI' && selectedProfile.category !== 'GERAL'
+                                                            !SENAI_MANAGEMENT_PROFILES.includes(selectedProfile.name) && selectedProfile.category !== 'SENAI' && selectedProfile.name !== 'Gestor Local' && selectedProfile.category !== 'GERAL'
                                                         ));
 
                                                         const isDisabled = !isEditingExisting || isPermissionRestricted;

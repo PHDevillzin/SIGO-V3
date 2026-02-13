@@ -174,6 +174,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
       if (userPermissions.includes('Menu Solicitações:Ciência')) return true;
 
       if (SENAI_MANAGEMENT_PROFILES.includes(selectedProfile)) return true;
+      if (selectedProfile === 'Gestor Local') return true;
 
       // -Seperfil gerência SENAI será exibido menu de "Solicitações ciência"
       const profileObj = profiles.find(p => p.name === selectedProfile);
