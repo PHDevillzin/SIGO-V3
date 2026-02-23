@@ -21,6 +21,7 @@ interface SidebarProps {
   profiles: any[]; // AccessProfile[] - using any to avoid type import if not strictly needed, or better import it.
   sidebarNotices?: any[];
   onDeleteSidebarNotice?: (id: number) => void;
+  onClearAllSidebarNotices?: () => void;
 }
 
 const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boolean, onClick?: () => void }> = ({ icon: Icon, label, active = false, onClick }) => (
@@ -30,7 +31,7 @@ const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boole
   </a>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout, userPermissions, userName, availableProfiles, isApproverStrategic, isApproverSede, isRequesterStrategic, isRequesterSede, profiles, sidebarNotices = [], onDeleteSidebarNotice }) => {
+const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout, userPermissions, userName, availableProfiles, isApproverStrategic, isApproverSede, isRequesterStrategic, isRequesterSede, profiles, sidebarNotices = [], onDeleteSidebarNotice, onClearAllSidebarNotices }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isManagementMenuOpen, setIsManagementMenuOpen] = useState(false);
   const [isSolicitacoesMenuOpen, setIsSolicitacoesMenuOpen] = useState(false);
@@ -638,12 +639,22 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                   <h2 className="text-lg font-bold text-[#0B1A4E]">Notificações</h2>
                   <span className="text-xs text-gray-500 font-medium">{sidebarNotices.length} {sidebarNotices.length === 1 ? 'mensagem' : 'mensagens'}</span>
               </div>
-              <button 
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
-                onClick={() => setIsNotificationPanelOpen(false)}
-              >
-                <XMarkIcon className="w-6 h-6" />
-              </button>
+              <div className="flex items-center space-x-2">
+                {sidebarNotices.length > 1 && (
+                  <button
+                    onClick={() => onClearAllSidebarNotices?.()}
+                    className="text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors mr-2"
+                  >
+                    Limpar tudo
+                  </button>
+                )}
+                <button 
+                  className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
+                  onClick={() => setIsNotificationPanelOpen(false)}
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F4F6F8]">
               {sidebarNotices.length === 0 ? (

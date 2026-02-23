@@ -307,6 +307,10 @@ const App: React.FC = () => {
         setSidebarNotices(prev => prev.filter(n => n.id !== id));
     };
 
+    const handleClearAllSidebarNotices = () => {
+        setSidebarNotices([]);
+    };
+
     // Helper to parse currency strings like "3,5 mi", "300 mil", "R$ 3.500.000,00"
     const parseCurrency = (str: string) => {
         if (!str) return 0;
@@ -468,6 +472,7 @@ const App: React.FC = () => {
                 profiles={profiles}
                 sidebarNotices={sidebarNotices}
                 onDeleteSidebarNotice={handleDeleteSidebarNotice}
+                onClearAllSidebarNotices={handleClearAllSidebarNotices}
             />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 {currentView === 'home' && (
