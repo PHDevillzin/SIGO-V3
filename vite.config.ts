@@ -25,18 +25,18 @@ export default defineConfig(({ mode }) => {
             console.log(`[API Middleware] Incoming request: ${req.method} /api/${endpoint}`);
 
             const endpointFileMap: Record<string, string> = {
-              'users': 'handlers/users.ts',
-              'units': 'handlers/units.ts',
-              'requests': 'handlers/requests.ts',
-              'tipologias': 'handlers/tipologias.ts',
-              'tipo-locais': 'handlers/tipo-locais.ts',
-              'profiles': 'handlers/profiles.ts',
-              'auth': 'handlers/auth.ts',
-              'health': 'handlers/health.ts',
-              'health-db': 'handlers/health-db.ts',
-              'movements': 'handlers/movements.ts',
-              'update-request-status': 'handlers/update_request_status.ts',
-              'avisos': 'handlers/avisos.ts'
+              'users': 'api/_handlers/users.ts',
+              'units': 'api/_handlers/units.ts',
+              'requests': 'api/_handlers/requests.ts',
+              'tipologias': 'api/_handlers/tipologias.ts',
+              'tipo-locais': 'api/_handlers/tipo-locais.ts',
+              'profiles': 'api/_handlers/profiles.ts',
+              'auth': 'api/_handlers/auth.ts',
+              'health': 'api/_handlers/health.ts',
+              'health-db': 'api/_handlers/health-db.ts',
+              'movements': 'api/_handlers/movements.ts',
+              'update-request-status': 'api/_handlers/update_request_status.ts',
+              'avisos': 'api/_handlers/avisos.ts'
             };
 
             const relativePath = endpointFileMap[endpoint];

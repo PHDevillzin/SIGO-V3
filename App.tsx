@@ -33,40 +33,39 @@ import type { SummaryData, Request, Unit, AccessProfile, User, Tipologia, TipoLo
 const NoticeOverlay: React.FC<{ avisos: AvisoGlobal[]; onClose: (id: number) => void }> = ({ avisos, onClose }) => {
     if (avisos.length === 0) return null;
 
+    const currentAviso = avisos[0];
+
     return (
-        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center p-4 bg-black/50 backdrop-blur-sm" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div className="flex flex-col space-y-4 w-full max-w-[520px] max-h-[90vh] overflow-y-auto p-2">
-                {avisos.map(aviso => (
-                    <div key={aviso.id} className="bg-[#ECECEC] rounded-lg shadow-2xl shrink-0 overflow-hidden border border-gray-300 relative">
-                        {/* Content Area */}
-                        <div className="flex p-6">
-                            {/* Icon Column */}
-                            <div className="flex-shrink-0 mr-6">
-                                <WarningTriangleIcon className="w-16 h-16 text-blue-500 drop-shadow-md" />
-                            </div>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            {/* Modal Container */}
+            <div className="bg-[#ECECEC] rounded-lg shadow-2xl w-full max-w-[520px] overflow-hidden border border-gray-300">
+                {/* Content Area */}
+                <div className="flex p-6">
+                    {/* Icon Column */}
+                    <div className="flex-shrink-0 mr-6">
+                        <WarningTriangleIcon className="w-16 h-16 text-blue-500 drop-shadow-md" />
+                    </div>
 
-                            {/* Text Column */}
-                            <div className="flex-1 pt-1">
-                                <h3 className="text-[15px] font-bold text-gray-900 mb-2 leading-tight">
-                                    {aviso.titulo}
-                                </h3>
-                                <div className="text-[13px] text-gray-600 leading-normal whitespace-pre-wrap">
-                                    {aviso.descricao}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Footer / Buttons */}
-                        <div className="px-6 pb-5 flex justify-end">
-                            <button
-                                onClick={() => onClose(aviso.id)}
-                                className="bg-blue-500 text-white px-6 py-1 rounded-[4px] text-[13px] font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 shadow-sm transition-colors min-w-[80px]"
-                            >
-                                OK
-                            </button>
+                    {/* Text Column */}
+                    <div className="flex-1 pt-1">
+                        <h3 className="text-[15px] font-bold text-gray-900 mb-2 leading-tight">
+                            {currentAviso.titulo}
+                        </h3>
+                        <div className="text-[13px] text-gray-600 leading-normal whitespace-pre-wrap">
+                            {currentAviso.descricao}
                         </div>
                     </div>
-                ))}
+                </div>
+
+                {/* Footer / Buttons */}
+                <div className="px-6 pb-5 flex justify-end">
+                    <button
+                        onClick={() => onClose(currentAviso.id)}
+                        className="bg-blue-500 text-white px-6 py-1 rounded-[4px] text-[13px] font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 shadow-sm transition-colors min-w-[80px]"
+                    >
+                        OK
+                    </button>
+                </div>
             </div>
         </div>
     );

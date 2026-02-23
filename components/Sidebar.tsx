@@ -657,7 +657,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                       <div className="flex justify-between items-start mb-2">
                           <h3 className="text-[13px] font-bold text-gray-800 pr-6 leading-tight">{notice.titulo}</h3>
                           <button 
-                            className="absolute top-3 right-3 text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-md transition-all"
+                            className="absolute top-3 right-3 text-red-500 bg-red-50 hover:bg-red-100 p-1.5 rounded-md transition-all border border-red-100"
                             onClick={() => onDeleteSidebarNotice?.(notice.id)}
                             title="Excluir notificação"
                           >
