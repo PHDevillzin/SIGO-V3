@@ -91,6 +91,7 @@ const App: React.FC = () => {
     const [tipologias, setTipologias] = useState<Tipologia[]>([]);
     const [tipoLocais, setTipoLocais] = useState<TipoLocal[]>([]);
     const [activeNotices, setActiveNotices] = useState<AvisoGlobal[]>([]);
+    const [sidebarNotices, setSidebarNotices] = useState<AvisoGlobal[]>([]);
 
     const isSolicitacoesView = ['solicitacoes', 'solicitacoes_reclassificacao', 'manutencao', 'manifestacao', 'ciencia'].includes(currentView);
 
@@ -288,6 +289,7 @@ const App: React.FC = () => {
                 if (res.ok) {
                     const data = await res.json();
                     setActiveNotices(data);
+                    setSidebarNotices(data);
                 }
             } catch (error) {
                 console.error('Error fetching notices:', error);
@@ -299,6 +301,10 @@ const App: React.FC = () => {
 
     const handleDismissNotice = (id: number) => {
         setActiveNotices(prev => prev.filter(n => n.id !== id));
+    };
+
+    const handleDeleteSidebarNotice = (id: number) => {
+        setSidebarNotices(prev => prev.filter(n => n.id !== id));
     };
 
     // Helper to parse currency strings like "3,5 mi", "300 mil", "R$ 3.500.000,00"
@@ -460,6 +466,8 @@ const App: React.FC = () => {
                     setCurrentView('home');
                 }}
                 profiles={profiles}
+                sidebarNotices={sidebarNotices}
+                onDeleteSidebarNotice={handleDeleteSidebarNotice}
             />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 {currentView === 'home' && (

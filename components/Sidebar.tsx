@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon, WrenchScrewdriverIcon, TagIcon, FolderPlusIcon, Squares2x2Icon, ClipboardIcon, BuildingStorefrontIcon, CheckCircleIcon, UserIcon, CalendarDaysIcon, InformationCircleIcon, ExclamationTriangleIcon, SparklesIcon, CloudArrowUpIcon, ClipboardDocumentListIcon } from './Icons';
+import { HomeIcon, ListIcon, ChevronDoubleLeftIcon, ChevronDownIcon, LogoutIcon, BuildingOfficeIcon, Cog8ToothIcon, DocumentDuplicateIcon, WrenchScrewdriverIcon, TagIcon, FolderPlusIcon, Squares2x2Icon, ClipboardIcon, BuildingStorefrontIcon, CheckCircleIcon, UserIcon, CalendarDaysIcon, InformationCircleIcon, ExclamationTriangleIcon, SparklesIcon, CloudArrowUpIcon, ClipboardDocumentListIcon, BellIcon, TrashIcon, XMarkIcon } from './Icons';
 
 import { SENAI_MANAGEMENT_PROFILES, SESI_MANAGEMENT_PROFILES } from './constants';
 
@@ -19,6 +19,8 @@ interface SidebarProps {
 
   isRequesterSede?: boolean;
   profiles: any[]; // AccessProfile[] - using any to avoid type import if not strictly needed, or better import it.
+  sidebarNotices?: any[];
+  onDeleteSidebarNotice?: (id: number) => void;
 }
 
 const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boolean, onClick?: () => void }> = ({ icon: Icon, label, active = false, onClick }) => (
@@ -28,13 +30,14 @@ const NavItem: React.FC<{ icon: React.ElementType; label: string; active?: boole
   </a>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout, userPermissions, userName, availableProfiles, isApproverStrategic, isApproverSede, isRequesterStrategic, isRequesterSede, profiles }) => {
+const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, currentView, setCurrentView, onLogout, userPermissions, userName, availableProfiles, isApproverStrategic, isApproverSede, isRequesterStrategic, isRequesterSede, profiles, sidebarNotices = [], onDeleteSidebarNotice }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isManagementMenuOpen, setIsManagementMenuOpen] = useState(false);
   const [isSolicitacoesMenuOpen, setIsSolicitacoesMenuOpen] = useState(false);
   const [isAbrirSolicitacoesMenuOpen, setIsAbrirSolicitacoesMenuOpen] = useState(false);
   const [isConfiguracoesMenuOpen, setIsConfiguracoesMenuOpen] = useState(false);
   const [isPeriodoMenuOpen, setIsPeriodoMenuOpen] = useState(false);
+  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
 
   // Helper to check permission
   const hasPermission = (permissionKey: string) => {
@@ -263,9 +266,23 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
           <span className="text-2xl font-bold tracking-wider">SESI</span>
           <span className="text-2xl font-bold tracking-wider text-red-600 bg-white px-1 ml-1">SENAI</span>
         </div>
-        <button className="text-gray-400 hover:text-white">
-          <ChevronDoubleLeftIcon className="w-6 h-6" />
-        </button>
+        <div className="flex items-center space-x-3 ml-2">
+            <button 
+              className="relative text-gray-400 hover:text-white transition-colors"
+              onClick={() => setIsNotificationPanelOpen(true)}
+              title="Notificações"
+            >
+              <BellIcon className="w-6 h-6" />
+              {sidebarNotices.length > 0 && (
+                <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full border border-[#0B1A4E]">
+                  {sidebarNotices.length}
+                </span>
+              )}
+            </button>
+            <button className="text-gray-400 hover:text-white transition-colors">
+              <ChevronDoubleLeftIcon className="w-6 h-6" />
+            </button>
+        </div>
       </div>
       <nav className="flex-1 p-4 space-y-2">
         {hasPermission('home') && <NavItem icon={HomeIcon} label="Home" active={currentView === 'home'} onClick={() => setCurrentView('home')} />}
@@ -607,6 +624,55 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
           <span>Sair</span>
         </button>
       </div>
+
+      {/* Notification Panel */}
+      {isNotificationPanelOpen && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/20 z-40 transition-opacity" 
+            onClick={() => setIsNotificationPanelOpen(false)}
+          />
+          <div className="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 overflow-hidden flex flex-col translate-x-0 transition-transform text-gray-800">
+            <div className="flex items-center justify-between p-4 border-b bg-white border-gray-200 shadow-sm z-10">
+              <div className="flex flex-col">
+                  <h2 className="text-lg font-bold text-[#0B1A4E]">Notificações</h2>
+                  <span className="text-xs text-gray-500 font-medium">{sidebarNotices.length} {sidebarNotices.length === 1 ? 'mensagem' : 'mensagens'}</span>
+              </div>
+              <button 
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
+                onClick={() => setIsNotificationPanelOpen(false)}
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F4F6F8]">
+              {sidebarNotices.length === 0 ? (
+                <div className="text-center text-gray-500 mt-10 text-sm flex flex-col items-center">
+                  <BellIcon className="w-12 h-12 text-gray-300 mb-2" />
+                  Nenhuma notificação no momento.
+                </div>
+              ) : (
+                sidebarNotices.map((notice) => (
+                  <div key={notice.id} className="bg-white border text-left border-gray-200 p-4 rounded-lg shadow-sm flex flex-col relative group">
+                      <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-[13px] font-bold text-gray-800 pr-6 leading-tight">{notice.titulo}</h3>
+                          <button 
+                            className="absolute top-3 right-3 text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                            onClick={() => onDeleteSidebarNotice?.(notice.id)}
+                            title="Excluir notificação"
+                          >
+                            <TrashIcon className="w-[15px] h-[15px]" />
+                          </button>
+                      </div>
+                      <p className="text-[12px] text-gray-600 whitespace-pre-wrap leading-relaxed">{notice.descricao}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
     </aside>
   );
 };
