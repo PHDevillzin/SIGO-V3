@@ -640,14 +640,6 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                   <span className="text-xs text-gray-500 font-medium">{sidebarNotices.length} {sidebarNotices.length === 1 ? 'mensagem' : 'mensagens'}</span>
               </div>
               <div className="flex items-center space-x-2">
-                {sidebarNotices.length > 1 && (
-                  <button
-                    onClick={() => onClearAllSidebarNotices?.()}
-                    className="text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors mr-2"
-                  >
-                    Limpar tudo
-                  </button>
-                )}
                 <button 
                   className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
                   onClick={() => setIsNotificationPanelOpen(false)}
@@ -667,13 +659,6 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedProfile, setSelectedProfile, 
                   <div key={notice.id} className="bg-white border text-left border-gray-200 p-4 rounded-lg shadow-sm flex flex-col relative group">
                       <div className="flex justify-between items-start mb-2">
                           <h3 className="text-[13px] font-bold text-gray-800 pr-6 leading-tight">{notice.titulo}</h3>
-                          <button 
-                            className="absolute top-3 right-3 text-red-500 bg-red-50 hover:bg-red-100 p-1.5 rounded-md transition-all border border-red-100"
-                            onClick={() => onDeleteSidebarNotice?.(notice.id)}
-                            title="Excluir notificação"
-                          >
-                            <TrashIcon className="w-[15px] h-[15px]" />
-                          </button>
                       </div>
                       <p className="text-[12px] text-gray-600 whitespace-pre-wrap leading-relaxed">{notice.descricao}</p>
                   </div>
