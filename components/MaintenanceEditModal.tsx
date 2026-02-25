@@ -11,11 +11,21 @@ interface MaintenanceEditModalProps {
 
 const MaintenanceEditModal: React.FC<MaintenanceEditModalProps> = ({ isOpen, onClose, request, onSave }) => {
     const [observacao, setObservacao] = useState('');
+    const [categoriaInvestimento, setCategoriaInvestimento] = useState('Manutenção');
     const [isSaving, setIsSaving] = useState(false);
+
+    const investmentCategories = [
+        'Baixa Complexidade',
+        'Reforma Operacional',
+        'Nova Unidade',
+        'Intervenção Estratégica',
+        'Manutenção',
+    ];
 
     useEffect(() => {
         if (request) {
             setObservacao(request.observacao || '');
+            setCategoriaInvestimento(request.categoriaInvestimento || 'Manutenção');
         }
     }, [request]);
 
@@ -29,7 +39,8 @@ const MaintenanceEditModal: React.FC<MaintenanceEditModalProps> = ({ isOpen, onC
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id: request.id,
-                    observacao
+                    observacao,
+                    categoriaInvestimento
                 })
             });
 
@@ -74,9 +85,15 @@ const MaintenanceEditModal: React.FC<MaintenanceEditModalProps> = ({ isOpen, onC
                         </div>
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1">Categoria de investimento</label>
-                            <div className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-500 cursor-not-allowed">
-                                {request.categoriaInvestimento || 'Manutenção'}
-                            </div>
+                            <select
+                                className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                value={categoriaInvestimento}
+                                onChange={(e) => setCategoriaInvestimento(e.target.value)}
+                            >
+                                {investmentCategories.map((cat) => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 
