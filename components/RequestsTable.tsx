@@ -860,8 +860,8 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
     };
 
     const isAnyItemReadyToSend = reclassifiedIds.length > 0;
-    const showEditButton = isReclassificationView || isManutencaoView;
-    const editButtonLabel = isManutencaoView ? 'Editar' : 'Reclassificar';
+    const showEditButton = isReclassificationView;
+    const editButtonLabel = 'Reclassificar';
 
 
     return (
@@ -937,7 +937,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                     <table className="w-full text-sm text-left text-gray-500">
                         <thead className="text-xs text-white uppercase bg-[#0B1A4E]">
                             <tr>
-                                {(isReclassificationView || isManutencaoView) && (
+                                {(isReclassificationView) && (
                                     <th scope="col" className="p-4">
                                         <input
                                             type="checkbox"
@@ -993,7 +993,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                         <tbody>
                             {paginatedRequests.length > 0 ? paginatedRequests.map(request => (
                                 <tr key={request.id} className="bg-white border-b hover:bg-gray-50 align-middle">
-                                    {(isReclassificationView || isManutencaoView) && (
+                                    {(isReclassificationView) && (
                                         <td className="p-4">
                                             <input
                                                 type="checkbox"
@@ -1112,8 +1112,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ selectedProfile, currentV
                                             {(isManutencaoView) && (
                                                 <>
                                                     <button
-                                                        onClick={() => handleEditRequest(request)}
-                                                        className="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600 transition-colors"
+                                                        onClick={() => {
+                                                            setSelectedRequestForMaintenance(request);
+                                                            setIsMaintenanceModalOpen(true);
+                                                        }}
+                                                        className="bg-[#0EA5E9] text-white p-2 rounded-md hover:bg-sky-600 transition-colors"
                                                         aria-label="Editar"
                                                     >
                                                         <PencilIcon className="w-5 h-5" />
