@@ -90,7 +90,7 @@ export interface Request {
   // Sede Request Files
   arquivoPlantaBaixa?: string; // URL
   arquivoFotos?: string; // URL
-  
+
   // Manifestation Workflow
   manifestationTargets?: string[]; // Areas selected for manifestation
   manifestations?: Manifestation[]; // Collected manifestations
@@ -228,6 +228,7 @@ export interface SolicitationPeriod {
   dataInclusao: string;
   alteradoPor?: string;
   dataAlteracao?: string;
+  ativo?: boolean;
 }
 
 export interface ApprovalPeriod {
@@ -240,6 +241,7 @@ export interface ApprovalPeriod {
   dataInclusao: string;
   alteradoPor?: string;
   dataAlteracao?: string;
+  ativo?: boolean;
 }
 
 export interface AvisoGlobal {
