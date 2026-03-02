@@ -152,7 +152,7 @@ const PeriodoAprovacaoScreen: React.FC<PeriodoAprovacaoScreenProps> = ({ profile
         <div key={period.id} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-yellow-500 relative transition-all ring-2 ring-yellow-400 ring-opacity-50">
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">Tipo de Aprovador</label>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Perfil aprovador</label>
               <select
                 value={editFormData.tipoAprovador}
                 onChange={(e) => setEditFormData({ ...editFormData, tipoAprovador: e.target.value })}
@@ -290,7 +290,7 @@ const PeriodoAprovacaoScreen: React.FC<PeriodoAprovacaoScreenProps> = ({ profile
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Tipo de Aprovador</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Perfil aprovador</label>
             <select
               value={tipoAprovador}
               onChange={(e) => setTipoAprovador(e.target.value)}
