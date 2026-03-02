@@ -233,7 +233,7 @@ const PeriodoAprovacaoScreen: React.FC<PeriodoAprovacaoScreenProps> = ({ profile
           </div>
           <button
             onClick={() => startEditing(period)}
-            className="text-gray-400 hover:text-blue-600 p-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0"
+            className="text-gray-400 hover:text-blue-600 p-1 ml-2 shrink-0"
             title="Editar"
           >
             <PencilIcon className="w-5 h-5" />
