@@ -189,12 +189,18 @@ const PeriodoInclusaoScreen: React.FC = () => {
                 className="w-full text-sm border-gray-300 rounded focus:ring-yellow-500 focus:border-yellow-500"
               />
             </div>
-            <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-gray-100">
-              <button onClick={cancelEditing} className="p-1 text-gray-500 hover:text-gray-700 bg-gray-100 rounded">
-                <XMarkIcon className="w-5 h-5" />
+            <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
+              <button
+                onClick={cancelEditing}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium transition-colors text-sm"
+              >
+                Cancelar
               </button>
-              <button onClick={() => saveEditing(period.id)} className="p-1 text-white bg-green-600 hover:bg-green-700 rounded">
-                <CheckIcon className="w-5 h-5" />
+              <button
+                onClick={() => saveEditing(period.id)}
+                className="px-6 py-2 bg-[#0E4F8F] text-white rounded-md hover:bg-opacity-90 font-medium transition-colors shadow-sm text-sm"
+              >
+                Salvar
               </button>
             </div>
           </div>
